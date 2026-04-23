@@ -51,6 +51,11 @@ jobs:
             'Splat Fighters/Assets/Scripts/Painting/PaintGridCell.cs'
             'Splat Fighters/Assets/Scripts/Painting/PaintableArea.cs'
             'Splat Fighters/Assets/Scripts/Painting/PaintManager.cs'
+            'Splat Fighters/Assets/Scripts/Weapons/InkProjectile.cs'
+            'Splat Fighters/Assets/Scripts/Weapons/InkWeapon.cs'
+            'Splat Fighters/Assets/Editor/SplatFightersMvpSceneSetup.cs'
+            'Splat Fighters/Assets/Scenes/MVP_ShootingTest.unity'
+            'Splat Fighters/Assets/Prefabs/Weapons/InkProjectile.prefab'
             'Splat Fighters/Docs/Splat_Fighters_Project_Technical_Documentation.docx'
           )
 
