@@ -30,16 +30,16 @@ public static class SplatFightersMvpSceneSetup
         scene.name = "MVP_ShootingTest";
 
         CreateLighting();
-        CreateCamera();
+        Camera camera = CreateCamera();
         CreatePaintManager();
         CreatePaintableGround(groundMaterial);
-        CreateTestShooter(shooterMaterial, projectilePrefab);
+        CreatePlayer(shooterMaterial, projectilePrefab, camera);
 
         EditorSceneManager.SaveScene(scene, ScenePath);
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
 
-        Debug.Log($"Created MVP shooting test scene at {ScenePath}. Press Play and hold Mouse0 to shoot ink projectiles.");
+        Debug.Log($"Created MVP shooting test scene at {ScenePath}. Press Play, use WASD to move, Space to jump, and hold Mouse0 to shoot ink projectiles.");
     }
 
     private static void EnsureFolders()
@@ -128,14 +128,16 @@ public static class SplatFightersMvpSceneSetup
         lightObject.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
     }
 
-    private static void CreateCamera()
+    private static Camera CreateCamera()
     {
         GameObject cameraObject = new GameObject("Main Camera");
         Camera camera = cameraObject.AddComponent<Camera>();
         camera.tag = "MainCamera";
         cameraObject.AddComponent<AudioListener>();
-        cameraObject.transform.position = new Vector3(0f, 8f, -12f);
-        cameraObject.transform.rotation = Quaternion.LookRotation(new Vector3(0f, 0.5f, 0f) - cameraObject.transform.position);
+        cameraObject.transform.position = new Vector3(0f, 5f, -10f);
+        cameraObject.transform.rotation = Quaternion.LookRotation(new Vector3(0f, 1f, -2f) - cameraObject.transform.position);
+
+        return camera;
     }
 
     private static void CreatePaintManager()
@@ -172,21 +174,43 @@ public static class SplatFightersMvpSceneSetup
         renderer.sharedMaterial = groundMaterial;
     }
 
-    private static void CreateTestShooter(Material shooterMaterial, InkProjectile projectilePrefab)
+    private static void CreatePlayer(Material shooterMaterial, InkProjectile projectilePrefab, Camera camera)
     {
-        GameObject shooter = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-        shooter.name = "TestShooter";
-        shooter.transform.position = new Vector3(0f, 1f, -8f);
+        GameObject player = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+        player.name = "Player";
+        player.transform.position = new Vector3(0f, 1f, -7f);
 
-        MeshRenderer renderer = shooter.GetComponent<MeshRenderer>();
+        CapsuleCollider capsuleCollider = player.GetComponent<CapsuleCollider>();
+        Object.DestroyImmediate(capsuleCollider);
+
+        CharacterController characterController = player.AddComponent<CharacterController>();
+        characterController.height = 2f;
+        characterController.radius = 0.5f;
+        characterController.center = new Vector3(0f, 1f, 0f);
+        characterController.slopeLimit = 45f;
+        characterController.stepOffset = 0.3f;
+
+        MeshRenderer renderer = player.GetComponent<MeshRenderer>();
         renderer.sharedMaterial = shooterMaterial;
 
         GameObject firePoint = new GameObject("FirePoint");
-        firePoint.transform.SetParent(shooter.transform);
-        firePoint.transform.position = new Vector3(0f, 1.35f, -7.35f);
+        firePoint.transform.SetParent(player.transform);
+        firePoint.transform.position = new Vector3(0f, 1.35f, -6.3f);
         firePoint.transform.rotation = Quaternion.LookRotation(new Vector3(0f, 0.05f, 0f) - firePoint.transform.position, Vector3.up);
 
-        InkWeapon weapon = shooter.AddComponent<InkWeapon>();
+        PlayerInputHandler input = player.AddComponent<PlayerInputHandler>();
+        PlayerController playerController = player.AddComponent<PlayerController>();
+        InkWeapon weapon = player.AddComponent<InkWeapon>();
+
+        SerializedObject controllerSo = new SerializedObject(playerController);
+        controllerSo.FindProperty("cameraTransform").objectReferenceValue = camera.transform;
+        controllerSo.FindProperty("weapon").objectReferenceValue = weapon;
+        controllerSo.FindProperty("moveSpeed").floatValue = 6f;
+        controllerSo.FindProperty("rotationSpeed").floatValue = 720f;
+        controllerSo.FindProperty("enableJump").boolValue = true;
+        controllerSo.FindProperty("jumpHeight").floatValue = 1.2f;
+        controllerSo.ApplyModifiedPropertiesWithoutUndo();
+
         SerializedObject weaponSo = new SerializedObject(weapon);
         weaponSo.FindProperty("projectilePrefab").objectReferenceValue = projectilePrefab;
         weaponSo.FindProperty("firePoint").objectReferenceValue = firePoint.transform;
@@ -195,7 +219,9 @@ public static class SplatFightersMvpSceneSetup
         weaponSo.FindProperty("paintRadius").floatValue = 1.75f;
         weaponSo.FindProperty("fireCooldown").floatValue = 0.2f;
         weaponSo.FindProperty("useCameraAim").boolValue = false;
-        weaponSo.FindProperty("enableKeyboardTestFire").boolValue = true;
+        weaponSo.FindProperty("enableKeyboardTestFire").boolValue = false;
         weaponSo.ApplyModifiedPropertiesWithoutUndo();
+
+        EditorUtility.SetDirty(input);
     }
 }
