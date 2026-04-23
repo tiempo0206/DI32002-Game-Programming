@@ -1,0 +1,103 @@
+name: Course Project Checks
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  repository-hygiene:
+    name: Repository hygiene
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Ensure generated Unity folders are not tracked
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          forbidden_patterns=(
+            '^Splat Fighters/Library/'
+            '^Splat Fighters/Temp/'
+            '^Splat Fighters/Logs/'
+            '^Splat Fighters/UserSettings/'
+            '^Splat Fighters/\.vscode/'
+            '^Splat Fighters/.*\.csproj$'
+            '^Splat Fighters/.*\.sln$'
+          )
+
+          tracked_files="$(git ls-files)"
+
+          for pattern in "${forbidden_patterns[@]}"; do
+            if printf '%s\n' "$tracked_files" | grep -E "$pattern"; then
+              echo "Forbidden generated/local file is tracked: $pattern"
+              exit 1
+            fi
+          done
+
+      - name: Ensure required project files exist
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          required_files=(
+            'Splat Fighters/Packages/manifest.json'
+            'Splat Fighters/ProjectSettings/ProjectVersion.txt'
+            'Splat Fighters/Assets/Scripts/Painting/Team.cs'
+            'Splat Fighters/Assets/Scripts/Painting/PaintGridCell.cs'
+            'Splat Fighters/Assets/Scripts/Painting/PaintableArea.cs'
+            'Splat Fighters/Assets/Scripts/Painting/PaintManager.cs'
+            'Splat Fighters/Assets/Scripts/Weapons/InkProjectile.cs'
+            'Splat Fighters/Assets/Scripts/Weapons/InkWeapon.cs'
+            'Splat Fighters/Assets/Editor/SplatFightersMvpSceneSetup.cs'
+            'Splat Fighters/Assets/Scenes/MVP_ShootingTest.unity'
+            'Splat Fighters/Assets/Prefabs/Weapons/InkProjectile.prefab'
+            'Splat Fighters/Docs/Splat_Fighters_Project_Technical_Documentation.docx'
+          )
+
+          for file in "${required_files[@]}"; do
+            test -f "$file" || {
+              echo "Missing required file: $file"
+              exit 1
+            }
+          done
+
+  documentation:
+    name: Documentation package
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate Word document package
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+
+          docx_path = Path("Splat Fighters/Docs/Splat_Fighters_Project_Technical_Documentation.docx")
+
+          with ZipFile(docx_path) as docx:
+              bad_file = docx.testzip()
+              if bad_file is not None:
+                  raise SystemExit(f"Corrupt file inside docx package: {bad_file}")
+
+              required_entries = {
+                  "[Content_Types].xml",
+                  "word/document.xml",
+              }
+
+              names = set(docx.namelist())
+              missing = required_entries - names
+              if missing:
+                  raise SystemExit(f"Missing docx entries: {sorted(missing)}")
+
+          print("Word document package is valid.")
+          PY

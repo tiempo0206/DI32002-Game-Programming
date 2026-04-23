@@ -1,1 +1,35 @@
 .DS_Store
+
+# Unity generated files and local editor state
+**/[Ll]ibrary/
+**/[Tt]emp/
+**/[Oo]bj/
+**/[Bb]uild/
+**/[Bb]uilds/
+**/[Ll]ogs/
+**/[Uu]ser[Ss]ettings/
+**/[Mm]emoryCaptures/
+**/Recordings/
+
+# Unity generated solution files
+**/*.csproj
+**/*.sln
+**/*.suo
+**/*.user
+**/*.userprefs
+**/*.pidb
+**/*.booproj
+**/*.svd
+**/*.pdb
+**/*.mdb
+**/*.opendb
+**/*.VC.db
+
+# Unity/IDE local folders
+**/.vs/
+**/.vscode/
+**/.idea/
+
+# OS files
+Thumbs.db
+Desktop.ini
