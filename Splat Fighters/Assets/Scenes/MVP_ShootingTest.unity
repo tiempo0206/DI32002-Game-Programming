@@ -3946,11 +3946,13 @@ GameObject:
   m_Component:
   - component: {fileID: 883299629}
   - component: {fileID: 883299628}
-  - component: {fileID: 883299627}
   - component: {fileID: 883299626}
+  - component: {fileID: 883299627}
+  - component: {fileID: 883299630}
+  - component: {fileID: 883299631}
   - component: {fileID: 883299625}
   m_Layer: 0
-  m_Name: TestShooter
+  m_Name: Player
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3981,7 +3983,7 @@ MonoBehaviour:
   aimLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  enableKeyboardTestFire: 1
+  enableKeyboardTestFire: 0
   testFireKey: 323
 --- !u!23 &883299626
 MeshRenderer:
@@ -4025,8 +4027,8 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!136 &883299627
-CapsuleCollider:
+--- !u!143 &883299627
+CharacterController:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -4044,10 +4046,50 @@ CapsuleCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Radius: 0.5
   m_Height: 2
-  m_Direction: 1
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Radius: 0.5
+  m_SlopeLimit: 45
+  m_StepOffset: 0.3
+  m_SkinWidth: 0.08
+  m_MinMoveDistance: 0.001
+  m_Center: {x: 0, y: 1, z: 0}
+--- !u!114 &883299630
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 883299624}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 82cb1a6684c3425b9bf7870011aab375, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  horizontalAxis: Horizontal
+  verticalAxis: Vertical
+  jumpKey: 32
+  fireKey: 323
+--- !u!114 &883299631
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 883299624}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a18be435c89e4d77ac85683d770d3e18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  cameraTransform: {fileID: 1889447127}
+  weapon: {fileID: 883299625}
+  moveSpeed: 6
+  rotationSpeed: 720
+  rotationMode: 0
+  enableJump: 1
+  jumpHeight: 1.2
+  gravity: -25
+  groundedStickForce: -2
 --- !u!33 &883299628
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -4065,7 +4107,7 @@ Transform:
   m_GameObject: {fileID: 883299624}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: -8}
+  m_LocalPosition: {x: 0, y: 1, z: -7}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -4283,7 +4325,7 @@ Transform:
   m_GameObject: {fileID: 2097483588}
   serializedVersion: 2
   m_LocalRotation: {x: 0.0874184, y: -0, z: -0, w: 0.9961717}
-  m_LocalPosition: {x: 0, y: 0.35000002, z: 0.6500001}
+  m_LocalPosition: {x: 0, y: 0.35000002, z: 0.7}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
