@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 /// <summary>
 /// A rectangular ground area that can be painted by two teams.
@@ -28,6 +29,13 @@ public class PaintableArea : MonoBehaviour
     [SerializeField, Range(0.1f, 1f)] private float cellFillScale = 0.92f;
     [SerializeField] private float gizmoYOffset = 0.03f;
 
+    [Header("Runtime Overlay")]
+    [SerializeField] private bool showRuntimeOverlay = true;
+    [SerializeField] private float runtimeOverlayYOffset = 0.02f;
+    [SerializeField] private Color teamAOverlayColor = new Color(0.1f, 0.45f, 1f, 0.9f);
+    [SerializeField] private Color teamBOverlayColor = new Color(1f, 0.45f, 0.05f, 0.9f);
+    [SerializeField] private Color unpaintedOverlayColor = new Color(0f, 0f, 0f, 0f);
+
     [Header("Context Menu Test")]
     [SerializeField, Min(0.1f)] private float debugPaintRadius = 2f;
 
@@ -45,6 +53,15 @@ public class PaintableArea : MonoBehaviour
     private float CellWidth => areaSize.x / gridWidth;
     private float CellHeight => areaSize.y / gridHeight;
 
+    private const string RuntimeOverlayName = "RuntimePaintOverlay";
+
+    private Texture2D runtimeOverlayTexture;
+    private Material runtimeOverlayMaterial;
+    private MeshRenderer runtimeOverlayRenderer;
+    private Transform runtimeOverlayTransform;
+    private static Mesh runtimeOverlayMesh;
+    private bool runtimeOverlayReady;
+
     private void Awake()
     {
         if (resetOnAwake)
@@ -58,11 +75,39 @@ public class PaintableArea : MonoBehaviour
         }
     }
 
+    private void Start()
+    {
+        SetupRuntimeOverlay();
+        runtimeOverlayReady = runtimeOverlayRenderer != null;
+        RefreshRuntimeOverlay();
+    }
+
     private void OnValidate()
     {
         ClampSettings();
         EnsureGrid();
         RecalculateCounts();
+
+        if (Application.isPlaying && runtimeOverlayReady)
+        {
+            UpdateOverlayTransform();
+            RefreshRuntimeOverlay();
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (runtimeOverlayTexture != null)
+        {
+            Destroy(runtimeOverlayTexture);
+        }
+
+        if (runtimeOverlayMaterial != null)
+        {
+            Destroy(runtimeOverlayMaterial);
+        }
+
+        runtimeOverlayReady = false;
     }
 
     /// <summary>
@@ -119,6 +164,7 @@ public class PaintableArea : MonoBehaviour
 
         if (changedCount > 0)
         {
+            RefreshRuntimeOverlay();
             PaintChanged?.Invoke(this);
         }
 
@@ -211,6 +257,7 @@ public class PaintableArea : MonoBehaviour
 
         teamACellCount = 0;
         teamBCellCount = 0;
+        RefreshRuntimeOverlay();
         PaintChanged?.Invoke(this);
     }
 
@@ -227,6 +274,7 @@ public class PaintableArea : MonoBehaviour
 
         teamACellCount = 0;
         teamBCellCount = 0;
+        RefreshRuntimeOverlay();
         PaintChanged?.Invoke(this);
     }
 
@@ -359,6 +407,194 @@ public class PaintableArea : MonoBehaviour
         float normalized = (localZ + halfZ) / areaSize.y;
         int index = Mathf.FloorToInt(normalized * gridHeight);
         return Mathf.Clamp(index, 0, gridHeight - 1);
+    }
+
+    private void SetupRuntimeOverlay()
+    {
+        if (!Application.isPlaying)
+        {
+            return;
+        }
+
+        runtimeOverlayTransform = transform.Find(RuntimeOverlayName);
+
+        if (runtimeOverlayTransform == null)
+        {
+            GameObject overlayObject = new GameObject(RuntimeOverlayName);
+            overlayObject.name = RuntimeOverlayName;
+            overlayObject.transform.SetParent(transform, false);
+            overlayObject.layer = gameObject.layer;
+
+            MeshFilter meshFilter = overlayObject.AddComponent<MeshFilter>();
+            runtimeOverlayRenderer = overlayObject.AddComponent<MeshRenderer>();
+            meshFilter.sharedMesh = GetOrCreateRuntimeOverlayMesh();
+            runtimeOverlayTransform = overlayObject.transform;
+        }
+        else
+        {
+            runtimeOverlayRenderer = runtimeOverlayTransform.GetComponent<MeshRenderer>();
+
+            MeshFilter meshFilter = runtimeOverlayTransform.GetComponent<MeshFilter>();
+
+            if (meshFilter == null)
+            {
+                meshFilter = runtimeOverlayTransform.gameObject.AddComponent<MeshFilter>();
+            }
+
+            meshFilter.sharedMesh = GetOrCreateRuntimeOverlayMesh();
+        }
+
+        UpdateOverlayTransform();
+
+        if (runtimeOverlayRenderer == null)
+        {
+            return;
+        }
+
+        runtimeOverlayRenderer.shadowCastingMode = ShadowCastingMode.Off;
+        runtimeOverlayRenderer.receiveShadows = false;
+        runtimeOverlayRenderer.lightProbeUsage = LightProbeUsage.Off;
+        runtimeOverlayRenderer.reflectionProbeUsage = ReflectionProbeUsage.Off;
+
+        if (runtimeOverlayMaterial == null)
+        {
+            Shader shader = Shader.Find("Sprites/Default");
+
+            if (shader == null)
+            {
+                shader = Shader.Find("Unlit/Transparent");
+            }
+
+            runtimeOverlayMaterial = new Material(shader);
+            runtimeOverlayMaterial.name = "MAT_RuntimePaintOverlay_Instance";
+
+            if (runtimeOverlayMaterial.HasProperty("_Cull"))
+            {
+                runtimeOverlayMaterial.SetFloat("_Cull", (float)CullMode.Off);
+            }
+        }
+
+        runtimeOverlayRenderer.sharedMaterial = runtimeOverlayMaterial;
+        runtimeOverlayRenderer.enabled = showRuntimeOverlay;
+    }
+
+    private void UpdateOverlayTransform()
+    {
+        if (runtimeOverlayTransform == null)
+        {
+            return;
+        }
+
+        runtimeOverlayTransform.localPosition = new Vector3(0f, runtimeOverlayYOffset, 0f);
+        runtimeOverlayTransform.localRotation = Quaternion.Euler(-90f, 0f, 0f);
+        runtimeOverlayTransform.localScale = new Vector3(areaSize.x, areaSize.y, 1f);
+    }
+
+    private void RefreshRuntimeOverlay()
+    {
+        if (!Application.isPlaying)
+        {
+            return;
+        }
+
+        if (!runtimeOverlayReady)
+        {
+            return;
+        }
+
+        if (!showRuntimeOverlay)
+        {
+            if (runtimeOverlayRenderer != null)
+            {
+                runtimeOverlayRenderer.enabled = false;
+            }
+
+            return;
+        }
+
+        EnsureGrid();
+        runtimeOverlayRenderer.enabled = true;
+
+        if (runtimeOverlayTexture == null || runtimeOverlayTexture.width != gridWidth || runtimeOverlayTexture.height != gridHeight)
+        {
+            if (runtimeOverlayTexture != null)
+            {
+                Destroy(runtimeOverlayTexture);
+            }
+
+            runtimeOverlayTexture = new Texture2D(gridWidth, gridHeight, TextureFormat.RGBA32, false);
+            runtimeOverlayTexture.name = "RuntimePaintOverlayTexture";
+            runtimeOverlayTexture.filterMode = FilterMode.Point;
+            runtimeOverlayTexture.wrapMode = TextureWrapMode.Clamp;
+        }
+
+        Color32[] pixels = new Color32[TotalCellCount];
+
+        for (int y = 0; y < gridHeight; y++)
+        {
+            for (int x = 0; x < gridWidth; x++)
+            {
+                Team owner = cells[ToIndex(x, y)].Owner;
+                pixels[ToIndex(x, y)] = GetOverlayColor(owner);
+            }
+        }
+
+        runtimeOverlayTexture.SetPixels32(pixels);
+        runtimeOverlayTexture.Apply(false, false);
+        runtimeOverlayMaterial.mainTexture = runtimeOverlayTexture;
+        runtimeOverlayMaterial.color = Color.white;
+    }
+
+    private static Mesh GetOrCreateRuntimeOverlayMesh()
+    {
+        if (runtimeOverlayMesh != null)
+        {
+            return runtimeOverlayMesh;
+        }
+
+        runtimeOverlayMesh = new Mesh();
+        runtimeOverlayMesh.name = "RuntimeOverlayQuad";
+
+        runtimeOverlayMesh.vertices = new[]
+        {
+            new Vector3(-0.5f, -0.5f, 0f),
+            new Vector3(0.5f, -0.5f, 0f),
+            new Vector3(-0.5f, 0.5f, 0f),
+            new Vector3(0.5f, 0.5f, 0f)
+        };
+
+        runtimeOverlayMesh.uv = new[]
+        {
+            new Vector2(0f, 0f),
+            new Vector2(1f, 0f),
+            new Vector2(0f, 1f),
+            new Vector2(1f, 1f)
+        };
+
+        runtimeOverlayMesh.triangles = new[] { 0, 2, 1, 2, 3, 1 };
+        runtimeOverlayMesh.normals = new[]
+        {
+            Vector3.forward,
+            Vector3.forward,
+            Vector3.forward,
+            Vector3.forward
+        };
+
+        runtimeOverlayMesh.RecalculateBounds();
+        return runtimeOverlayMesh;
+    }
+
+    private Color32 GetOverlayColor(Team team)
+    {
+        switch (team)
+        {
+            case Team.TeamA:
+                return teamAOverlayColor;
+            case Team.TeamB:
+                return teamBOverlayColor;
+            default:
+                return unpaintedOverlayColor;
+        }
     }
 
     private void OnDrawGizmos()

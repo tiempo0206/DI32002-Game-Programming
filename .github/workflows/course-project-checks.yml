@@ -55,6 +55,7 @@ jobs:
             'Splat Fighters/Assets/Scripts/Weapons/InkWeapon.cs'
             'Splat Fighters/Assets/Scripts/Player/PlayerInputHandler.cs'
             'Splat Fighters/Assets/Scripts/Player/PlayerController.cs'
+            'Splat Fighters/Assets/Scripts/Player/ThirdPersonCameraFollow.cs'
             'Splat Fighters/Assets/Editor/SplatFightersMvpSceneSetup.cs'
             'Splat Fighters/Assets/Scenes/MVP_ShootingTest.unity'
             'Splat Fighters/Assets/Prefabs/Weapons/InkProjectile.prefab'
