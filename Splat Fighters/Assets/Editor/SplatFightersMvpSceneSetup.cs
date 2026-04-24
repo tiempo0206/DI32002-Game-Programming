@@ -33,7 +33,8 @@ public static class SplatFightersMvpSceneSetup
         Camera camera = CreateCamera();
         CreatePaintManager();
         CreatePaintableGround(groundMaterial);
-        CreatePlayer(shooterMaterial, projectilePrefab, camera);
+        GameObject player = CreatePlayer(shooterMaterial, projectilePrefab, camera);
+        ConfigureCameraFollow(camera, player.transform);
 
         EditorSceneManager.SaveScene(scene, ScenePath);
         AssetDatabase.SaveAssets();
@@ -174,7 +175,7 @@ public static class SplatFightersMvpSceneSetup
         renderer.sharedMaterial = groundMaterial;
     }
 
-    private static void CreatePlayer(Material shooterMaterial, InkProjectile projectilePrefab, Camera camera)
+    private static GameObject CreatePlayer(Material shooterMaterial, InkProjectile projectilePrefab, Camera camera)
     {
         GameObject player = GameObject.CreatePrimitive(PrimitiveType.Capsule);
         player.name = "Player";
@@ -223,5 +224,29 @@ public static class SplatFightersMvpSceneSetup
         weaponSo.ApplyModifiedPropertiesWithoutUndo();
 
         EditorUtility.SetDirty(input);
+        return player;
+    }
+
+    private static void ConfigureCameraFollow(Camera camera, Transform target)
+    {
+        if (camera == null || target == null)
+        {
+            return;
+        }
+
+        ThirdPersonCameraFollow follow = camera.gameObject.AddComponent<ThirdPersonCameraFollow>();
+        SerializedObject followSo = new SerializedObject(follow);
+        followSo.FindProperty("target").objectReferenceValue = target;
+        followSo.FindProperty("followOffset").vector3Value = new Vector3(0f, 4.5f, -6f);
+        followSo.FindProperty("useTargetRotation").boolValue = true;
+        followSo.FindProperty("positionSmoothSpeed").floatValue = 10f;
+        followSo.FindProperty("rotationSmoothSpeed").floatValue = 12f;
+        followSo.FindProperty("lookAtHeight").floatValue = 1.25f;
+        followSo.ApplyModifiedPropertiesWithoutUndo();
+
+        camera.transform.position = target.TransformPoint(new Vector3(0f, 4.5f, -6f));
+        camera.transform.rotation = Quaternion.LookRotation(
+            (target.position + Vector3.up * 1.25f) - camera.transform.position,
+            Vector3.up);
     }
 }
