@@ -1,0 +1,199 @@
+using UnityEngine;
+using UnityEngine.UI;
+
+/// <summary>
+/// Runtime HUD for match timer and team paint coverage.
+/// It can be wired in the scene or auto-created by GameManager for quick testing.
+/// </summary>
+public class ScoreUI : MonoBehaviour
+{
+    [Header("Text References")]
+    [SerializeField] private Text timerText = null;
+    [SerializeField] private Text teamAText = null;
+    [SerializeField] private Text teamBText = null;
+    [SerializeField] private Text statusText = null;
+
+    [Header("Formatting")]
+    [SerializeField] private string teamALabel = "Team A";
+    [SerializeField] private string teamBLabel = "Team B";
+    [SerializeField] private Color teamAColor = new Color(0.1f, 0.55f, 1f, 1f);
+    [SerializeField] private Color teamBColor = new Color(1f, 0.45f, 0.05f, 1f);
+    [SerializeField] private Color neutralColor = Color.white;
+
+    public void UpdateView(
+        GameManager.MatchState state,
+        float remainingSeconds,
+        float teamACoverage,
+        float teamBCoverage,
+        Team winningTeam)
+    {
+        EnsureRuntimeTextReferences();
+
+        if (timerText != null)
+        {
+            timerText.text = FormatTime(remainingSeconds);
+        }
+
+        if (teamAText != null)
+        {
+            teamAText.text = $"{teamALabel}: {teamACoverage:0.0}%";
+            teamAText.color = teamAColor;
+        }
+
+        if (teamBText != null)
+        {
+            teamBText.text = $"{teamBLabel}: {teamBCoverage:0.0}%";
+            teamBText.color = teamBColor;
+        }
+
+        if (statusText != null)
+        {
+            statusText.text = FormatStatus(state, winningTeam);
+            statusText.color = neutralColor;
+        }
+    }
+
+    public static ScoreUI CreateRuntimeScoreUI()
+    {
+        GameObject canvasObject = new GameObject("ScoreCanvas");
+        Canvas canvas = canvasObject.AddComponent<Canvas>();
+        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        canvas.sortingOrder = 10;
+
+        CanvasScaler scaler = canvasObject.AddComponent<CanvasScaler>();
+        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        scaler.referenceResolution = new Vector2(1920f, 1080f);
+        scaler.matchWidthOrHeight = 0.5f;
+
+        canvasObject.AddComponent<GraphicRaycaster>();
+
+        GameObject panelObject = new GameObject("ScorePanel");
+        panelObject.transform.SetParent(canvasObject.transform, false);
+        RectTransform panelRect = panelObject.AddComponent<RectTransform>();
+        panelRect.anchorMin = new Vector2(0f, 1f);
+        panelRect.anchorMax = new Vector2(0f, 1f);
+        panelRect.pivot = new Vector2(0f, 1f);
+        panelRect.anchoredPosition = new Vector2(24f, -24f);
+        panelRect.sizeDelta = new Vector2(360f, 150f);
+
+        Image panelImage = panelObject.AddComponent<Image>();
+        panelImage.color = new Color(0f, 0f, 0f, 0.45f);
+        panelImage.raycastTarget = false;
+
+        ScoreUI scoreUI = canvasObject.AddComponent<ScoreUI>();
+        scoreUI.timerText = CreateText(panelObject.transform, "TimerText", new Vector2(16f, -12f), 32, FontStyle.Bold);
+        scoreUI.teamAText = CreateText(panelObject.transform, "TeamAText", new Vector2(16f, -58f), 24, FontStyle.Bold);
+        scoreUI.teamBText = CreateText(panelObject.transform, "TeamBText", new Vector2(16f, -90f), 24, FontStyle.Bold);
+        scoreUI.statusText = CreateText(panelObject.transform, "StatusText", new Vector2(16f, -122f), 20, FontStyle.Normal);
+
+        return scoreUI;
+    }
+
+    private void Awake()
+    {
+        EnsureRuntimeTextReferences();
+    }
+
+    private void EnsureRuntimeTextReferences()
+    {
+        if (timerText != null && teamAText != null && teamBText != null && statusText != null)
+        {
+            return;
+        }
+
+        Text[] texts = GetComponentsInChildren<Text>(true);
+
+        for (int i = 0; i < texts.Length; i++)
+        {
+            Text text = texts[i];
+
+            if (text.name == "TimerText")
+            {
+                timerText = text;
+            }
+            else if (text.name == "TeamAText")
+            {
+                teamAText = text;
+            }
+            else if (text.name == "TeamBText")
+            {
+                teamBText = text;
+            }
+            else if (text.name == "StatusText")
+            {
+                statusText = text;
+            }
+        }
+    }
+
+    private static Text CreateText(Transform parent, string name, Vector2 anchoredPosition, int fontSize, FontStyle fontStyle)
+    {
+        GameObject textObject = new GameObject(name);
+        textObject.transform.SetParent(parent, false);
+
+        RectTransform rect = textObject.AddComponent<RectTransform>();
+        rect.anchorMin = new Vector2(0f, 1f);
+        rect.anchorMax = new Vector2(0f, 1f);
+        rect.pivot = new Vector2(0f, 1f);
+        rect.anchoredPosition = anchoredPosition;
+        rect.sizeDelta = new Vector2(320f, 32f);
+
+        Text text = textObject.AddComponent<Text>();
+        text.font = GetDefaultFont();
+        text.fontSize = fontSize;
+        text.fontStyle = fontStyle;
+        text.alignment = TextAnchor.UpperLeft;
+        text.horizontalOverflow = HorizontalWrapMode.Overflow;
+        text.verticalOverflow = VerticalWrapMode.Overflow;
+        text.color = Color.white;
+        text.raycastTarget = false;
+
+        return text;
+    }
+
+    private static Font GetDefaultFont()
+    {
+        Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+
+        if (font == null)
+        {
+            font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+        }
+
+        return font;
+    }
+
+    private static string FormatTime(float seconds)
+    {
+        int wholeSeconds = Mathf.CeilToInt(Mathf.Max(0f, seconds));
+        int minutes = wholeSeconds / 60;
+        int remaining = wholeSeconds % 60;
+        return $"{minutes:00}:{remaining:00}";
+    }
+
+    private string FormatStatus(GameManager.MatchState state, Team winningTeam)
+    {
+        switch (state)
+        {
+            case GameManager.MatchState.Playing:
+                return "Match in progress";
+            case GameManager.MatchState.Finished:
+                return winningTeam == Team.None ? "Draw" : $"{GetTeamLabel(winningTeam)} wins";
+            default:
+                return "Ready";
+        }
+    }
+
+    private string GetTeamLabel(Team team)
+    {
+        switch (team)
+        {
+            case Team.TeamA:
+                return teamALabel;
+            case Team.TeamB:
+                return teamBLabel;
+            default:
+                return "No team";
+        }
+    }
+}
