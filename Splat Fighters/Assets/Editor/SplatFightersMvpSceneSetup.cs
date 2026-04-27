@@ -31,9 +31,10 @@ public static class SplatFightersMvpSceneSetup
 
         CreateLighting();
         Camera camera = CreateCamera();
-        CreatePaintManager();
+        PaintManager paintManager = CreatePaintManager();
         CreatePaintableGround(groundMaterial);
         GameObject player = CreatePlayer(shooterMaterial, projectilePrefab, camera);
+        CreateGameManager(paintManager);
         ConfigureCameraFollow(camera, player.transform);
 
         EditorSceneManager.SaveScene(scene, ScenePath);
@@ -141,10 +142,25 @@ public static class SplatFightersMvpSceneSetup
         return camera;
     }
 
-    private static void CreatePaintManager()
+    private static PaintManager CreatePaintManager()
     {
         GameObject managerObject = new GameObject("PaintManager");
-        managerObject.AddComponent<PaintManager>();
+        return managerObject.AddComponent<PaintManager>();
+    }
+
+    private static void CreateGameManager(PaintManager paintManager)
+    {
+        GameObject managerObject = new GameObject("GameManager");
+        GameManager gameManager = managerObject.AddComponent<GameManager>();
+
+        SerializedObject managerSo = new SerializedObject(gameManager);
+        managerSo.FindProperty("startMatchOnAwake").boolValue = true;
+        managerSo.FindProperty("clearPaintOnMatchStart").boolValue = true;
+        managerSo.FindProperty("matchDurationSeconds").floatValue = 180f;
+        managerSo.FindProperty("paintManager").objectReferenceValue = paintManager;
+        managerSo.FindProperty("autoCreateScoreUI").boolValue = true;
+        managerSo.FindProperty("scoreRefreshInterval").floatValue = 0.1f;
+        managerSo.ApplyModifiedPropertiesWithoutUndo();
     }
 
     private static void CreatePaintableGround(Material groundMaterial)
