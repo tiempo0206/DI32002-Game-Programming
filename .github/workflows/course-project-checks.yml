@@ -28,6 +28,13 @@ jobs:
             '^Splat Fighters/\.vscode/'
             '^Splat Fighters/.*\.csproj$'
             '^Splat Fighters/.*\.sln$'
+            '^class activity/2D-shooter/Library/'
+            '^class activity/2D-shooter/Temp/'
+            '^class activity/2D-shooter/Logs/'
+            '^class activity/2D-shooter/UserSettings/'
+            '^class activity/2D-shooter/\.vscode/'
+            '^class activity/2D-shooter/.*\.csproj$'
+            '^class activity/2D-shooter/.*\.sln$'
           )
 
           tracked_files="$(git ls-files)"
@@ -63,6 +70,16 @@ jobs:
             'Splat Fighters/Assets/Scenes/MVP_ShootingTest.unity'
             'Splat Fighters/Assets/Prefabs/Weapons/InkProjectile.prefab'
             'Splat Fighters/Docs/Splat_Fighters_Project_Technical_Documentation.docx'
+            'class activity/2D-shooter/Packages/manifest.json'
+            'class activity/2D-shooter/Packages/packages-lock.json'
+            'class activity/2D-shooter/ProjectSettings/ProjectVersion.txt'
+            'class activity/2D-shooter/ProjectSettings/EditorBuildSettings.asset'
+            'class activity/2D-shooter/Assets/_Scenes/Level1_scene.unity'
+            'class activity/2D-shooter/Assets/Scripts/Enemies/EnemySpawner.cs'
+            'class activity/2D-shooter/Assets/Scripts/ShootingProjectiles/ShootingController.cs'
+            'class activity/2D-shooter/Assets/Prefabs/Effects/EnemyHitEffect.prefab'
+            'class activity/2D-shooter/Assets/Prefabs/Effects/PlayerProjectileHitV2.prefab'
+            'class activity/2D-shooter/Assets/Prefabs/Enemies/EnemyParts/EnemyGun.prefab'
           )
 
           for file in "${required_files[@]}"; do
@@ -71,6 +88,27 @@ jobs:
               exit 1
             }
           done
+
+      - name: Validate 4.27 2D shooter activity references
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if grep -R \
+            -e 'Assets/Scenes/SampleScene.unity' \
+            -e '2cda990e2423bbf4892e6590ba056729' \
+            -e '728d251feda159b458e87d0141fc1d5d' \
+            -e '9eb5a8624f0bc464aaefb5b0adc332ad' \
+            -e '209d4d49de0bd3843b645f4a2775c108' \
+            -e '9769a150f75db004799247e154454dd7' \
+            'class activity/2D-shooter/Assets' \
+            'class activity/2D-shooter/ProjectSettings'; then
+            echo "Found stale scene path or broken imported-package GUID."
+            exit 1
+          fi
+
+          grep -q 'com.unity.inputsystem' 'class activity/2D-shooter/Packages/manifest.json'
+          grep -q 'path: Assets/_Scenes/Level1_scene.unity' 'class activity/2D-shooter/ProjectSettings/EditorBuildSettings.asset'
 
   documentation:
     name: Documentation package
