@@ -110,6 +110,50 @@ jobs:
           grep -q 'com.unity.inputsystem' 'class activity/2D-shooter/Packages/manifest.json'
           grep -q 'path: Assets/_Scenes/Level1_scene.unity' 'class activity/2D-shooter/ProjectSettings/EditorBuildSettings.asset'
 
+      - name: Validate 4.28 2D shooter playable MVP scene
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          scene='class activity/2D-shooter/Assets/_Scenes/Level1_scene.unity'
+          tags='class activity/2D-shooter/ProjectSettings/TagManager.asset'
+
+          required_scene_patterns=(
+            'm_Name: Player'
+            'm_TagString: Player'
+            'm_Name: ProjectileHolder'
+            'm_Name: Main Camera'
+            'm_Name: HUD Canvas'
+            'm_Name: ScoreText'
+            'm_Name: VictoryPage'
+            'm_Name: GameOverPage'
+            'value: GameManager'
+            'value: UIManager'
+            'value: EnemySpawnerStraight'
+            'guid: dcba33f7f009a424e8f7a603aaec8262'
+            'guid: f75388997f8d4264a86b7441dc9ea74e'
+            'guid: 52c9a4613bbc6ce4b809b21678067793'
+            'guid: 8d271c85fb6a1e546b37f1f81e5a648d'
+            'guid: b5ce9867d2d7f4d44b5a3445bbb0e201'
+            'guid: 14346f8fcc871204299029fedba2a3eb'
+            'guid: aee1688b385340b4bab2b46707955895'
+            'propertyPath: enemiesToDefeat'
+            'propertyPath: maxSpawn'
+            'propertyPath: spawnInfinite'
+          )
+
+          for pattern in "${required_scene_patterns[@]}"; do
+            grep -q "$pattern" "$scene" || {
+              echo "Missing playable MVP scene pattern: $pattern"
+              exit 1
+            }
+          done
+
+          grep -q '  - Player' "$tags" || {
+            echo "Missing Player tag required for GameManager game-over flow."
+            exit 1
+          }
+
   documentation:
     name: Documentation package
     runs-on: ubuntu-latest
