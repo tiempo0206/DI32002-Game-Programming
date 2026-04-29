@@ -535,7 +535,9 @@ public class PaintableArea : MonoBehaviour
             for (int x = 0; x < gridWidth; x++)
             {
                 Team owner = cells[ToIndex(x, y)].Owner;
-                pixels[ToIndex(x, y)] = GetOverlayColor(owner);
+                // The overlay quad is rotated onto the XZ plane, so texture V is opposite to local +Z.
+                int textureY = gridHeight - 1 - y;
+                pixels[textureY * gridWidth + x] = GetOverlayColor(owner);
             }
         }
 

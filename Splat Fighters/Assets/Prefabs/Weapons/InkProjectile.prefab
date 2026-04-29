@@ -154,3 +154,16 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 4294967295
   destroyOnNonPaintableHit: 1
+  useSweepHitDetection: 1
+  sweepRadius: 0.12
+  sweepExtraDistance: 0.08
+  useIntendedImpactPoint: 1
+  paintAtIntendedImpactPoint: 1
+  intendedImpactPointTolerance: 0.35
+  spawnImpactMarker: 0
+  impactMarkerColor: {r: 0.05, g: 0.65, b: 1, a: 0.85}
+  noPaintMarkerColor: {r: 1, g: 1, b: 1, a: 0.45}
+  impactMarkerSize: 0.35
+  impactMarkerLifetime: 0.25
+  impactMarkerSurfaceOffset: 0.03
+  logPaintMisses: 0
