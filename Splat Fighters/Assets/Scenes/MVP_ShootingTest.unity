@@ -165,6 +165,11 @@ MonoBehaviour:
   drawGridLines: 0
   cellFillScale: 0.92
   gizmoYOffset: 0.03
+  showRuntimeOverlay: 1
+  runtimeOverlayYOffset: 0.02
+  teamAOverlayColor: {r: 0.1, g: 0.45, b: 1, a: 0.9}
+  teamBOverlayColor: {r: 1, g: 0.45, b: 0.05, a: 0.9}
+  unpaintedOverlayColor: {r: 0, g: 0, b: 0, a: 0}
   debugPaintRadius: 2
   cells:
   - owner: 0
@@ -3927,6 +3932,20 @@ MonoBehaviour:
   positionSmoothSpeed: 10
   rotationSmoothSpeed: 12
   lookAtHeight: 1.25
+  lookAheadDistance: 1.5
+  lookSideOffset: 0.25
+  enableMouseOrbit: 1
+  lockCursorOnPlay: 1
+  mouseXAxis: Mouse X
+  mouseYAxis: Mouse Y
+  yawSensitivity: 180
+  pitchSensitivity: 120
+  invertY: 0
+  shoulderOffset: 0.75
+  orbitDistance: 6.5
+  initialPitch: 18
+  minPitch: -20
+  maxPitch: 65
 --- !u!1 &1262384762
 GameObject:
   m_ObjectHideFlags: 0
@@ -4187,6 +4206,7 @@ GameObject:
   - component: {fileID: 1752747620}
   - component: {fileID: 1752747619}
   - component: {fileID: 1752747618}
+  - component: {fileID: 1752747616}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -4194,6 +4214,39 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &1752747616
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1752747617}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6615296465094593a7a83823b7b8eeee, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  aimCamera: {fileID: 1154486791}
+  weapon: {fileID: 1752747618}
+  firePoint: {fileID: 1092357852}
+  characterRoot: {fileID: 1752747624}
+  weaponPivot: {fileID: 1092357852}
+  ignoredRoot: {fileID: 1752747624}
+  reticleUI: {fileID: 0}
+  autoCreateReticle: 1
+  aimInputMode: 0
+  maxAimDistance: 100
+  aimLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  minimumAimDistance: 0.05
+  ignoreProjectiles: 1
+  rotateCharacterToAim: 1
+  rotateWeaponPivotToAim: 1
+  characterTurnSpeed: 720
+  weaponTurnSpeed: 1080
+  drawDebugAimRay: 1
+  debugRayColor: {r: 0, g: 1, b: 1, a: 1}
 --- !u!114 &1752747618
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4219,6 +4272,8 @@ MonoBehaviour:
   aimLayers:
     serializedVersion: 2
     m_Bits: 4294967295
+  paintDirectlyAtAimTarget: 1
+  projectileIsVisualOnlyWhenDirectPainting: 1
   enableKeyboardTestFire: 0
   testFireKey: 323
 --- !u!114 &1752747619
@@ -4235,9 +4290,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cameraTransform: {fileID: 1154486789}
   weapon: {fileID: 1752747618}
+  aimController: {fileID: 1752747616}
   moveSpeed: 6
   rotationSpeed: 720
-  rotationMode: 0
+  rotationMode: 2
   enableJump: 1
   jumpHeight: 1.2
   gravity: -25
@@ -4283,7 +4339,7 @@ CharacterController:
   m_StepOffset: 0.3
   m_SkinWidth: 0.08
   m_MinMoveDistance: 0.001
-  m_Center: {x: 0, y: 1, z: 0}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!23 &1752747622
 MeshRenderer:
   m_ObjectHideFlags: 0

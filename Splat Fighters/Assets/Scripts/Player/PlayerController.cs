@@ -6,17 +6,20 @@ using UnityEngine;
 /// </summary>
 [RequireComponent(typeof(CharacterController))]
 [RequireComponent(typeof(PlayerInputHandler))]
+[DefaultExecutionOrder(100)]
 public class PlayerController : MonoBehaviour
 {
     private enum RotationMode
     {
         MoveDirection,
-        CameraForward
+        CameraForward,
+        ExternalAim
     }
 
     [Header("References")]
     [SerializeField] private Transform cameraTransform = null;
     [SerializeField] private InkWeapon weapon = null;
+    [SerializeField] private AimController aimController = null;
 
     [Header("Movement")]
     [SerializeField] private float moveSpeed = 6f;
@@ -43,6 +46,11 @@ public class PlayerController : MonoBehaviour
             weapon = GetComponentInChildren<InkWeapon>();
         }
 
+        if (aimController == null)
+        {
+            aimController = GetComponentInChildren<AimController>();
+        }
+
         if (cameraTransform == null && Camera.main != null)
         {
             cameraTransform = Camera.main.transform;
@@ -56,6 +64,10 @@ public class PlayerController : MonoBehaviour
         ApplyRotation(moveDirection);
         ApplyJumpAndGravity();
         MoveCharacter(moveDirection);
+    }
+
+    private void LateUpdate()
+    {
         HandleFireInput();
     }
 
@@ -86,6 +98,11 @@ public class PlayerController : MonoBehaviour
 
     private void ApplyRotation(Vector3 moveDirection)
     {
+        if (rotationMode == RotationMode.ExternalAim)
+        {
+            return;
+        }
+
         Vector3 targetDirection = Vector3.zero;
 
         if (rotationMode == RotationMode.CameraForward && cameraTransform != null)
@@ -135,6 +152,11 @@ public class PlayerController : MonoBehaviour
         if (!input.FireHeld || weapon == null)
         {
             return;
+        }
+
+        if (aimController != null)
+        {
+            aimController.RefreshAimNow();
         }
 
         weapon.TryFire();

@@ -113,6 +113,19 @@ public static class SplatFightersMvpSceneSetup
         projectileSo.FindProperty("paintRadius").floatValue = 1.75f;
         projectileSo.FindProperty("team").enumValueIndex = (int)Team.TeamA;
         projectileSo.FindProperty("destroyOnNonPaintableHit").boolValue = true;
+        projectileSo.FindProperty("useSweepHitDetection").boolValue = true;
+        projectileSo.FindProperty("sweepRadius").floatValue = 0.12f;
+        projectileSo.FindProperty("sweepExtraDistance").floatValue = 0.08f;
+        projectileSo.FindProperty("useIntendedImpactPoint").boolValue = true;
+        projectileSo.FindProperty("paintAtIntendedImpactPoint").boolValue = true;
+        projectileSo.FindProperty("intendedImpactPointTolerance").floatValue = 0.35f;
+        projectileSo.FindProperty("spawnImpactMarker").boolValue = false;
+        projectileSo.FindProperty("impactMarkerColor").colorValue = new Color(0.05f, 0.65f, 1f, 0.85f);
+        projectileSo.FindProperty("noPaintMarkerColor").colorValue = new Color(1f, 1f, 1f, 0.45f);
+        projectileSo.FindProperty("impactMarkerSize").floatValue = 0.35f;
+        projectileSo.FindProperty("impactMarkerLifetime").floatValue = 0.25f;
+        projectileSo.FindProperty("impactMarkerSurfaceOffset").floatValue = 0.03f;
+        projectileSo.FindProperty("logPaintMisses").boolValue = false;
         projectileSo.ApplyModifiedPropertiesWithoutUndo();
 
         GameObject prefab = PrefabUtility.SaveAsPrefabAsset(projectileObject, ProjectilePrefabPath);
@@ -203,7 +216,7 @@ public static class SplatFightersMvpSceneSetup
         CharacterController characterController = player.AddComponent<CharacterController>();
         characterController.height = 2f;
         characterController.radius = 0.5f;
-        characterController.center = new Vector3(0f, 1f, 0f);
+        characterController.center = Vector3.zero;
         characterController.slopeLimit = 45f;
         characterController.stepOffset = 0.3f;
 
@@ -218,12 +231,15 @@ public static class SplatFightersMvpSceneSetup
         PlayerInputHandler input = player.AddComponent<PlayerInputHandler>();
         PlayerController playerController = player.AddComponent<PlayerController>();
         InkWeapon weapon = player.AddComponent<InkWeapon>();
+        AimController aimController = player.AddComponent<AimController>();
 
         SerializedObject controllerSo = new SerializedObject(playerController);
         controllerSo.FindProperty("cameraTransform").objectReferenceValue = camera.transform;
         controllerSo.FindProperty("weapon").objectReferenceValue = weapon;
+        controllerSo.FindProperty("aimController").objectReferenceValue = aimController;
         controllerSo.FindProperty("moveSpeed").floatValue = 6f;
         controllerSo.FindProperty("rotationSpeed").floatValue = 720f;
+        controllerSo.FindProperty("rotationMode").enumValueIndex = 2;
         controllerSo.FindProperty("enableJump").boolValue = true;
         controllerSo.FindProperty("jumpHeight").floatValue = 1.2f;
         controllerSo.ApplyModifiedPropertiesWithoutUndo();
@@ -236,8 +252,29 @@ public static class SplatFightersMvpSceneSetup
         weaponSo.FindProperty("paintRadius").floatValue = 1.75f;
         weaponSo.FindProperty("fireCooldown").floatValue = 0.2f;
         weaponSo.FindProperty("useCameraAim").boolValue = false;
+        weaponSo.FindProperty("paintDirectlyAtAimTarget").boolValue = true;
+        weaponSo.FindProperty("projectileIsVisualOnlyWhenDirectPainting").boolValue = true;
         weaponSo.FindProperty("enableKeyboardTestFire").boolValue = false;
         weaponSo.ApplyModifiedPropertiesWithoutUndo();
+
+        SerializedObject aimSo = new SerializedObject(aimController);
+        aimSo.FindProperty("aimCamera").objectReferenceValue = camera;
+        aimSo.FindProperty("weapon").objectReferenceValue = weapon;
+        aimSo.FindProperty("firePoint").objectReferenceValue = firePoint.transform;
+        aimSo.FindProperty("characterRoot").objectReferenceValue = player.transform;
+        aimSo.FindProperty("weaponPivot").objectReferenceValue = firePoint.transform;
+        aimSo.FindProperty("ignoredRoot").objectReferenceValue = player.transform;
+        aimSo.FindProperty("autoCreateReticle").boolValue = true;
+        aimSo.FindProperty("aimInputMode").enumValueIndex = 0;
+        aimSo.FindProperty("maxAimDistance").floatValue = 100f;
+        aimSo.FindProperty("minimumAimDistance").floatValue = 0.05f;
+        aimSo.FindProperty("ignoreProjectiles").boolValue = true;
+        aimSo.FindProperty("rotateCharacterToAim").boolValue = true;
+        aimSo.FindProperty("rotateWeaponPivotToAim").boolValue = true;
+        aimSo.FindProperty("characterTurnSpeed").floatValue = 720f;
+        aimSo.FindProperty("weaponTurnSpeed").floatValue = 1080f;
+        aimSo.FindProperty("drawDebugAimRay").boolValue = true;
+        aimSo.ApplyModifiedPropertiesWithoutUndo();
 
         EditorUtility.SetDirty(input);
         return player;
@@ -258,6 +295,17 @@ public static class SplatFightersMvpSceneSetup
         followSo.FindProperty("positionSmoothSpeed").floatValue = 10f;
         followSo.FindProperty("rotationSmoothSpeed").floatValue = 12f;
         followSo.FindProperty("lookAtHeight").floatValue = 1.25f;
+        followSo.FindProperty("lookAheadDistance").floatValue = 1.5f;
+        followSo.FindProperty("lookSideOffset").floatValue = 0.25f;
+        followSo.FindProperty("enableMouseOrbit").boolValue = true;
+        followSo.FindProperty("lockCursorOnPlay").boolValue = true;
+        followSo.FindProperty("yawSensitivity").floatValue = 180f;
+        followSo.FindProperty("pitchSensitivity").floatValue = 120f;
+        followSo.FindProperty("shoulderOffset").floatValue = 0.75f;
+        followSo.FindProperty("orbitDistance").floatValue = 6.5f;
+        followSo.FindProperty("initialPitch").floatValue = 18f;
+        followSo.FindProperty("minPitch").floatValue = -20f;
+        followSo.FindProperty("maxPitch").floatValue = 65f;
         followSo.ApplyModifiedPropertiesWithoutUndo();
 
         camera.transform.position = target.TransformPoint(new Vector3(0f, 4.5f, -6f));

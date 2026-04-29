@@ -21,11 +21,21 @@ public class InkWeapon : MonoBehaviour
     [SerializeField] private float maxAimDistance = 100f;
     [SerializeField] private LayerMask aimLayers = ~0;
 
+    [Header("Crosshair Paint")]
+    [SerializeField] private bool paintDirectlyAtAimTarget = true;
+    [SerializeField] private bool projectileIsVisualOnlyWhenDirectPainting = true;
+
     [Header("Quick Test Input")]
     [SerializeField] private bool enableKeyboardTestFire = true;
     [SerializeField] private KeyCode testFireKey = KeyCode.Mouse0;
 
     private float nextFireTime;
+    private bool hasExternalAimDirection;
+    private Vector3 externalAimDirection = Vector3.forward;
+    private bool hasExternalAimTarget;
+    private Vector3 externalAimTarget;
+
+    public Transform FirePoint => firePoint != null ? firePoint : transform;
 
     private void Update()
     {
@@ -55,13 +65,51 @@ public class InkWeapon : MonoBehaviour
         Transform spawnPoint = firePoint != null ? firePoint : transform;
         Vector3 fireDirection = GetFireDirection(spawnPoint);
         Quaternion rotation = Quaternion.LookRotation(fireDirection, Vector3.up);
+        bool paintedDirectly = PaintDirectlyAtAimTargetIfNeeded();
+        bool projectileCanPaint = !paintedDirectly || !projectileIsVisualOnlyWhenDirectPainting;
 
         InkProjectile projectile = Instantiate(projectilePrefab, spawnPoint.position, rotation);
         projectile.IgnoreColliders(GetComponentsInChildren<Collider>());
-        projectile.Launch(fireDirection, projectileSpeed, paintRadius, team);
+        projectile.Launch(
+            fireDirection,
+            projectileSpeed,
+            paintRadius,
+            team,
+            externalAimTarget,
+            hasExternalAimTarget,
+            projectileCanPaint);
 
         nextFireTime = Time.time + fireCooldown;
         return true;
+    }
+
+    /// <summary>
+    /// Called by AimController so the weapon can stay simple and only spawn projectiles.
+    /// </summary>
+    public void SetAimDirection(Vector3 worldDirection)
+    {
+        if (worldDirection.sqrMagnitude <= 0.0001f)
+        {
+            return;
+        }
+
+        externalAimDirection = worldDirection.normalized;
+        hasExternalAimDirection = true;
+    }
+
+    /// <summary>
+    /// Called by AimController so projectiles can resolve near-ground crosshair hits reliably.
+    /// </summary>
+    public void SetAimTarget(Vector3 worldPoint, bool hasTarget)
+    {
+        externalAimTarget = worldPoint;
+        hasExternalAimTarget = hasTarget;
+    }
+
+    public void ClearAimDirection()
+    {
+        hasExternalAimDirection = false;
+        hasExternalAimTarget = false;
     }
 
     /// <summary>
@@ -75,6 +123,21 @@ public class InkWeapon : MonoBehaviour
 
     private Vector3 GetFireDirection(Transform spawnPoint)
     {
+        if (hasExternalAimDirection)
+        {
+            if (hasExternalAimTarget)
+            {
+                Vector3 directionToTarget = externalAimTarget - spawnPoint.position;
+
+                if (directionToTarget.sqrMagnitude > 0.0001f)
+                {
+                    return directionToTarget.normalized;
+                }
+            }
+
+            return externalAimDirection;
+        }
+
         if (!useCameraAim || aimCamera == null)
         {
             return spawnPoint.forward;
@@ -94,5 +157,16 @@ public class InkWeapon : MonoBehaviour
 
         Vector3 fallbackTarget = ray.origin + ray.direction * maxAimDistance;
         return (fallbackTarget - spawnPoint.position).normalized;
+    }
+
+    private bool PaintDirectlyAtAimTargetIfNeeded()
+    {
+        if (!paintDirectlyAtAimTarget || !hasExternalAimTarget || PaintManager.Instance == null)
+        {
+            return false;
+        }
+
+        PaintManager.Instance.PaintAtWorldPosition(externalAimTarget, paintRadius, team);
+        return true;
     }
 }
