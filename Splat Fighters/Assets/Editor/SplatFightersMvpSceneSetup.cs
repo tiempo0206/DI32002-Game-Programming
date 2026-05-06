@@ -260,6 +260,9 @@ public static class SplatFightersMvpSceneSetup
         weaponSo.FindProperty("useCameraAim").boolValue = false;
         weaponSo.FindProperty("paintDirectlyAtAimTarget").boolValue = true;
         weaponSo.FindProperty("projectileIsVisualOnlyWhenDirectPainting").boolValue = true;
+        weaponSo.FindProperty("applyTeamColorToProjectile").boolValue = true;
+        weaponSo.FindProperty("teamAProjectileColor").colorValue = new Color(0.05f, 0.45f, 1f, 1f);
+        weaponSo.FindProperty("teamBProjectileColor").colorValue = new Color(1f, 0.45f, 0.05f, 1f);
         weaponSo.FindProperty("enableKeyboardTestFire").boolValue = false;
         weaponSo.ApplyModifiedPropertiesWithoutUndo();
 
