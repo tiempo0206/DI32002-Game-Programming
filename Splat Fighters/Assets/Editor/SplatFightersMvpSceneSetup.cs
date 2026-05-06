@@ -36,6 +36,7 @@ public static class SplatFightersMvpSceneSetup
         GameObject player = CreatePlayer(shooterMaterial, projectilePrefab, camera);
         CreateGameManager(paintManager);
         ConfigureCameraFollow(camera, player.transform);
+        SplatFightersGrayboxMapBuilder.BuildInCurrentScene();
 
         EditorSceneManager.SaveScene(scene, ScenePath);
         AssetDatabase.SaveAssets();
@@ -187,10 +188,15 @@ public static class SplatFightersMvpSceneSetup
         areaSo.FindProperty("gridWidth").intValue = 60;
         areaSo.FindProperty("gridHeight").intValue = 60;
         areaSo.FindProperty("resetOnAwake").boolValue = true;
+        areaSo.FindProperty("requirePaintPointNearAreaPlane").boolValue = true;
+        areaSo.FindProperty("maxPaintPointHeightOffset").floatValue = 0.16f;
+        areaSo.FindProperty("rebuildMaskFromPaintBlockersOnAwake").boolValue = true;
+        areaSo.FindProperty("clearMaskBeforeBaking").boolValue = true;
         areaSo.FindProperty("drawGizmos").boolValue = true;
         areaSo.FindProperty("drawOnlyWhenSelected").boolValue = false;
         areaSo.FindProperty("drawPaintedCells").boolValue = true;
         areaSo.FindProperty("drawUnpaintedCells").boolValue = false;
+        areaSo.FindProperty("drawBlockedCells").boolValue = false;
         areaSo.FindProperty("drawGridLines").boolValue = false;
         areaSo.ApplyModifiedPropertiesWithoutUndo();
 

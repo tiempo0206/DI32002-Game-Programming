@@ -64,13 +64,22 @@ jobs:
             'Splat Fighters/Assets/Scripts/Player/PlayerController.cs'
             'Splat Fighters/Assets/Scripts/Player/ThirdPersonCameraFollow.cs'
             'Splat Fighters/Assets/Scripts/Player/AimController.cs'
+            'Splat Fighters/Assets/Scripts/Level/SpawnPoint.cs'
+            'Splat Fighters/Assets/Scripts/Level/PaintBlocker.cs'
             'Splat Fighters/Assets/Scripts/Managers/GameManager.cs'
             'Splat Fighters/Assets/Scripts/Managers/MatchTimer.cs'
             'Splat Fighters/Assets/Scripts/UI/AimReticleUI.cs'
             'Splat Fighters/Assets/Scripts/UI/ScoreUI.cs'
             'Splat Fighters/Assets/Editor/SplatFightersMvpSceneSetup.cs'
+            'Splat Fighters/Assets/Editor/SplatFightersGrayboxMapBuilder.cs'
             'Splat Fighters/Assets/Scenes/MVP_ShootingTest.unity'
             'Splat Fighters/Assets/Prefabs/Weapons/InkProjectile.prefab'
+            'Splat Fighters/Assets/Materials/Level/MAT_Level_Boundary.mat'
+            'Splat Fighters/Assets/Materials/Level/MAT_Level_Cover.mat'
+            'Splat Fighters/Assets/Materials/Level/MAT_Level_Platform.mat'
+            'Splat Fighters/Assets/Materials/Level/MAT_Level_Ramp.mat'
+            'Splat Fighters/Assets/Materials/Level/MAT_Level_Spawn_TeamA.mat'
+            'Splat Fighters/Assets/Materials/Level/MAT_Level_Spawn_TeamB.mat'
             'Splat Fighters/Docs/Splat_Fighters_Project_Technical_Documentation.docx'
             'class activity/2D-shooter/Packages/manifest.json'
             'class activity/2D-shooter/Packages/packages-lock.json'
@@ -155,6 +164,56 @@ jobs:
             echo "Missing Player tag required for GameManager game-over flow."
             exit 1
           }
+
+      - name: Validate Splat Fighters graybox map scene
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          scene='Splat Fighters/Assets/Scenes/MVP_ShootingTest.unity'
+
+          required_scene_patterns=(
+            'm_Name: LevelRoot'
+            'm_Name: BoundaryWalls'
+            'm_Name: Obstacles'
+            'm_Name: Cover'
+            'm_Name: Platforms'
+            'm_Name: SpawnPoints'
+            'm_Name: NorthBoundaryRail'
+            'm_Name: SouthBoundaryRail'
+            'm_Name: CenterContestBlock'
+            'm_Name: CenterLeftPillar'
+            'm_Name: CenterRightPillar'
+            'm_Name: TeamASpawnLeftCover'
+            'm_Name: TeamBSpawnRightCover'
+            'm_Name: WestPlatformCover'
+            'm_Name: EastPlatformCover'
+            'm_Name: WestPlatformRamp'
+            'm_Name: EastPlatformRamp'
+            'm_Name: TeamASpawn'
+            'm_Name: TeamBSpawn'
+            'guid: 523848afdbb78428f9909a6a36dedc79'
+            'guid: 6eae5c84c8a24551a6a1738913276ea9'
+            'requirePaintPointNearAreaPlane: 1'
+            'rebuildMaskFromPaintBlockersOnAwake: 1'
+            'paintableCellCount: 3600'
+            'team: 1'
+            'team: 2'
+          )
+
+          for pattern in "${required_scene_patterns[@]}"; do
+            grep -q "$pattern" "$scene" || {
+              echo "Missing Splat Fighters graybox scene pattern: $pattern"
+              exit 1
+            }
+          done
+
+          paint_blocker_count="$(grep -c 'guid: 6eae5c84c8a24551a6a1738913276ea9' "$scene")"
+
+          if [ "$paint_blocker_count" -lt 20 ]; then
+            echo "Expected at least 20 PaintBlocker components in the graybox map, found $paint_blocker_count."
+            exit 1
+          fi
 
   documentation:
     name: Documentation package

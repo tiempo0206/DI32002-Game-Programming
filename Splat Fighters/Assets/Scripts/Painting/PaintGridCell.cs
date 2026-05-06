@@ -9,14 +9,32 @@ using UnityEngine;
 public class PaintGridCell
 {
     [SerializeField] private Team owner = Team.None;
+    [SerializeField] private bool isPaintable = true;
 
     public Team Owner => owner;
+    public bool IsPaintable => isPaintable;
 
-    public bool IsPainted => owner != Team.None;
+    public bool IsPainted => isPaintable && owner != Team.None;
 
     public void SetOwner(Team newOwner)
     {
+        if (!isPaintable)
+        {
+            owner = Team.None;
+            return;
+        }
+
         owner = newOwner;
+    }
+
+    public void SetPaintable(bool value)
+    {
+        isPaintable = value;
+
+        if (!isPaintable)
+        {
+            owner = Team.None;
+        }
     }
 
     public void Clear()

@@ -166,6 +166,11 @@ public class InkWeapon : MonoBehaviour
             return false;
         }
 
+        if (!PaintManager.Instance.CanPaintAtWorldPosition(externalAimTarget))
+        {
+            return false;
+        }
+
         PaintManager.Instance.PaintAtWorldPosition(externalAimTarget, paintRadius, team);
         return true;
     }
