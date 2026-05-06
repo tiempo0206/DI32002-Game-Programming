@@ -223,8 +223,15 @@ public class Controller : MonoBehaviour
             {
                 movement.y = 0;
             }
-            // Move the player's transform
-            transform.position = transform.position + (movement * Time.deltaTime * moveSpeed);
+            Vector3 nextPosition = transform.position + (movement * Time.deltaTime * moveSpeed);
+            if (myRigidbody != null)
+            {
+                myRigidbody.MovePosition(nextPosition);
+            }
+            else
+            {
+                transform.position = nextPosition;
+            }
         }
     }
 
