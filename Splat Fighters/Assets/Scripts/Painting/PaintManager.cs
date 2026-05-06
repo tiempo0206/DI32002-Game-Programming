@@ -54,7 +54,7 @@ public class PaintManager : MonoBehaviour
                 continue;
             }
 
-            if (!area.ContainsWorldPosition(worldPosition))
+            if (!area.CanPaintAtWorldPosition(worldPosition))
             {
                 continue;
             }
@@ -130,6 +130,48 @@ public class PaintManager : MonoBehaviour
         }
 
         return teamA > teamB ? Team.TeamA : Team.TeamB;
+    }
+
+    public bool CanPaintAtWorldPosition(Vector3 worldPosition)
+    {
+        for (int i = 0; i < paintableAreas.Count; i++)
+        {
+            PaintableArea area = paintableAreas[i];
+
+            if (area == null)
+            {
+                continue;
+            }
+
+            if (area.CanPaintAtWorldPosition(worldPosition))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public bool TryGetTeamAtWorldPosition(Vector3 worldPosition, out Team team)
+    {
+        team = Team.None;
+
+        for (int i = 0; i < paintableAreas.Count; i++)
+        {
+            PaintableArea area = paintableAreas[i];
+
+            if (area == null)
+            {
+                continue;
+            }
+
+            if (area.TryGetOwnerAtWorldPosition(worldPosition, out team))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public void RegisterArea(PaintableArea area)

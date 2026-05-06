@@ -15,16 +15,24 @@ public class PaintableArea : MonoBehaviour
     [SerializeField, Min(1)] private int gridHeight = 50;
     [SerializeField] private bool resetOnAwake = true;
 
+    [Header("Scoring Mask")]
+    [SerializeField] private bool requirePaintPointNearAreaPlane = true;
+    [SerializeField, Min(0f)] private float maxPaintPointHeightOffset = 0.16f;
+    [SerializeField] private bool rebuildMaskFromPaintBlockersOnAwake = true;
+    [SerializeField] private bool clearMaskBeforeBaking = true;
+
     [Header("Debug Colors")]
     [SerializeField] private Color unpaintedGizmoColor = new Color(1f, 1f, 1f, 0.08f);
     [SerializeField] private Color teamAGizmoColor = new Color(0.1f, 0.45f, 1f, 0.55f);
     [SerializeField] private Color teamBGizmoColor = new Color(1f, 0.45f, 0.05f, 0.55f);
+    [SerializeField] private Color blockedGizmoColor = new Color(1f, 0.1f, 0.05f, 0.18f);
 
     [Header("Gizmos")]
     [SerializeField] private bool drawGizmos = true;
     [SerializeField] private bool drawOnlyWhenSelected = true;
     [SerializeField] private bool drawPaintedCells = true;
     [SerializeField] private bool drawUnpaintedCells = false;
+    [SerializeField] private bool drawBlockedCells = false;
     [SerializeField] private bool drawGridLines = false;
     [SerializeField, Range(0.1f, 1f)] private float cellFillScale = 0.92f;
     [SerializeField] private float gizmoYOffset = 0.03f;
@@ -35,11 +43,13 @@ public class PaintableArea : MonoBehaviour
     [SerializeField] private Color teamAOverlayColor = new Color(0.1f, 0.45f, 1f, 0.9f);
     [SerializeField] private Color teamBOverlayColor = new Color(1f, 0.45f, 0.05f, 0.9f);
     [SerializeField] private Color unpaintedOverlayColor = new Color(0f, 0f, 0f, 0f);
+    [SerializeField] private Color blockedOverlayColor = new Color(0f, 0f, 0f, 0f);
 
     [Header("Context Menu Test")]
     [SerializeField, Min(0.1f)] private float debugPaintRadius = 2f;
 
     [SerializeField, HideInInspector] private PaintGridCell[] cells;
+    [SerializeField, HideInInspector] private int paintableCellCount;
     [SerializeField, HideInInspector] private int teamACellCount;
     [SerializeField, HideInInspector] private int teamBCellCount;
 
@@ -48,7 +58,8 @@ public class PaintableArea : MonoBehaviour
     public Vector2 AreaSize => areaSize;
     public int GridWidth => gridWidth;
     public int GridHeight => gridHeight;
-    public int TotalCellCount => gridWidth * gridHeight;
+    public int RawCellCount => gridWidth * gridHeight;
+    public int TotalCellCount => Mathf.Clamp(paintableCellCount, 0, RawCellCount);
 
     private float CellWidth => areaSize.x / gridWidth;
     private float CellHeight => areaSize.y / gridHeight;
@@ -64,13 +75,19 @@ public class PaintableArea : MonoBehaviour
 
     private void Awake()
     {
+        EnsureGrid();
+
+        if (rebuildMaskFromPaintBlockersOnAwake)
+        {
+            RebuildPaintableMaskFromSceneBlockers(clearMaskBeforeBaking);
+        }
+
         if (resetOnAwake)
         {
-            InitializeGrid();
+            ClearPaint();
         }
         else
         {
-            EnsureGrid();
             RecalculateCounts();
         }
     }
@@ -123,7 +140,7 @@ public class PaintableArea : MonoBehaviour
 
         EnsureGrid();
 
-        if (!ContainsWorldPosition(worldPosition))
+        if (!CanPaintAtWorldPosition(worldPosition))
         {
             return 0;
         }
@@ -151,6 +168,11 @@ public class PaintableArea : MonoBehaviour
                 float dzWorld = (localCellCenter.z - localHit.z) * scaleZ;
 
                 if (dxWorld * dxWorld + dzWorld * dzWorld > radiusSqr)
+                {
+                    continue;
+                }
+
+                if (!IsCellPaintable(x, y))
                 {
                     continue;
                 }
@@ -196,7 +218,7 @@ public class PaintableArea : MonoBehaviour
             case Team.TeamB:
                 return teamBCellCount;
             case Team.None:
-                return TotalCellCount - teamACellCount - teamBCellCount;
+                return Mathf.Max(0, TotalCellCount - teamACellCount - teamBCellCount);
             default:
                 return 0;
         }
@@ -210,7 +232,8 @@ public class PaintableArea : MonoBehaviour
         }
 
         EnsureGrid();
-        return cells[ToIndex(x, y)].Owner;
+        PaintGridCell cell = cells[ToIndex(x, y)];
+        return cell.IsPaintable ? cell.Owner : Team.None;
     }
 
     public Vector3 GetCellCenterWorld(int x, int y)
@@ -234,6 +257,50 @@ public class PaintableArea : MonoBehaviour
         return true;
     }
 
+    public bool TryGetOwnerAtWorldPosition(Vector3 worldPosition, out Team owner)
+    {
+        owner = Team.None;
+
+        if (!TryGetCellAtWorldPosition(worldPosition, out int x, out int y))
+        {
+            return false;
+        }
+
+        if (!IsCellPaintable(x, y))
+        {
+            return false;
+        }
+
+        owner = GetCellOwner(x, y);
+        return true;
+    }
+
+    public bool IsCellPaintable(int x, int y)
+    {
+        if (!IsValidCell(x, y))
+        {
+            return false;
+        }
+
+        EnsureGrid();
+        return cells[ToIndex(x, y)].IsPaintable;
+    }
+
+    public bool CanPaintAtWorldPosition(Vector3 worldPosition)
+    {
+        if (!TryGetCellAtWorldPosition(worldPosition, out int x, out int y))
+        {
+            return false;
+        }
+
+        if (requirePaintPointNearAreaPlane && !IsWorldPositionNearAreaPlane(worldPosition))
+        {
+            return false;
+        }
+
+        return IsCellPaintable(x, y);
+    }
+
     public bool ContainsWorldPosition(Vector3 worldPosition)
     {
         Vector3 local = transform.InverseTransformPoint(worldPosition);
@@ -255,8 +322,7 @@ public class PaintableArea : MonoBehaviour
             cells[i].Clear();
         }
 
-        teamACellCount = 0;
-        teamBCellCount = 0;
+        RecalculateCounts();
         RefreshRuntimeOverlay();
         PaintChanged?.Invoke(this);
     }
@@ -265,23 +331,138 @@ public class PaintableArea : MonoBehaviour
     {
         ClampSettings();
 
-        cells = new PaintGridCell[TotalCellCount];
+        cells = new PaintGridCell[RawCellCount];
 
         for (int i = 0; i < cells.Length; i++)
         {
             cells[i] = new PaintGridCell();
         }
 
-        teamACellCount = 0;
-        teamBCellCount = 0;
+        RecalculateCounts();
         RefreshRuntimeOverlay();
         PaintChanged?.Invoke(this);
+    }
+
+    public void ResetPaintableMask(bool isPaintable)
+    {
+        EnsureGrid();
+
+        for (int i = 0; i < cells.Length; i++)
+        {
+            cells[i].SetPaintable(isPaintable);
+        }
+
+        RecalculateCounts();
+        RefreshRuntimeOverlay();
+        PaintChanged?.Invoke(this);
+    }
+
+    public bool SetCellPaintable(int x, int y, bool isPaintable)
+    {
+        if (!IsValidCell(x, y))
+        {
+            return false;
+        }
+
+        EnsureGrid();
+        PaintGridCell cell = cells[ToIndex(x, y)];
+
+        if (cell.IsPaintable == isPaintable)
+        {
+            return false;
+        }
+
+        cell.SetPaintable(isPaintable);
+        RecalculateCounts();
+        return true;
+    }
+
+    public int SetCellsPaintableByWorldBounds(Bounds worldBounds, bool isPaintable, float boundsPadding)
+    {
+        EnsureGrid();
+
+        Bounds paddedBounds = worldBounds;
+        paddedBounds.Expand(new Vector3(boundsPadding * 2f, 0.02f, boundsPadding * 2f));
+
+        int changedCells = 0;
+
+        for (int y = 0; y < gridHeight; y++)
+        {
+            for (int x = 0; x < gridWidth; x++)
+            {
+                Vector3 worldCellCenter = GetCellCenterWorld(x, y);
+
+                if (!paddedBounds.Contains(worldCellCenter))
+                {
+                    continue;
+                }
+
+                PaintGridCell cell = cells[ToIndex(x, y)];
+
+                if (cell.IsPaintable == isPaintable)
+                {
+                    continue;
+                }
+
+                cell.SetPaintable(isPaintable);
+                changedCells++;
+            }
+        }
+
+        if (changedCells > 0)
+        {
+            RecalculateCounts();
+            RefreshRuntimeOverlay();
+            PaintChanged?.Invoke(this);
+        }
+
+        return changedCells;
+    }
+
+    public int RebuildPaintableMaskFromSceneBlockers(bool resetMaskFirst)
+    {
+        EnsureGrid();
+
+        if (resetMaskFirst)
+        {
+            for (int i = 0; i < cells.Length; i++)
+            {
+                cells[i].SetPaintable(true);
+            }
+        }
+
+        int blockedCells = 0;
+        PaintBlocker[] blockers = FindObjectsOfType<PaintBlocker>();
+
+        for (int i = 0; i < blockers.Length; i++)
+        {
+            PaintBlocker blocker = blockers[i];
+
+            if (blocker == null || !blocker.BlocksScoring || !blocker.TryGetWorldBounds(out Bounds bounds))
+            {
+                continue;
+            }
+
+            blockedCells += SetCellsPaintableByWorldBounds(bounds, false, blocker.BoundsPadding);
+        }
+
+        RecalculateCounts();
+        RefreshRuntimeOverlay();
+        PaintChanged?.Invoke(this);
+        return blockedCells;
     }
 
     private bool SetCellOwner(int x, int y, Team newOwner)
     {
         int index = ToIndex(x, y);
-        Team oldOwner = cells[index].Owner;
+        PaintGridCell cell = cells[index];
+
+        if (!cell.IsPaintable)
+        {
+            return false;
+        }
+
+        Team oldOwner = cell.Owner;
 
         if (oldOwner == newOwner)
         {
@@ -289,7 +470,7 @@ public class PaintableArea : MonoBehaviour
         }
 
         DecreaseCount(oldOwner);
-        cells[index].SetOwner(newOwner);
+        cell.SetOwner(newOwner);
         IncreaseCount(newOwner);
         return true;
     }
@@ -320,6 +501,7 @@ public class PaintableArea : MonoBehaviour
 
     private void RecalculateCounts()
     {
+        paintableCellCount = 0;
         teamACellCount = 0;
         teamBCellCount = 0;
 
@@ -335,6 +517,13 @@ public class PaintableArea : MonoBehaviour
                 continue;
             }
 
+            if (!cells[i].IsPaintable)
+            {
+                cells[i].Clear();
+                continue;
+            }
+
+            paintableCellCount++;
             IncreaseCount(cells[i].Owner);
         }
     }
@@ -342,7 +531,7 @@ public class PaintableArea : MonoBehaviour
     private void EnsureGrid()
     {
         ClampSettings();
-        int expectedCellCount = TotalCellCount;
+        int expectedCellCount = RawCellCount;
 
         if (cells == null || cells.Length != expectedCellCount)
         {
@@ -355,6 +544,19 @@ public class PaintableArea : MonoBehaviour
             {
                 cells[i] = new PaintGridCell();
             }
+        }
+
+        RecalculateCounts();
+
+        // Older scene data may not contain the isPaintable field yet. Keep the MVP usable by treating that data as fully paintable.
+        if (paintableCellCount == 0 && cells.Length > 0)
+        {
+            for (int i = 0; i < cells.Length; i++)
+            {
+                cells[i].SetPaintable(true);
+            }
+
+            RecalculateCounts();
         }
     }
 
@@ -407,6 +609,14 @@ public class PaintableArea : MonoBehaviour
         float normalized = (localZ + halfZ) / areaSize.y;
         int index = Mathf.FloorToInt(normalized * gridHeight);
         return Mathf.Clamp(index, 0, gridHeight - 1);
+    }
+
+    private bool IsWorldPositionNearAreaPlane(Vector3 worldPosition)
+    {
+        Vector3 local = transform.InverseTransformPoint(worldPosition);
+        float scaleY = Mathf.Max(0.0001f, Mathf.Abs(transform.lossyScale.y));
+        float localTolerance = maxPaintPointHeightOffset / scaleY;
+        return Mathf.Abs(local.y) <= localTolerance;
     }
 
     private void SetupRuntimeOverlay()
@@ -528,16 +738,18 @@ public class PaintableArea : MonoBehaviour
             runtimeOverlayTexture.wrapMode = TextureWrapMode.Clamp;
         }
 
-        Color32[] pixels = new Color32[TotalCellCount];
+        Color32[] pixels = new Color32[RawCellCount];
 
         for (int y = 0; y < gridHeight; y++)
         {
             for (int x = 0; x < gridWidth; x++)
             {
-                Team owner = cells[ToIndex(x, y)].Owner;
+                PaintGridCell cell = cells[ToIndex(x, y)];
                 // The overlay quad is rotated onto the XZ plane, so texture V is opposite to local +Z.
                 int textureY = gridHeight - 1 - y;
-                pixels[textureY * gridWidth + x] = GetOverlayColor(owner);
+                pixels[textureY * gridWidth + x] = cell.IsPaintable
+                    ? GetOverlayColor(cell.Owner)
+                    : blockedOverlayColor;
             }
         }
 
@@ -633,7 +845,7 @@ public class PaintableArea : MonoBehaviour
             DrawGridLines();
         }
 
-        if (drawPaintedCells || drawUnpaintedCells)
+        if (drawPaintedCells || drawUnpaintedCells || drawBlockedCells)
         {
             DrawCellFills();
         }
@@ -682,6 +894,19 @@ public class PaintableArea : MonoBehaviour
             for (int x = 0; x < gridWidth; x++)
             {
                 Team owner = cells[ToIndex(x, y)].Owner;
+                bool isPaintable = cells[ToIndex(x, y)].IsPaintable;
+
+                if (!isPaintable)
+                {
+                    if (!drawBlockedCells)
+                    {
+                        continue;
+                    }
+
+                    Gizmos.color = blockedGizmoColor;
+                    Gizmos.DrawCube(GetCellCenterLocalForGizmo(x, y), cellSize);
+                    continue;
+                }
 
                 if (owner == Team.None && !drawUnpaintedCells)
                 {
