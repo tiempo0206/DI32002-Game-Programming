@@ -33,7 +33,7 @@ public class BotController : MonoBehaviour
 
     [Header("Debug")]
     [SerializeField] private bool drawGizmos = true;
-    [SerializeField] private Color waypointGizmoColor = new Color(1f, 0.45f, 0.05f, 0.85f);
+    [SerializeField] private Color waypointGizmoColor = TeamVisualPalette.TeamBGizmoColor;
     [SerializeField] private Color aimGizmoColor = new Color(1f, 0.75f, 0.05f, 0.85f);
 
     private int currentWaypointIndex;

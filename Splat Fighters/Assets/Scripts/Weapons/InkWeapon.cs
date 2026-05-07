@@ -27,8 +27,8 @@ public class InkWeapon : MonoBehaviour
 
     [Header("Projectile Visuals")]
     [SerializeField] private bool applyTeamColorToProjectile = true;
-    [SerializeField] private Color teamAProjectileColor = new Color(0.05f, 0.45f, 1f, 1f);
-    [SerializeField] private Color teamBProjectileColor = new Color(1f, 0.45f, 0.05f, 1f);
+    [SerializeField] private Color teamAProjectileColor = TeamVisualPalette.TeamAColor;
+    [SerializeField] private Color teamBProjectileColor = TeamVisualPalette.TeamBColor;
 
     [Header("Quick Test Input")]
     [SerializeField] private bool enableKeyboardTestFire = true;

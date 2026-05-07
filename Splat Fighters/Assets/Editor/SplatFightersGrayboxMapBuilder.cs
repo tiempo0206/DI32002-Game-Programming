@@ -37,8 +37,10 @@ public static class SplatFightersGrayboxMapBuilder
         Material coverMaterial = GetOrCreateMaterial("Assets/Materials/Level/MAT_Level_Cover.mat", new Color(0.42f, 0.47f, 0.48f));
         Material platformMaterial = GetOrCreateMaterial("Assets/Materials/Level/MAT_Level_Platform.mat", new Color(0.3f, 0.36f, 0.34f));
         Material rampMaterial = GetOrCreateMaterial("Assets/Materials/Level/MAT_Level_Ramp.mat", new Color(0.45f, 0.42f, 0.36f));
-        Material teamAMaterial = GetOrCreateMaterial("Assets/Materials/Level/MAT_Level_Spawn_TeamA.mat", new Color(0.05f, 0.45f, 1f));
-        Material teamBMaterial = GetOrCreateMaterial("Assets/Materials/Level/MAT_Level_Spawn_TeamB.mat", new Color(1f, 0.45f, 0.05f));
+        Material teamAMaterial = GetOrCreateMaterial("Assets/Materials/Level/MAT_Level_Spawn_TeamA.mat", TeamVisualPalette.TeamAColor);
+        Material teamBMaterial = GetOrCreateMaterial("Assets/Materials/Level/MAT_Level_Spawn_TeamB.mat", TeamVisualPalette.TeamBColor);
+        Material teamAPlayerMaterial = GetOrCreateMaterial("Assets/Materials/Teams/MAT_TeamA_Player.mat", TeamVisualPalette.TeamAColor);
+        Material teamBBotMaterial = GetOrCreateMaterial("Assets/Materials/Teams/MAT_TeamB_Bot.mat", TeamVisualPalette.TeamBColor);
 
         DestroyExistingLevelRoot();
 
@@ -54,9 +56,9 @@ public static class SplatFightersGrayboxMapBuilder
         BuildContestObstacles(obstacleRoot, coverRoot, coverMaterial);
         BuildSidePlatforms(platformRoot, platformMaterial, rampMaterial);
         BuildSpawnPoints(spawnRoot, teamAMaterial, teamBMaterial);
-        BuildTeamBBot(aiRoot, teamBMaterial);
+        BuildTeamBBot(aiRoot, teamBBotMaterial);
         ConfigurePaintableGroundForGrayboxMap();
-        PositionExistingPlayerAtTeamASpawn();
+        PositionExistingPlayerAtTeamASpawn(teamAPlayerMaterial);
         PositionExistingCameraForGrayboxMap();
 
         EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
@@ -134,6 +136,8 @@ public static class SplatFightersGrayboxMapBuilder
         characterController.stepOffset = 0.3f;
 
         AssignMaterial(bot, teamBMaterial);
+        TeamVisualBinder visualBinder = bot.AddComponent<TeamVisualBinder>();
+        visualBinder.Configure(Team.TeamB, null, teamBMaterial);
 
         GameObject firePointObject = new GameObject("TeamBBotFirePoint");
         firePointObject.transform.SetParent(bot.transform, false);
@@ -170,7 +174,8 @@ public static class SplatFightersGrayboxMapBuilder
         weaponSo.FindProperty("paintDirectlyAtAimTarget").boolValue = true;
         weaponSo.FindProperty("projectileIsVisualOnlyWhenDirectPainting").boolValue = true;
         weaponSo.FindProperty("applyTeamColorToProjectile").boolValue = true;
-        weaponSo.FindProperty("teamBProjectileColor").colorValue = new Color(1f, 0.45f, 0.05f, 1f);
+        weaponSo.FindProperty("teamAProjectileColor").colorValue = TeamVisualPalette.TeamAColor;
+        weaponSo.FindProperty("teamBProjectileColor").colorValue = TeamVisualPalette.TeamBColor;
         weaponSo.FindProperty("enableKeyboardTestFire").boolValue = false;
         weaponSo.ApplyModifiedPropertiesWithoutUndo();
 
@@ -189,6 +194,7 @@ public static class SplatFightersGrayboxMapBuilder
         botSo.ApplyModifiedPropertiesWithoutUndo();
 
         EditorUtility.SetDirty(bot);
+        EditorUtility.SetDirty(visualBinder);
     }
 
     private static void CreateSpawnPoint(string name, Team team, Vector3 position, Vector3 forward, Material material, Transform parent)
@@ -218,7 +224,7 @@ public static class SplatFightersGrayboxMapBuilder
         AssignMaterial(pad, material);
     }
 
-    private static void PositionExistingPlayerAtTeamASpawn()
+    private static void PositionExistingPlayerAtTeamASpawn(Material teamAMaterial)
     {
         GameObject player = GameObject.Find("Player");
         GameObject spawn = GameObject.Find("TeamASpawn");
@@ -229,7 +235,17 @@ public static class SplatFightersGrayboxMapBuilder
         }
 
         player.transform.SetPositionAndRotation(spawn.transform.position, spawn.transform.rotation);
+        AssignMaterial(player, teamAMaterial);
+        TeamVisualBinder visualBinder = player.GetComponent<TeamVisualBinder>();
+
+        if (visualBinder == null)
+        {
+            visualBinder = player.AddComponent<TeamVisualBinder>();
+        }
+
+        visualBinder.Configure(Team.TeamA, teamAMaterial, null);
         EditorUtility.SetDirty(player);
+        EditorUtility.SetDirty(visualBinder);
     }
 
     private static void PositionExistingCameraForGrayboxMap()
@@ -385,6 +401,11 @@ public static class SplatFightersGrayboxMapBuilder
         if (!AssetDatabase.IsValidFolder("Assets/Materials/Level"))
         {
             AssetDatabase.CreateFolder("Assets/Materials", "Level");
+        }
+
+        if (!AssetDatabase.IsValidFolder("Assets/Materials/Teams"))
+        {
+            AssetDatabase.CreateFolder("Assets/Materials", "Teams");
         }
     }
 

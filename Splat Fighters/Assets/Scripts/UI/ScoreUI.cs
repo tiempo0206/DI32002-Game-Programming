@@ -14,10 +14,10 @@ public class ScoreUI : MonoBehaviour
     [SerializeField] private Text statusText = null;
 
     [Header("Formatting")]
-    [SerializeField] private string teamALabel = "Team A";
-    [SerializeField] private string teamBLabel = "Team B";
-    [SerializeField] private Color teamAColor = new Color(0.1f, 0.55f, 1f, 1f);
-    [SerializeField] private Color teamBColor = new Color(1f, 0.45f, 0.05f, 1f);
+    [SerializeField] private string teamALabel = TeamVisualPalette.TeamALabel;
+    [SerializeField] private string teamBLabel = TeamVisualPalette.TeamBLabel;
+    [SerializeField] private Color teamAColor = TeamVisualPalette.TeamAColor;
+    [SerializeField] private Color teamBColor = TeamVisualPalette.TeamBColor;
     [SerializeField] private Color neutralColor = Color.white;
 
     public void UpdateView(
@@ -193,7 +193,7 @@ public class ScoreUI : MonoBehaviour
             case Team.TeamB:
                 return teamBLabel;
             default:
-                return "No team";
+                return TeamVisualPalette.GetLabel(team);
         }
     }
 }

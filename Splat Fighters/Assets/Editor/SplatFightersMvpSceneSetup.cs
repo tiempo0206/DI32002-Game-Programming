@@ -21,8 +21,9 @@ public static class SplatFightersMvpSceneSetup
         EnsureFolders();
 
         Material groundMaterial = GetOrCreateMaterial("Assets/Materials/MAT_Ground_Debug.mat", new Color(0.35f, 0.35f, 0.35f));
-        Material shooterMaterial = GetOrCreateMaterial("Assets/Materials/MAT_TestShooter_Debug.mat", new Color(0.1f, 0.35f, 0.9f));
-        Material projectileMaterial = GetOrCreateMaterial("Assets/Materials/MAT_InkProjectile_TeamA.mat", new Color(0.05f, 0.45f, 1f));
+        Material shooterMaterial = GetOrCreateMaterial("Assets/Materials/Teams/MAT_TeamA_Player.mat", TeamVisualPalette.TeamAColor);
+        Material projectileMaterial = GetOrCreateMaterial("Assets/Materials/Teams/MAT_TeamA_Projectile.mat", TeamVisualPalette.TeamAColor);
+        GetOrCreateMaterial("Assets/Materials/Teams/MAT_TeamB_Projectile.mat", TeamVisualPalette.TeamBColor);
 
         InkProjectile projectilePrefab = CreateOrUpdateProjectilePrefab(projectileMaterial);
 
@@ -50,6 +51,7 @@ public static class SplatFightersMvpSceneSetup
         EnsureFolder("Assets", "Prefabs");
         EnsureFolder(PrefabsFolder, "Weapons");
         EnsureFolder("Assets", "Materials");
+        EnsureFolder(MaterialsFolder, "Teams");
         EnsureFolder("Assets", "Scenes");
     }
 
@@ -238,6 +240,8 @@ public static class SplatFightersMvpSceneSetup
         PlayerController playerController = player.AddComponent<PlayerController>();
         InkWeapon weapon = player.AddComponent<InkWeapon>();
         AimController aimController = player.AddComponent<AimController>();
+        TeamVisualBinder visualBinder = player.AddComponent<TeamVisualBinder>();
+        visualBinder.Configure(Team.TeamA, shooterMaterial, null);
 
         SerializedObject controllerSo = new SerializedObject(playerController);
         controllerSo.FindProperty("cameraTransform").objectReferenceValue = camera.transform;
@@ -261,8 +265,8 @@ public static class SplatFightersMvpSceneSetup
         weaponSo.FindProperty("paintDirectlyAtAimTarget").boolValue = true;
         weaponSo.FindProperty("projectileIsVisualOnlyWhenDirectPainting").boolValue = true;
         weaponSo.FindProperty("applyTeamColorToProjectile").boolValue = true;
-        weaponSo.FindProperty("teamAProjectileColor").colorValue = new Color(0.05f, 0.45f, 1f, 1f);
-        weaponSo.FindProperty("teamBProjectileColor").colorValue = new Color(1f, 0.45f, 0.05f, 1f);
+        weaponSo.FindProperty("teamAProjectileColor").colorValue = TeamVisualPalette.TeamAColor;
+        weaponSo.FindProperty("teamBProjectileColor").colorValue = TeamVisualPalette.TeamBColor;
         weaponSo.FindProperty("enableKeyboardTestFire").boolValue = false;
         weaponSo.ApplyModifiedPropertiesWithoutUndo();
 
@@ -286,6 +290,7 @@ public static class SplatFightersMvpSceneSetup
         aimSo.ApplyModifiedPropertiesWithoutUndo();
 
         EditorUtility.SetDirty(input);
+        EditorUtility.SetDirty(visualBinder);
         return player;
     }
 

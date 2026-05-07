@@ -14,9 +14,9 @@ public class SpawnPoint : MonoBehaviour
     [Header("Gizmos")]
     [SerializeField] private bool drawGizmos = true;
     [SerializeField, Min(0.05f)] private float gizmoRadius = 0.45f;
-    [SerializeField] private Color teamAColor = new Color(0.1f, 0.45f, 1f, 0.85f);
-    [SerializeField] private Color teamBColor = new Color(1f, 0.45f, 0.05f, 0.85f);
-    [SerializeField] private Color neutralColor = new Color(1f, 1f, 1f, 0.6f);
+    [SerializeField] private Color teamAColor = TeamVisualPalette.TeamAGizmoColor;
+    [SerializeField] private Color teamBColor = TeamVisualPalette.TeamBGizmoColor;
+    [SerializeField] private Color neutralColor = TeamVisualPalette.NeutralColor;
 
     public Team Team => team;
     public bool DefaultForTeam => defaultForTeam;
