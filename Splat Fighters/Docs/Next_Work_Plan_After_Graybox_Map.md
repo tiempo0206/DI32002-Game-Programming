@@ -1,6 +1,6 @@
 # Next Work Plan After Graybox Map V1
 
-Date: 2026-05-06
+Date: 2026-05-07
 
 ## Current Increment
 
@@ -63,16 +63,22 @@ Acceptance criteria:
 
 ### 2. TeamB Bot V1
 
+Status:
+
+Implemented in the current branch.
+
 Goal:
 
 Add the first opponent pressure source.
 
-Suggested work:
+Implemented work:
 
-- Create a simple TeamB bot scene object.
-- Move with deterministic waypoints first.
+- Added a simple TeamB bot scene object.
+- Added deterministic waypoint movement with `CharacterController`.
+- Added fixed paint targets so the bot paints readable contested ground.
+- The bot calls `InkWeapon.SetAimTarget` and `InkWeapon.TryFire`.
+- The bot uses TeamB weapon ownership and TeamB projectile coloring.
 - Avoid NavMesh until the arena has been playtested with the current `CharacterController` and blockout geometry.
-- Make the bot call `InkWeapon.SetAimTarget` and `InkWeapon.TryFire`.
 - Use the existing `PaintManager.TryGetTeamAtWorldPosition` query later for territory-aware movement.
 
 Acceptance criteria:
@@ -86,7 +92,7 @@ Acceptance criteria:
 
 Goal:
 
-Make TeamA and TeamB readable before adding the bot.
+Make TeamA and TeamB easier to read during playtests.
 
 Suggested work:
 
@@ -110,10 +116,10 @@ Acceptance criteria:
 
 ## GitHub Workflow For Next Increment
 
-Use a new branch from latest `main`:
+Use the single shared development branch:
 
 ```text
-Tianbo-Cao-team-b-bot-v1
+Tianbo-Cao
 ```
 
 Keep the PR focused on one outcome and include:

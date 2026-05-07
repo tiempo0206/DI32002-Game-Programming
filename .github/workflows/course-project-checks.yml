@@ -60,6 +60,7 @@ jobs:
             'Splat Fighters/Assets/Scripts/Painting/PaintManager.cs'
             'Splat Fighters/Assets/Scripts/Weapons/InkProjectile.cs'
             'Splat Fighters/Assets/Scripts/Weapons/InkWeapon.cs'
+            'Splat Fighters/Assets/Scripts/AI/BotController.cs'
             'Splat Fighters/Assets/Scripts/Player/PlayerInputHandler.cs'
             'Splat Fighters/Assets/Scripts/Player/PlayerController.cs'
             'Splat Fighters/Assets/Scripts/Player/ThirdPersonCameraFollow.cs'
@@ -210,12 +211,20 @@ jobs:
           scene='Splat Fighters/Assets/Scenes/MVP_ShootingTest.unity'
 
           required_scene_patterns=(
+            'm_Name: PaintableGround'
+            'm_Name: GroundVisual'
+            'm_Name: Player'
+            'm_Name: FirePoint'
+            'm_Name: PaintManager'
+            'm_Name: GameManager'
+            'm_Name: Main Camera'
             'm_Name: LevelRoot'
             'm_Name: BoundaryWalls'
             'm_Name: Obstacles'
             'm_Name: Cover'
             'm_Name: Platforms'
             'm_Name: SpawnPoints'
+            'm_Name: AI'
             'm_Name: NorthBoundaryRail'
             'm_Name: SouthBoundaryRail'
             'm_Name: CenterContestBlock'
@@ -229,11 +238,16 @@ jobs:
             'm_Name: EastPlatformRamp'
             'm_Name: TeamASpawn'
             'm_Name: TeamBSpawn'
+            'm_Name: TeamBBot'
+            'm_Name: TeamBBotFirePoint'
+            'm_Name: TeamBBotPatrolPoints'
+            'm_Name: TeamBBotPaintTargets'
+            'guid: 3b1f6fa4a44a34fd2b8d3115d8b234c5'
             'guid: 523848afdbb78428f9909a6a36dedc79'
             'guid: 6eae5c84c8a24551a6a1738913276ea9'
+            'guid: e65d3f35aa204309aead02ea2b17a67a'
             'requirePaintPointNearAreaPlane: 1'
             'rebuildMaskFromPaintBlockersOnAwake: 1'
-            'paintableCellCount: 3600'
             'team: 1'
             'team: 2'
           )
@@ -249,6 +263,37 @@ jobs:
 
           if [ "$paint_blocker_count" -lt 20 ]; then
             echo "Expected at least 20 PaintBlocker components in the graybox map, found $paint_blocker_count."
+            exit 1
+          fi
+
+          paintable_cell_count="$(python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          scene = Path("Splat Fighters/Assets/Scenes/MVP_ShootingTest.unity").read_text(encoding="utf-8")
+          match = re.search(r"paintableCellCount: (\d+)", scene)
+
+          if match is None:
+              raise SystemExit("Missing paintableCellCount serialization.")
+
+          print(match.group(1))
+          PY
+          )"
+
+          if [ "$paintable_cell_count" -le 0 ] || [ "$paintable_cell_count" -gt 3600 ]; then
+            echo "Expected serialized paintable cell count to be between 1 and 3600, found $paintable_cell_count."
+            exit 1
+          fi
+
+          patrol_count="$(grep -c 'm_Name: TeamBBotPatrol_' "$scene")"
+          if [ "$patrol_count" -lt 4 ]; then
+            echo "Expected at least 4 TeamB bot patrol points, found $patrol_count."
+            exit 1
+          fi
+
+          paint_target_count="$(grep -c 'm_Name: TeamBBotPaintTarget_' "$scene")"
+          if [ "$paint_target_count" -lt 4 ]; then
+            echo "Expected at least 4 TeamB bot paint targets, found $paint_target_count."
             exit 1
           fi
 

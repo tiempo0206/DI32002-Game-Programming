@@ -12,6 +12,7 @@ public static class SplatFightersGrayboxMapBuilder
 {
     private const string ScenePath = "Assets/Scenes/MVP_ShootingTest.unity";
     private const string LevelRootName = "LevelRoot";
+    private const string ProjectilePrefabPath = "Assets/Prefabs/Weapons/InkProjectile.prefab";
     private const float CharacterRootHeight = 1f;
     private static readonly List<PaintBlocker> PaintBlockers = new List<PaintBlocker>();
 
@@ -47,11 +48,13 @@ public static class SplatFightersGrayboxMapBuilder
         Transform coverRoot = CreateGroup(levelRoot.transform, "Cover");
         Transform platformRoot = CreateGroup(levelRoot.transform, "Platforms");
         Transform spawnRoot = CreateGroup(levelRoot.transform, "SpawnPoints");
+        Transform aiRoot = CreateGroup(levelRoot.transform, "AI");
 
         BuildBoundaryWalls(boundaryRoot, boundaryMaterial);
         BuildContestObstacles(obstacleRoot, coverRoot, coverMaterial);
         BuildSidePlatforms(platformRoot, platformMaterial, rampMaterial);
         BuildSpawnPoints(spawnRoot, teamAMaterial, teamBMaterial);
+        BuildTeamBBot(aiRoot, teamBMaterial);
         ConfigurePaintableGroundForGrayboxMap();
         PositionExistingPlayerAtTeamASpawn();
         PositionExistingCameraForGrayboxMap();
@@ -104,6 +107,88 @@ public static class SplatFightersGrayboxMapBuilder
     {
         CreateSpawnPoint("TeamASpawn", Team.TeamA, new Vector3(0f, CharacterRootHeight, -7.25f), Vector3.forward, teamAMaterial, parent);
         CreateSpawnPoint("TeamBSpawn", Team.TeamB, new Vector3(0f, CharacterRootHeight, 7.25f), Vector3.back, teamBMaterial, parent);
+    }
+
+    private static void BuildTeamBBot(Transform parent, Material teamBMaterial)
+    {
+        InkProjectile projectilePrefab = AssetDatabase.LoadAssetAtPath<InkProjectile>(ProjectilePrefabPath);
+
+        GameObject bot = GameObject.CreatePrimitive(PrimitiveType.Capsule);
+        bot.name = "TeamBBot";
+        bot.transform.SetParent(parent, false);
+        bot.transform.position = new Vector3(0f, CharacterRootHeight, 6.25f);
+        bot.transform.rotation = Quaternion.LookRotation(Vector3.back, Vector3.up);
+
+        CapsuleCollider capsuleCollider = bot.GetComponent<CapsuleCollider>();
+
+        if (capsuleCollider != null)
+        {
+            Object.DestroyImmediate(capsuleCollider);
+        }
+
+        CharacterController characterController = bot.AddComponent<CharacterController>();
+        characterController.height = 2f;
+        characterController.radius = 0.5f;
+        characterController.center = Vector3.zero;
+        characterController.slopeLimit = 45f;
+        characterController.stepOffset = 0.3f;
+
+        AssignMaterial(bot, teamBMaterial);
+
+        GameObject firePointObject = new GameObject("TeamBBotFirePoint");
+        firePointObject.transform.SetParent(bot.transform, false);
+        firePointObject.transform.localPosition = new Vector3(0f, 0.35f, 0.7f);
+        firePointObject.transform.localRotation = Quaternion.identity;
+
+        Transform patrolRoot = CreateGroup(parent, "TeamBBotPatrolPoints");
+        Transform[] waypoints =
+        {
+            CreateMarker("TeamBBotPatrol_01", new Vector3(0f, 1f, 5.8f), patrolRoot),
+            CreateMarker("TeamBBotPatrol_02", new Vector3(-3.5f, 1f, 3.2f), patrolRoot),
+            CreateMarker("TeamBBotPatrol_03", new Vector3(0f, 1f, 1.4f), patrolRoot),
+            CreateMarker("TeamBBotPatrol_04", new Vector3(3.5f, 1f, 3.2f), patrolRoot)
+        };
+
+        Transform paintTargetRoot = CreateGroup(parent, "TeamBBotPaintTargets");
+        Transform[] paintTargets =
+        {
+            CreateMarker("TeamBBotPaintTarget_Center", new Vector3(0f, 0f, 1.8f), paintTargetRoot),
+            CreateMarker("TeamBBotPaintTarget_LeftLane", new Vector3(-4f, 0f, 0.8f), paintTargetRoot),
+            CreateMarker("TeamBBotPaintTarget_RightLane", new Vector3(4f, 0f, -0.8f), paintTargetRoot),
+            CreateMarker("TeamBBotPaintTarget_TeamASide", new Vector3(0f, 0f, -3.8f), paintTargetRoot)
+        };
+
+        InkWeapon weapon = bot.AddComponent<InkWeapon>();
+        SerializedObject weaponSo = new SerializedObject(weapon);
+        weaponSo.FindProperty("projectilePrefab").objectReferenceValue = projectilePrefab;
+        weaponSo.FindProperty("firePoint").objectReferenceValue = firePointObject.transform;
+        weaponSo.FindProperty("team").enumValueIndex = (int)Team.TeamB;
+        weaponSo.FindProperty("projectileSpeed").floatValue = 18f;
+        weaponSo.FindProperty("paintRadius").floatValue = 1.6f;
+        weaponSo.FindProperty("fireCooldown").floatValue = 0.35f;
+        weaponSo.FindProperty("useCameraAim").boolValue = false;
+        weaponSo.FindProperty("paintDirectlyAtAimTarget").boolValue = true;
+        weaponSo.FindProperty("projectileIsVisualOnlyWhenDirectPainting").boolValue = true;
+        weaponSo.FindProperty("applyTeamColorToProjectile").boolValue = true;
+        weaponSo.FindProperty("teamBProjectileColor").colorValue = new Color(1f, 0.45f, 0.05f, 1f);
+        weaponSo.FindProperty("enableKeyboardTestFire").boolValue = false;
+        weaponSo.ApplyModifiedPropertiesWithoutUndo();
+
+        BotController botController = bot.AddComponent<BotController>();
+        SerializedObject botSo = new SerializedObject(botController);
+        botSo.FindProperty("characterController").objectReferenceValue = characterController;
+        botSo.FindProperty("weapon").objectReferenceValue = weapon;
+        botSo.FindProperty("firePoint").objectReferenceValue = firePointObject.transform;
+        AssignTransformArray(botSo.FindProperty("waypoints"), waypoints);
+        AssignTransformArray(botSo.FindProperty("paintTargets"), paintTargets);
+        botSo.FindProperty("moveSpeed").floatValue = 3.2f;
+        botSo.FindProperty("turnSpeed").floatValue = 540f;
+        botSo.FindProperty("waypointReachDistance").floatValue = 0.6f;
+        botSo.FindProperty("fireInterval").floatValue = 0.65f;
+        botSo.FindProperty("aimRefreshInterval").floatValue = 1.2f;
+        botSo.ApplyModifiedPropertiesWithoutUndo();
+
+        EditorUtility.SetDirty(bot);
     }
 
     private static void CreateSpawnPoint(string name, Team team, Vector3 position, Vector3 forward, Material material, Transform parent)
@@ -170,6 +255,25 @@ public static class SplatFightersGrayboxMapBuilder
         GameObject group = new GameObject(name);
         group.transform.SetParent(parent, false);
         return group.transform;
+    }
+
+    private static Transform CreateMarker(string name, Vector3 position, Transform parent)
+    {
+        GameObject marker = new GameObject(name);
+        marker.transform.SetParent(parent, false);
+        marker.transform.position = position;
+        return marker.transform;
+    }
+
+    private static void AssignTransformArray(SerializedProperty arrayProperty, Transform[] values)
+    {
+        arrayProperty.ClearArray();
+
+        for (int i = 0; i < values.Length; i++)
+        {
+            arrayProperty.InsertArrayElementAtIndex(i);
+            arrayProperty.GetArrayElementAtIndex(i).objectReferenceValue = values[i];
+        }
     }
 
     private static GameObject CreateSolidCube(string name, Vector3 position, Vector3 scale, Material material, Transform parent)

@@ -25,6 +25,11 @@ public class InkWeapon : MonoBehaviour
     [SerializeField] private bool paintDirectlyAtAimTarget = true;
     [SerializeField] private bool projectileIsVisualOnlyWhenDirectPainting = true;
 
+    [Header("Projectile Visuals")]
+    [SerializeField] private bool applyTeamColorToProjectile = true;
+    [SerializeField] private Color teamAProjectileColor = new Color(0.05f, 0.45f, 1f, 1f);
+    [SerializeField] private Color teamBProjectileColor = new Color(1f, 0.45f, 0.05f, 1f);
+
     [Header("Quick Test Input")]
     [SerializeField] private bool enableKeyboardTestFire = true;
     [SerializeField] private KeyCode testFireKey = KeyCode.Mouse0;
@@ -69,6 +74,7 @@ public class InkWeapon : MonoBehaviour
         bool projectileCanPaint = !paintedDirectly || !projectileIsVisualOnlyWhenDirectPainting;
 
         InkProjectile projectile = Instantiate(projectilePrefab, spawnPoint.position, rotation);
+        ApplyProjectileTeamColor(projectile);
         projectile.IgnoreColliders(GetComponentsInChildren<Collider>());
         projectile.Launch(
             fireDirection,
@@ -173,5 +179,28 @@ public class InkWeapon : MonoBehaviour
 
         PaintManager.Instance.PaintAtWorldPosition(externalAimTarget, paintRadius, team);
         return true;
+    }
+
+    private void ApplyProjectileTeamColor(InkProjectile projectile)
+    {
+        if (!applyTeamColorToProjectile || projectile == null)
+        {
+            return;
+        }
+
+        Renderer[] renderers = projectile.GetComponentsInChildren<Renderer>();
+        Color color = team == Team.TeamB ? teamBProjectileColor : teamAProjectileColor;
+
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            Renderer projectileRenderer = renderers[i];
+
+            if (projectileRenderer == null)
+            {
+                continue;
+            }
+
+            projectileRenderer.material.color = color;
+        }
     }
 }
