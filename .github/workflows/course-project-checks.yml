@@ -95,6 +95,7 @@ jobs:
             'class activity/2D-shooter/Assets/_Scenes/Level1_scene.unity'
             'class activity/2D-shooter/Assets/Scripts/Enemies/EnemySpawner.cs'
             'class activity/2D-shooter/Assets/Scripts/ShootingProjectiles/ShootingController.cs'
+            'class activity/2D-shooter/Assets/Scripts/UI/StartMenuController.cs'
             'class activity/2D-shooter/Assets/Prefabs/Effects/EnemyHitEffect.prefab'
             'class activity/2D-shooter/Assets/Prefabs/Effects/PlayerProjectileHitV2.prefab'
             'class activity/2D-shooter/Assets/Prefabs/Enemies/EnemyParts/EnemyGun.prefab'
@@ -208,6 +209,38 @@ jobs:
           grep -q 'guid: 2f7ee51cc1e5f3e4fb1b273aa57cf7b4' "$player_fire"
           grep -q 'guid: b58ca2f55b8d54e44921b14b727bf610' "$player_fire"
           grep -q 'myRigidbody.MovePosition(nextPosition);' 'class activity/2D-shooter/Assets/Scripts/Player/Controller.cs'
+
+      - name: Validate 5.7 2D shooter start menu
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          scene='class activity/2D-shooter/Assets/_Scenes/Level1_scene.unity'
+          start_menu_controller='class activity/2D-shooter/Assets/Scripts/UI/StartMenuController.cs'
+
+          required_menu_patterns=(
+            'm_Name: StartMenu'
+            'm_Name: StartButton'
+            'm_Name: START'
+            'm_Name: 2D SPACE SHOOTER'
+            'm_Name: 5.7 CLASS ACTIVITY'
+            'guid: 557567248abe740679461196db7ab927'
+            'guid: 440c20dec0f2220499038bfec1cf8886'
+            'guid: 018cd37590e3e2341a620241eacc4e09'
+            'gameplayBehaviours:'
+          )
+
+          for pattern in "${required_menu_patterns[@]}"; do
+            grep -q "$pattern" "$scene" || {
+              echo "Missing 5.7 start menu scene pattern: $pattern"
+              exit 1
+            }
+          done
+
+          test -f "$start_menu_controller"
+          grep -q 'public class StartMenuController' "$start_menu_controller"
+          grep -q 'Time.timeScale = 0f;' "$start_menu_controller"
+          grep -q 'Time.timeScale = 1f;' "$start_menu_controller"
 
       - name: Validate Splat Fighters graybox map scene
         shell: bash
