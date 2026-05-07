@@ -8,6 +8,31 @@ User story:
 
 As a course project developer, I want a compact graybox arena so the player can test movement, shooting, painting, and future bot behavior in a readable 3D space.
 
+## Splatoon-Aligned Product Direction
+
+Target:
+
+Move the project from a simple ink shooter MVP toward a small, classroom-friendly Turf War prototype inspired by Splatoon.
+
+Core loop to protect:
+
+- Paint ground to claim territory.
+- Use owned paint as a movement and resource advantage.
+- Avoid enemy paint because it should slow, block, or pressure the player.
+- Move between shooting, repositioning, refilling, contesting mid-map, retreating, and restarting quickly.
+- Keep territory coverage as the primary win condition; eliminations should support map control instead of replacing it.
+
+Current scope guardrails:
+
+- Build one local single-player prototype first: TeamA player versus TeamB bot.
+- Keep the main mode close to Turf War before adding ranked-style objectives.
+- Avoid online 4v4, Salmon Run-style co-op, complex loadouts, and large weapon rosters until the core loop feels correct.
+- Do not copy Nintendo branding, character names, assets, UI, music, or exact weapon names.
+
+Priority adjustment:
+
+The next work should now prioritize swim/squid-form movement, enemy ink movement pressure, territory-aware bot behavior, and Turf War presentation before heavier damage systems. Damage and respawn remain useful, but they should be secondary to painting, movement, and map control.
+
 Acceptance criteria for the current map increment:
 
 - `MVP_ShootingTest` contains a `LevelRoot` hierarchy.
@@ -165,33 +190,174 @@ Acceptance criteria:
 - Standing on own paint provides one clear benefit.
 - The behavior is explainable from existing paint grid ownership data.
 
-### 6. Damage And Respawn V1
+### 6. Swim Form And Own-Ink Movement V1
 
 Goal:
 
-Add one direct opponent consequence while keeping the current territory and reset loop stable.
+Make owned paint feel like a mobility lane, not only a scoring texture.
+
+Suggested work:
+
+- Add a toggle or hold input for a swim-form state.
+- Increase movement speed while the player is on TeamA paint and in swim form.
+- Hide or lower the player capsule slightly while swimming to communicate the mode change.
+- Refill ink faster while swimming on TeamA paint.
+- Keep shooting disabled or limited while in swim form so players must switch between movement and attacking.
+
+Acceptance criteria:
+
+- Player can switch between humanoid shooting and swim movement.
+- Swim movement is faster only on TeamA paint.
+- Ink refill is clearly faster while swimming on TeamA paint.
+- Player cannot freely shoot while swimming.
+- HUD or visuals make the current form readable.
+
+### 7. Enemy Ink Movement Pressure V1
+
+Goal:
+
+Make enemy paint matter immediately, matching the Splatoon idea that territory controls movement.
+
+Suggested work:
+
+- Slow TeamA movement on TeamB paint.
+- Disable or heavily limit swim-form benefits on TeamB paint.
+- Add simple feedback when standing on enemy paint.
+- Keep hard damage optional for this increment; the first target is movement pressure.
+
+Acceptance criteria:
+
+- TeamB paint slows TeamA player movement.
+- TeamA paint keeps the current refill and swim benefit.
+- Neutral ground stays playable and does not feel punishing.
+- The behavior uses `PaintManager.TryGetTeamAtWorldPosition`.
+
+### 8. Damage And Respawn V1
+
+Goal:
+
+Add one direct opponent consequence while keeping territory control as the main objective.
 
 Suggested work:
 
 - Add lightweight health to player and TeamB bot.
-- Let enemy ink projectiles or direct paint hits apply small damage only to opposing characters.
+- Let enemy ink apply small damage only to opposing characters.
 - Respawn defeated characters at their team spawn after a short delay.
-- Keep eliminations secondary to territory score so the course demo remains about painting.
+- Clear active enemy pressure near spawn only if needed for playability.
+- Keep eliminations secondary to territory score.
 
 Acceptance criteria:
 
 - Player and bot can be defeated by enemy ink.
 - Defeated characters return to their team spawn without restarting the match.
-- Paint score, timer, restart, and pause still work.
+- Paint score, timer, restart, pause, ink resource, and swim movement still work.
 - No friendly-fire damage is applied.
+
+### 9. Turf War Presentation V1
+
+Goal:
+
+Make the match read like a small Turf War round during classroom demos.
+
+Suggested work:
+
+- Add a short match intro state with TeamA and TeamB labels.
+- Improve end-of-match results with winner, final percentages, and a simple territory comparison.
+- Add a basic map coverage summary or large score panel.
+- Keep Restart and Reset Paint controls available for fast demos.
+
+Acceptance criteria:
+
+- Match start clearly communicates TeamA versus TeamB.
+- Match end clearly shows which team covered more ground.
+- Restart returns to the intro or ready state without reopening the scene.
+- The scoring explanation is understandable without reading code.
+
+### 10. TeamB Territory Bot V2
+
+Goal:
+
+Make the bot contest territory more like an opponent instead of only following fixed targets.
+
+Suggested work:
+
+- Use paint ownership queries to choose contested or enemy-owned ground targets.
+- Make the bot repaint nearby TeamA areas when they are close enough.
+- Let the bot retreat toward TeamB paint when low on ink or after taking damage.
+- Keep waypoint movement as a fallback until pathfinding is worth the added complexity.
+
+Acceptance criteria:
+
+- Bot chooses at least some paint targets from current territory state.
+- Bot can repaint TeamA territory during the match.
+- Bot behavior remains deterministic enough for classroom testing.
+- Score changes remain readable.
+
+### 11. Wall Painting And Vertical Routes V1
+
+Goal:
+
+Add a small vertical movement payoff without turning the graybox map into a large traversal project.
+
+Suggested work:
+
+- Add one or two wall or ramp surfaces that can show team paint.
+- Allow swim-form movement up selected owned-painted vertical surfaces.
+- Keep scoring focused on ground territory unless wall scoring is intentionally added later.
+
+Acceptance criteria:
+
+- At least one vertical route can be enabled by painting it.
+- Player can climb or traverse it only when owned by TeamA.
+- The route creates a useful flank or recovery path.
+- Existing ground score remains stable.
+
+### 12. Weapon Variety And Special Meter V1
+
+Goal:
+
+Introduce Splatoon-like weapon identity without building a large arsenal.
+
+Suggested work:
+
+- Add one alternate close-range paint tool, such as a roller-style prototype.
+- Add a simple special meter that charges from painting territory.
+- Add one special action, such as a larger paint burst or temporary high-output firing.
+- Keep weapon switching editor-configured instead of building a full loadout UI.
+
+Acceptance criteria:
+
+- Painting territory can charge a special meter.
+- A special action provides a visible temporary advantage.
+- The alternate tool has a different paint pattern from the shooter.
+- The current shooter remains the default classroom-demo weapon.
+
+### 13. Stretch Modes After Turf War Core
+
+Goal:
+
+Only expand modes after the local Turf War loop is fun and explainable.
+
+Suggested future modes:
+
+- Splat Zones-style center-area control using existing paint coverage logic.
+- Tower Control-style moving objective after bot movement is more reliable.
+- Salmon Run-style co-op should remain a long-term stretch because it requires wave spawning, PvE enemy roles, and team revive rules.
+
+Acceptance criteria:
+
+- Turf War loop is stable before any alternate mode work starts.
+- New modes reuse existing paint, timer, score, respawn, and UI systems.
+- Each mode is introduced as a separate small Agile increment.
 
 ## Risks To Watch
 
 - The side platforms are still block-based and may need slope tuning for `CharacterController`.
 - Tall cover can block the camera if placed too close to the player.
-- Bot movement should stay simple until the map layout has been playtested.
-- Wall painting remains out of scope for this phase.
-- The first bot should use simple scripted movement before any pathfinding dependency is added.
+- Swim form can make the player too fast if the arena stays small.
+- Enemy ink pressure can become frustrating if neutral ground is not useful.
+- Bot movement should stay simple until the map layout has been playtested with swim movement.
+- Wall painting should start with one or two authored surfaces before any general wall-paint system.
 
 ## GitHub Workflow For Next Increment
 
