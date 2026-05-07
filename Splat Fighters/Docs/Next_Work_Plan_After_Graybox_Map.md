@@ -90,21 +90,47 @@ Acceptance criteria:
 
 ### 3. Team Visual Readability
 
+Status:
+
+Implemented in the current branch.
+
 Goal:
 
 Make TeamA and TeamB easier to read during playtests.
 
-Suggested work:
+Implemented work:
 
-- Add TeamB material assets.
-- Add a `TeamVisualBinder` if repeated team-colored renderers become hard to manage manually.
-- Use the same team colors for player/bot, projectiles, spawn pads, paint overlay, and HUD.
+- Added a shared `TeamVisualPalette` for TeamA and TeamB labels and colors.
+- Added `TeamVisualBinder` so character renderers can use the same team palette.
+- Added team material assets for the TeamA player, TeamA projectile, TeamB bot, and TeamB projectile.
+- Updated the MVP scene setup and graybox map builder so regenerated scenes preserve player and bot team visuals.
+- Kept TeamA and TeamB colors aligned across player, bot, projectiles, spawn pads, paint overlay, and HUD.
 
 Acceptance criteria:
 
 - TeamA and TeamB are distinguishable at a glance.
 - Spawn pads clearly communicate team ownership.
 - TeamB setup can be reused by the bot.
+
+### 4. Match Flow V1
+
+Goal:
+
+Make the MVP demo loop easier to restart and present after one match ends.
+
+Suggested work:
+
+- Add a clear match-finished UI state.
+- Add restart/reset input for quick classroom playtests.
+- Keep reset behavior limited to timer, score, paint state, player spawn, and bot spawn.
+- Avoid adding menus or broad UI refactors until the playable loop is stable.
+
+Acceptance criteria:
+
+- Match end communicates winner or draw.
+- Restart returns the scene to a playable state without reopening Unity.
+- Paint coverage resets correctly.
+- Player and TeamB bot restart from their team spawn areas.
 
 ## Risks To Watch
 

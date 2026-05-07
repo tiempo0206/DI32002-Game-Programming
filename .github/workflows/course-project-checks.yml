@@ -61,6 +61,8 @@ jobs:
             'Splat Fighters/Assets/Scripts/Weapons/InkProjectile.cs'
             'Splat Fighters/Assets/Scripts/Weapons/InkWeapon.cs'
             'Splat Fighters/Assets/Scripts/AI/BotController.cs'
+            'Splat Fighters/Assets/Scripts/Visuals/TeamVisualPalette.cs'
+            'Splat Fighters/Assets/Scripts/Visuals/TeamVisualBinder.cs'
             'Splat Fighters/Assets/Scripts/Player/PlayerInputHandler.cs'
             'Splat Fighters/Assets/Scripts/Player/PlayerController.cs'
             'Splat Fighters/Assets/Scripts/Player/ThirdPersonCameraFollow.cs'
@@ -81,6 +83,10 @@ jobs:
             'Splat Fighters/Assets/Materials/Level/MAT_Level_Ramp.mat'
             'Splat Fighters/Assets/Materials/Level/MAT_Level_Spawn_TeamA.mat'
             'Splat Fighters/Assets/Materials/Level/MAT_Level_Spawn_TeamB.mat'
+            'Splat Fighters/Assets/Materials/Teams/MAT_TeamA_Player.mat'
+            'Splat Fighters/Assets/Materials/Teams/MAT_TeamA_Projectile.mat'
+            'Splat Fighters/Assets/Materials/Teams/MAT_TeamB_Bot.mat'
+            'Splat Fighters/Assets/Materials/Teams/MAT_TeamB_Projectile.mat'
             'Splat Fighters/Docs/Splat_Fighters_Project_Technical_Documentation.docx'
             'class activity/2D-shooter/Packages/manifest.json'
             'class activity/2D-shooter/Packages/packages-lock.json'
@@ -246,6 +252,9 @@ jobs:
             'guid: 523848afdbb78428f9909a6a36dedc79'
             'guid: 6eae5c84c8a24551a6a1738913276ea9'
             'guid: e65d3f35aa204309aead02ea2b17a67a'
+            'guid: 13b1c0840c8ae4d04a8bf41efc3983d2'
+            'guid: 13eced9b9c66941f497c78ae0279d6df'
+            'guid: ee07f6abdd1964429868fa0d1187932c'
             'requirePaintPointNearAreaPlane: 1'
             'rebuildMaskFromPaintBlockersOnAwake: 1'
             'team: 1'
@@ -265,6 +274,17 @@ jobs:
             echo "Expected at least 20 PaintBlocker components in the graybox map, found $paint_blocker_count."
             exit 1
           fi
+
+          team_visual_binder_count="$(grep -c 'guid: 13b1c0840c8ae4d04a8bf41efc3983d2' "$scene")"
+          if [ "$team_visual_binder_count" -lt 2 ]; then
+            echo "Expected TeamVisualBinder on both player and TeamB bot, found $team_visual_binder_count."
+            exit 1
+          fi
+
+          grep -q 'guid: 2523003a8ccb1411c976d590e5f00eec' 'Splat Fighters/Assets/Prefabs/Weapons/InkProjectile.prefab' || {
+            echo "Expected InkProjectile prefab to use the TeamA projectile material."
+            exit 1
+          }
 
           paintable_cell_count="$(python3 - <<'PY'
           from pathlib import Path

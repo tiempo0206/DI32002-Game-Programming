@@ -23,8 +23,8 @@ public class PaintableArea : MonoBehaviour
 
     [Header("Debug Colors")]
     [SerializeField] private Color unpaintedGizmoColor = new Color(1f, 1f, 1f, 0.08f);
-    [SerializeField] private Color teamAGizmoColor = new Color(0.1f, 0.45f, 1f, 0.55f);
-    [SerializeField] private Color teamBGizmoColor = new Color(1f, 0.45f, 0.05f, 0.55f);
+    [SerializeField] private Color teamAGizmoColor = TeamVisualPalette.GetColor(Team.TeamA, 0.55f);
+    [SerializeField] private Color teamBGizmoColor = TeamVisualPalette.GetColor(Team.TeamB, 0.55f);
     [SerializeField] private Color blockedGizmoColor = new Color(1f, 0.1f, 0.05f, 0.18f);
 
     [Header("Gizmos")]
@@ -40,8 +40,8 @@ public class PaintableArea : MonoBehaviour
     [Header("Runtime Overlay")]
     [SerializeField] private bool showRuntimeOverlay = true;
     [SerializeField] private float runtimeOverlayYOffset = 0.02f;
-    [SerializeField] private Color teamAOverlayColor = new Color(0.1f, 0.45f, 1f, 0.9f);
-    [SerializeField] private Color teamBOverlayColor = new Color(1f, 0.45f, 0.05f, 0.9f);
+    [SerializeField] private Color teamAOverlayColor = TeamVisualPalette.TeamAOverlayColor;
+    [SerializeField] private Color teamBOverlayColor = TeamVisualPalette.TeamBOverlayColor;
     [SerializeField] private Color unpaintedOverlayColor = new Color(0f, 0f, 0f, 0f);
     [SerializeField] private Color blockedOverlayColor = new Color(0f, 0f, 0f, 0f);
 
