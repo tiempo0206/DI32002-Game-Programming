@@ -264,6 +264,12 @@ jobs:
             'teamBBot: {fileID:'
             'teamASpawn: {fileID:'
             'teamBSpawn: {fileID:'
+            'playerWeapon: {fileID:'
+            'useInkResource: 1'
+            'maxInk: 100'
+            'inkPerShot: 10'
+            'ownPaintRecoveryMultiplier: 3.5'
+            'groundProbe: {fileID:'
             'enableKeyboardControls: 1'
             'startKey: 13'
             'restartKey: 114'
@@ -306,6 +312,7 @@ jobs:
             'ResumeMatch'
             'ResetCharactersToSpawns'
             'DestroyActiveProjectiles'
+            'ResetWeaponResources'
           )
 
           for pattern in "${required_code_patterns[@]}"; do
@@ -319,6 +326,26 @@ jobs:
             echo "Expected ScoreUI controls text support."
             exit 1
           }
+
+          grep -q 'InkText' 'Splat Fighters/Assets/Scripts/UI/ScoreUI.cs' || {
+            echo "Expected ScoreUI ink resource text support."
+            exit 1
+          }
+
+          required_weapon_patterns=(
+            'useInkResource'
+            'inkPerShot'
+            'ownPaintRecoveryMultiplier'
+            'IsReceivingOwnPaintRecovery'
+            'TryGetTeamAtWorldPosition'
+          )
+
+          for pattern in "${required_weapon_patterns[@]}"; do
+            grep -q "$pattern" 'Splat Fighters/Assets/Scripts/Weapons/InkWeapon.cs' || {
+              echo "Missing ink resource weapon code pattern: $pattern"
+              exit 1
+            }
+          done
 
           grep -q 'ResetMotionState' 'Splat Fighters/Assets/Scripts/Player/PlayerController.cs' || {
             echo "Expected PlayerController reset support."

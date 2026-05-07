@@ -171,6 +171,13 @@ public static class SplatFightersGrayboxMapBuilder
         weaponSo.FindProperty("projectileSpeed").floatValue = 18f;
         weaponSo.FindProperty("paintRadius").floatValue = 1.6f;
         weaponSo.FindProperty("fireCooldown").floatValue = 0.35f;
+        weaponSo.FindProperty("useInkResource").boolValue = true;
+        weaponSo.FindProperty("maxInk").floatValue = 100f;
+        weaponSo.FindProperty("inkPerShot").floatValue = 10f;
+        weaponSo.FindProperty("inkRecoveryPerSecond").floatValue = 12f;
+        weaponSo.FindProperty("ownPaintRecoveryMultiplier").floatValue = 3.5f;
+        weaponSo.FindProperty("startWithFullInk").boolValue = true;
+        weaponSo.FindProperty("groundProbe").objectReferenceValue = bot.transform;
         weaponSo.FindProperty("useCameraAim").boolValue = false;
         weaponSo.FindProperty("paintDirectlyAtAimTarget").boolValue = true;
         weaponSo.FindProperty("projectileIsVisualOnlyWhenDirectPainting").boolValue = true;
@@ -245,8 +252,31 @@ public static class SplatFightersGrayboxMapBuilder
         }
 
         visualBinder.Configure(Team.TeamA, teamAMaterial, null);
+        ConfigurePlayerInkResource(player);
         EditorUtility.SetDirty(player);
         EditorUtility.SetDirty(visualBinder);
+    }
+
+    private static void ConfigurePlayerInkResource(GameObject player)
+    {
+        InkWeapon weapon = player != null ? player.GetComponentInChildren<InkWeapon>() : null;
+
+        if (weapon == null)
+        {
+            return;
+        }
+
+        SerializedObject weaponSo = new SerializedObject(weapon);
+        weaponSo.FindProperty("useInkResource").boolValue = true;
+        weaponSo.FindProperty("maxInk").floatValue = 100f;
+        weaponSo.FindProperty("inkPerShot").floatValue = 10f;
+        weaponSo.FindProperty("inkRecoveryPerSecond").floatValue = 12f;
+        weaponSo.FindProperty("ownPaintRecoveryMultiplier").floatValue = 3.5f;
+        weaponSo.FindProperty("startWithFullInk").boolValue = true;
+        weaponSo.FindProperty("groundProbe").objectReferenceValue = player.transform;
+        weaponSo.ApplyModifiedPropertiesWithoutUndo();
+
+        EditorUtility.SetDirty(weapon);
     }
 
     private static void PositionExistingCameraForGrayboxMap()
@@ -290,6 +320,7 @@ public static class SplatFightersGrayboxMapBuilder
         managerSo.FindProperty("paintManager").objectReferenceValue = paintManager;
         managerSo.FindProperty("playerRoot").objectReferenceValue = player != null ? player.transform : null;
         managerSo.FindProperty("playerController").objectReferenceValue = player != null ? player.GetComponent<PlayerController>() : null;
+        managerSo.FindProperty("playerWeapon").objectReferenceValue = player != null ? player.GetComponentInChildren<InkWeapon>() : null;
         managerSo.FindProperty("teamBBot").objectReferenceValue = bot;
         managerSo.FindProperty("teamASpawn").objectReferenceValue = teamASpawn;
         managerSo.FindProperty("teamBSpawn").objectReferenceValue = teamBSpawn;

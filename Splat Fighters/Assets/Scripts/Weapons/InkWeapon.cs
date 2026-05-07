@@ -15,6 +15,15 @@ public class InkWeapon : MonoBehaviour
     [SerializeField] private float paintRadius = 1.5f;
     [SerializeField] private float fireCooldown = 0.2f;
 
+    [Header("Ink Resource")]
+    [SerializeField] private bool useInkResource = true;
+    [SerializeField, Min(0.1f)] private float maxInk = 100f;
+    [SerializeField, Min(0f)] private float inkPerShot = 10f;
+    [SerializeField, Min(0f)] private float inkRecoveryPerSecond = 12f;
+    [SerializeField, Min(1f)] private float ownPaintRecoveryMultiplier = 3.5f;
+    [SerializeField] private bool startWithFullInk = true;
+    [SerializeField] private Transform groundProbe = null;
+
     [Header("Aiming")]
     [SerializeField] private bool useCameraAim = false;
     [SerializeField] private Camera aimCamera = null;
@@ -35,15 +44,30 @@ public class InkWeapon : MonoBehaviour
     [SerializeField] private KeyCode testFireKey = KeyCode.Mouse0;
 
     private float nextFireTime;
+    private float currentInk;
+    private bool isReceivingOwnPaintRecovery;
     private bool hasExternalAimDirection;
     private Vector3 externalAimDirection = Vector3.forward;
     private bool hasExternalAimTarget;
     private Vector3 externalAimTarget;
 
     public Transform FirePoint => firePoint != null ? firePoint : transform;
+    public Team Team => team;
+    public float CurrentInk => useInkResource ? currentInk : maxInk;
+    public float MaxInk => maxInk;
+    public float InkPercent => maxInk <= 0f ? 0f : CurrentInk / maxInk * 100f;
+    public bool HasEnoughInkToFire => !useInkResource || currentInk >= inkPerShot;
+    public bool IsReceivingOwnPaintRecovery => isReceivingOwnPaintRecovery;
+
+    private void Awake()
+    {
+        ResetInkResource();
+    }
 
     private void Update()
     {
+        RecoverInk(Time.deltaTime);
+
         // MVP test input. This keeps the shooting chain testable before the full player input system exists.
         if (enableKeyboardTestFire && Input.GetKey(testFireKey))
         {
@@ -67,6 +91,11 @@ public class InkWeapon : MonoBehaviour
             return false;
         }
 
+        if (!TryConsumeInkForShot())
+        {
+            return false;
+        }
+
         Transform spawnPoint = firePoint != null ? firePoint : transform;
         Vector3 fireDirection = GetFireDirection(spawnPoint);
         Quaternion rotation = Quaternion.LookRotation(fireDirection, Vector3.up);
@@ -87,6 +116,12 @@ public class InkWeapon : MonoBehaviour
 
         nextFireTime = Time.time + fireCooldown;
         return true;
+    }
+
+    public void ResetInkResource()
+    {
+        currentInk = startWithFullInk ? maxInk : Mathf.Min(currentInk, maxInk);
+        isReceivingOwnPaintRecovery = false;
     }
 
     /// <summary>
@@ -179,6 +214,76 @@ public class InkWeapon : MonoBehaviour
 
         PaintManager.Instance.PaintAtWorldPosition(externalAimTarget, paintRadius, team);
         return true;
+    }
+
+    private bool TryConsumeInkForShot()
+    {
+        if (!useInkResource)
+        {
+            return true;
+        }
+
+        if (currentInk < inkPerShot)
+        {
+            return false;
+        }
+
+        currentInk = Mathf.Max(0f, currentInk - inkPerShot);
+        return true;
+    }
+
+    private void RecoverInk(float deltaTime)
+    {
+        if (!useInkResource)
+        {
+            isReceivingOwnPaintRecovery = false;
+            currentInk = maxInk;
+            return;
+        }
+
+        currentInk = Mathf.Clamp(currentInk, 0f, maxInk);
+
+        bool onOwnPaint = IsStandingOnOwnPaint();
+        isReceivingOwnPaintRecovery = currentInk < maxInk && onOwnPaint;
+
+        if (currentInk >= maxInk || deltaTime <= 0f)
+        {
+            return;
+        }
+
+        float recoveryRate = inkRecoveryPerSecond;
+
+        if (onOwnPaint)
+        {
+            recoveryRate *= ownPaintRecoveryMultiplier;
+        }
+
+        currentInk = Mathf.Min(maxInk, currentInk + recoveryRate * deltaTime);
+    }
+
+    private bool IsStandingOnOwnPaint()
+    {
+        if (PaintManager.Instance == null || team == Team.None)
+        {
+            return false;
+        }
+
+        if (!PaintManager.Instance.TryGetTeamAtWorldPosition(GetGroundProbePosition(), out Team groundTeam))
+        {
+            return false;
+        }
+
+        return groundTeam == team;
+    }
+
+    private Vector3 GetGroundProbePosition()
+    {
+        if (groundProbe != null)
+        {
+            return groundProbe.position;
+        }
+
+        return transform.position;
     }
 
     private void ApplyProjectileTeamColor(InkProjectile projectile)
