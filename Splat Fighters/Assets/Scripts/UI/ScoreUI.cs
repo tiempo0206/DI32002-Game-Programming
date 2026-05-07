@@ -11,6 +11,7 @@ public class ScoreUI : MonoBehaviour
     [SerializeField] private Text timerText = null;
     [SerializeField] private Text teamAText = null;
     [SerializeField] private Text teamBText = null;
+    [SerializeField] private Text inkText = null;
     [SerializeField] private Text statusText = null;
     [SerializeField] private Text controlsText = null;
 
@@ -26,7 +27,10 @@ public class ScoreUI : MonoBehaviour
         float remainingSeconds,
         float teamACoverage,
         float teamBCoverage,
-        Team winningTeam)
+        Team winningTeam,
+        float playerInkPercent,
+        bool playerOnOwnPaint,
+        bool playerHasEnoughInk)
     {
         EnsureRuntimeTextReferences();
 
@@ -45,6 +49,12 @@ public class ScoreUI : MonoBehaviour
         {
             teamBText.text = $"{teamBLabel}: {teamBCoverage:0.0}%";
             teamBText.color = teamBColor;
+        }
+
+        if (inkText != null)
+        {
+            inkText.text = FormatInk(playerInkPercent, playerOnOwnPaint, playerHasEnoughInk);
+            inkText.color = playerOnOwnPaint ? teamAColor : neutralColor;
         }
 
         if (statusText != null)
@@ -81,7 +91,7 @@ public class ScoreUI : MonoBehaviour
         panelRect.anchorMax = new Vector2(0f, 1f);
         panelRect.pivot = new Vector2(0f, 1f);
         panelRect.anchoredPosition = new Vector2(24f, -24f);
-        panelRect.sizeDelta = new Vector2(420f, 184f);
+        panelRect.sizeDelta = new Vector2(420f, 216f);
 
         Image panelImage = panelObject.AddComponent<Image>();
         panelImage.color = new Color(0f, 0f, 0f, 0.45f);
@@ -91,8 +101,9 @@ public class ScoreUI : MonoBehaviour
         scoreUI.timerText = CreateText(panelObject.transform, "TimerText", new Vector2(16f, -12f), 32, FontStyle.Bold);
         scoreUI.teamAText = CreateText(panelObject.transform, "TeamAText", new Vector2(16f, -58f), 24, FontStyle.Bold);
         scoreUI.teamBText = CreateText(panelObject.transform, "TeamBText", new Vector2(16f, -90f), 24, FontStyle.Bold);
-        scoreUI.statusText = CreateText(panelObject.transform, "StatusText", new Vector2(16f, -122f), 20, FontStyle.Normal);
-        scoreUI.controlsText = CreateText(panelObject.transform, "ControlsText", new Vector2(16f, -150f), 18, FontStyle.Normal);
+        scoreUI.inkText = CreateText(panelObject.transform, "InkText", new Vector2(16f, -122f), 20, FontStyle.Bold);
+        scoreUI.statusText = CreateText(panelObject.transform, "StatusText", new Vector2(16f, -154f), 20, FontStyle.Normal);
+        scoreUI.controlsText = CreateText(panelObject.transform, "ControlsText", new Vector2(16f, -182f), 18, FontStyle.Normal);
 
         return scoreUI;
     }
@@ -104,7 +115,7 @@ public class ScoreUI : MonoBehaviour
 
     private void EnsureRuntimeTextReferences()
     {
-        if (timerText != null && teamAText != null && teamBText != null && statusText != null && controlsText != null)
+        if (timerText != null && teamAText != null && teamBText != null && inkText != null && statusText != null && controlsText != null)
         {
             return;
         }
@@ -126,6 +137,10 @@ public class ScoreUI : MonoBehaviour
             else if (text.name == "TeamBText")
             {
                 teamBText = text;
+            }
+            else if (text.name == "InkText")
+            {
+                inkText = text;
             }
             else if (text.name == "StatusText")
             {
@@ -211,6 +226,23 @@ public class ScoreUI : MonoBehaviour
             default:
                 return "Enter Start | R Restart";
         }
+    }
+
+    private static string FormatInk(float playerInkPercent, bool playerOnOwnPaint, bool playerHasEnoughInk)
+    {
+        if (playerInkPercent < 0f)
+        {
+            return "Ink: --";
+        }
+
+        string stateLabel = playerHasEnoughInk ? "Ready" : "Low";
+
+        if (playerOnOwnPaint)
+        {
+            stateLabel = "Refill";
+        }
+
+        return $"Ink: {Mathf.Clamp(playerInkPercent, 0f, 100f):0}% | {stateLabel}";
     }
 
     private string GetTeamLabel(Team team)

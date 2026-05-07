@@ -141,15 +141,22 @@ Acceptance criteria:
 
 ### 5. Ink Resource And Ground Benefits
 
+Status:
+
+Implemented in the current branch.
+
 Goal:
 
 Give paint ownership a gameplay impact without expanding the MVP into a large mechanics refactor.
 
-Suggested work:
+Implemented work:
 
-- Add a small ink resource or cooldown constraint to repeated firing.
-- Add a simple movement benefit or refill benefit while standing on own team paint.
-- Use `PaintManager.TryGetTeamAtWorldPosition` for the first ground ownership query.
+- Added a small ink tank to `InkWeapon` so repeated firing drains a readable resource.
+- Blocked firing when the weapon does not have enough ink for the next shot.
+- Added passive ink recovery, with faster recovery while the weapon owner stands on their own team paint.
+- Used `PaintManager.TryGetTeamAtWorldPosition` as the ground ownership query for the refill benefit.
+- Added HUD ink feedback for player ink level, low-ink state, and own-paint refill state.
+- Reset player and TeamB bot ink resources during match restart.
 - Keep penalties and damage out of scope until the resettable match loop is stable.
 
 Acceptance criteria:
@@ -157,6 +164,26 @@ Acceptance criteria:
 - Repeated firing has a readable resource or pacing limit.
 - Standing on own paint provides one clear benefit.
 - The behavior is explainable from existing paint grid ownership data.
+
+### 6. Damage And Respawn V1
+
+Goal:
+
+Add one direct opponent consequence while keeping the current territory and reset loop stable.
+
+Suggested work:
+
+- Add lightweight health to player and TeamB bot.
+- Let enemy ink projectiles or direct paint hits apply small damage only to opposing characters.
+- Respawn defeated characters at their team spawn after a short delay.
+- Keep eliminations secondary to territory score so the course demo remains about painting.
+
+Acceptance criteria:
+
+- Player and bot can be defeated by enemy ink.
+- Defeated characters return to their team spawn without restarting the match.
+- Paint score, timer, restart, and pause still work.
+- No friendly-fire damage is applied.
 
 ## Risks To Watch
 

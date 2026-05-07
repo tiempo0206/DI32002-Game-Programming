@@ -269,6 +269,13 @@ public static class SplatFightersMvpSceneSetup
         weaponSo.FindProperty("projectileSpeed").floatValue = 18f;
         weaponSo.FindProperty("paintRadius").floatValue = 1.75f;
         weaponSo.FindProperty("fireCooldown").floatValue = 0.2f;
+        weaponSo.FindProperty("useInkResource").boolValue = true;
+        weaponSo.FindProperty("maxInk").floatValue = 100f;
+        weaponSo.FindProperty("inkPerShot").floatValue = 10f;
+        weaponSo.FindProperty("inkRecoveryPerSecond").floatValue = 12f;
+        weaponSo.FindProperty("ownPaintRecoveryMultiplier").floatValue = 3.5f;
+        weaponSo.FindProperty("startWithFullInk").boolValue = true;
+        weaponSo.FindProperty("groundProbe").objectReferenceValue = player.transform;
         weaponSo.FindProperty("useCameraAim").boolValue = false;
         weaponSo.FindProperty("paintDirectlyAtAimTarget").boolValue = true;
         weaponSo.FindProperty("projectileIsVisualOnlyWhenDirectPainting").boolValue = true;

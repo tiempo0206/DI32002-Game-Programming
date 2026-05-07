@@ -30,6 +30,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private ScoreUI scoreUI = null;
     [SerializeField] private Transform playerRoot = null;
     [SerializeField] private PlayerController playerController = null;
+    [SerializeField] private InkWeapon playerWeapon = null;
     [SerializeField] private BotController teamBBot = null;
     [SerializeField] private SpawnPoint teamASpawn = null;
     [SerializeField] private SpawnPoint teamBSpawn = null;
@@ -300,6 +301,11 @@ public class GameManager : MonoBehaviour
             playerController = playerRoot.GetComponent<PlayerController>();
         }
 
+        if (playerWeapon == null && playerRoot != null)
+        {
+            playerWeapon = playerRoot.GetComponentInChildren<InkWeapon>();
+        }
+
         if (teamBBot == null)
         {
             teamBBot = FindObjectOfType<BotController>();
@@ -366,10 +372,13 @@ public class GameManager : MonoBehaviour
             playerController.ResetMotionState();
         }
 
+        ResetWeaponResources(playerRoot);
+
         if (teamBBot != null)
         {
             TeleportCharacter(teamBBot.transform, teamBSpawn);
             teamBBot.ResetBotState();
+            ResetWeaponResources(teamBBot.transform);
         }
     }
 
@@ -407,6 +416,26 @@ public class GameManager : MonoBehaviour
             if (projectile != null)
             {
                 Destroy(projectile.gameObject);
+            }
+        }
+    }
+
+    private void ResetWeaponResources(Transform root)
+    {
+        if (root == null)
+        {
+            return;
+        }
+
+        InkWeapon[] weapons = root.GetComponentsInChildren<InkWeapon>();
+
+        for (int i = 0; i < weapons.Length; i++)
+        {
+            InkWeapon weapon = weapons[i];
+
+            if (weapon != null)
+            {
+                weapon.ResetInkResource();
             }
         }
     }
@@ -484,7 +513,10 @@ public class GameManager : MonoBehaviour
             matchTimer.RemainingSeconds,
             teamACoverage,
             teamBCoverage,
-            winningTeam);
+            winningTeam,
+            playerWeapon != null ? playerWeapon.InkPercent : -1f,
+            playerWeapon != null && playerWeapon.IsReceivingOwnPaintRecovery,
+            playerWeapon == null || playerWeapon.HasEnoughInkToFire);
     }
 
     private void SetState(MatchState nextState)
