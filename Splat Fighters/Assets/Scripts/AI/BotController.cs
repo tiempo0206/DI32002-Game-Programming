@@ -70,6 +70,16 @@ public class BotController : MonoBehaviour
         currentAimTarget = ResolveCurrentAimTarget();
     }
 
+    public void ResetBotState()
+    {
+        currentWaypointIndex = 0;
+        currentPaintTargetIndex = 0;
+        verticalVelocity = 0f;
+        nextFireTime = 0f;
+        nextAimRefreshTime = 0f;
+        currentAimTarget = ResolveCurrentAimTarget();
+    }
+
     private void ResolveReferences()
     {
         if (characterController == null)

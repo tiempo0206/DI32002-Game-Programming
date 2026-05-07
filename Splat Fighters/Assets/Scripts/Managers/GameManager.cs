@@ -11,6 +11,7 @@ public class GameManager : MonoBehaviour
     {
         WaitingToStart,
         Playing,
+        Paused,
         Finished
     }
 
@@ -19,22 +20,39 @@ public class GameManager : MonoBehaviour
     [Header("Match")]
     [SerializeField] private bool startMatchOnAwake = true;
     [SerializeField] private bool clearPaintOnMatchStart = true;
+    [SerializeField] private bool resetCharactersOnMatchStart = true;
+    [SerializeField] private bool destroyProjectilesOnMatchStart = true;
     [SerializeField, Min(1f)] private float matchDurationSeconds = 180f;
     [SerializeField] private MatchTimer matchTimer = new MatchTimer();
 
     [Header("References")]
     [SerializeField] private PaintManager paintManager = null;
     [SerializeField] private ScoreUI scoreUI = null;
+    [SerializeField] private Transform playerRoot = null;
+    [SerializeField] private PlayerController playerController = null;
+    [SerializeField] private BotController teamBBot = null;
+    [SerializeField] private SpawnPoint teamASpawn = null;
+    [SerializeField] private SpawnPoint teamBSpawn = null;
     [SerializeField] private bool autoCreateScoreUI = true;
 
     [Header("Score Refresh")]
     [SerializeField, Min(0.02f)] private float scoreRefreshInterval = 0.1f;
+
+    [Header("Quick Controls")]
+    [SerializeField] private bool enableKeyboardControls = true;
+    [SerializeField] private KeyCode startKey = KeyCode.Return;
+    [SerializeField] private KeyCode restartKey = KeyCode.R;
+    [SerializeField] private KeyCode pauseKey = KeyCode.P;
+    [SerializeField] private KeyCode alternatePauseKey = KeyCode.Escape;
+    [SerializeField] private bool pauseUsesTimeScale = true;
 
     private MatchState currentState = MatchState.WaitingToStart;
     private float nextScoreRefreshTime;
     private float teamACoverage;
     private float teamBCoverage;
     private Team winningTeam = Team.None;
+    private float timeScaleBeforePause = 1f;
+    private bool timeScaleOverridden;
 
     public event Action<MatchState> MatchStateChanged;
 
@@ -71,6 +89,8 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
+        HandleKeyboardControls();
+
         if (currentState != MatchState.Playing)
         {
             UpdateScoreUI();
@@ -94,6 +114,7 @@ public class GameManager : MonoBehaviour
     {
         if (Instance == this)
         {
+            ApplyPausedTimeScale(false);
             Instance = null;
         }
     }
@@ -107,6 +128,17 @@ public class GameManager : MonoBehaviour
             paintManager.ClearAllPaint();
         }
 
+        if (destroyProjectilesOnMatchStart)
+        {
+            DestroyActiveProjectiles();
+        }
+
+        if (resetCharactersOnMatchStart)
+        {
+            ResetCharactersToSpawns();
+        }
+
+        ApplyPausedTimeScale(false);
         matchTimer.Configure(matchDurationSeconds);
         matchTimer.Reset();
         matchTimer.Start();
@@ -117,6 +149,7 @@ public class GameManager : MonoBehaviour
 
     public void EndMatch()
     {
+        ApplyPausedTimeScale(false);
         matchTimer.Stop();
         RefreshScore(true);
         winningTeam = GetWinningTeam();
@@ -126,6 +159,7 @@ public class GameManager : MonoBehaviour
 
     public void ResetMatch()
     {
+        ApplyPausedTimeScale(false);
         matchTimer.Configure(matchDurationSeconds);
         matchTimer.Reset();
 
@@ -134,10 +168,65 @@ public class GameManager : MonoBehaviour
             paintManager.ClearAllPaint();
         }
 
+        if (destroyProjectilesOnMatchStart)
+        {
+            DestroyActiveProjectiles();
+        }
+
+        if (resetCharactersOnMatchStart)
+        {
+            ResetCharactersToSpawns();
+        }
+
         winningTeam = Team.None;
         SetState(MatchState.WaitingToStart);
         RefreshScore(true);
         UpdateScoreUI();
+    }
+
+    public void RestartMatch()
+    {
+        StartMatch();
+    }
+
+    public void PauseMatch()
+    {
+        if (currentState != MatchState.Playing)
+        {
+            return;
+        }
+
+        matchTimer.Stop();
+        ApplyPausedTimeScale(true);
+        SetState(MatchState.Paused);
+        RefreshScore(true);
+        UpdateScoreUI();
+    }
+
+    public void ResumeMatch()
+    {
+        if (currentState != MatchState.Paused)
+        {
+            return;
+        }
+
+        ApplyPausedTimeScale(false);
+        matchTimer.Start();
+        SetState(MatchState.Playing);
+        RefreshScore(true);
+        UpdateScoreUI();
+    }
+
+    public void TogglePause()
+    {
+        if (currentState == MatchState.Playing)
+        {
+            PauseMatch();
+        }
+        else if (currentState == MatchState.Paused)
+        {
+            ResumeMatch();
+        }
     }
 
     public float GetCoveragePercent(Team team)
@@ -171,6 +260,18 @@ public class GameManager : MonoBehaviour
         ResetMatch();
     }
 
+    [ContextMenu("Debug Restart Match")]
+    private void DebugRestartMatch()
+    {
+        RestartMatch();
+    }
+
+    [ContextMenu("Debug Toggle Pause")]
+    private void DebugTogglePause()
+    {
+        TogglePause();
+    }
+
     private void ResolveReferences()
     {
         if (paintManager == null)
@@ -186,6 +287,153 @@ public class GameManager : MonoBehaviour
         if (scoreUI == null && autoCreateScoreUI)
         {
             scoreUI = ScoreUI.CreateRuntimeScoreUI();
+        }
+
+        if (playerRoot == null)
+        {
+            GameObject playerObject = GameObject.Find("Player");
+            playerRoot = playerObject != null ? playerObject.transform : null;
+        }
+
+        if (playerController == null && playerRoot != null)
+        {
+            playerController = playerRoot.GetComponent<PlayerController>();
+        }
+
+        if (teamBBot == null)
+        {
+            teamBBot = FindObjectOfType<BotController>();
+        }
+
+        if (teamASpawn == null || teamBSpawn == null)
+        {
+            SpawnPoint[] spawnPoints = FindObjectsOfType<SpawnPoint>();
+
+            for (int i = 0; i < spawnPoints.Length; i++)
+            {
+                SpawnPoint spawnPoint = spawnPoints[i];
+
+                if (spawnPoint == null || !spawnPoint.DefaultForTeam)
+                {
+                    continue;
+                }
+
+                if (spawnPoint.Team == Team.TeamA && teamASpawn == null)
+                {
+                    teamASpawn = spawnPoint;
+                }
+                else if (spawnPoint.Team == Team.TeamB && teamBSpawn == null)
+                {
+                    teamBSpawn = spawnPoint;
+                }
+            }
+        }
+    }
+
+    private void HandleKeyboardControls()
+    {
+        if (!enableKeyboardControls)
+        {
+            return;
+        }
+
+        if (Input.GetKeyDown(restartKey))
+        {
+            RestartMatch();
+            return;
+        }
+
+        if (Input.GetKeyDown(startKey) && currentState == MatchState.WaitingToStart)
+        {
+            StartMatch();
+            return;
+        }
+
+        if (Input.GetKeyDown(pauseKey) || Input.GetKeyDown(alternatePauseKey))
+        {
+            TogglePause();
+        }
+    }
+
+    private void ResetCharactersToSpawns()
+    {
+        ResolveReferences();
+
+        TeleportCharacter(playerRoot, teamASpawn);
+
+        if (playerController != null)
+        {
+            playerController.ResetMotionState();
+        }
+
+        if (teamBBot != null)
+        {
+            TeleportCharacter(teamBBot.transform, teamBSpawn);
+            teamBBot.ResetBotState();
+        }
+    }
+
+    private void TeleportCharacter(Transform characterRoot, SpawnPoint spawnPoint)
+    {
+        if (characterRoot == null || spawnPoint == null)
+        {
+            return;
+        }
+
+        CharacterController characterController = characterRoot.GetComponent<CharacterController>();
+        bool restoreController = characterController != null && characterController.enabled;
+
+        if (restoreController)
+        {
+            characterController.enabled = false;
+        }
+
+        characterRoot.SetPositionAndRotation(spawnPoint.SpawnPosition, spawnPoint.SpawnRotation);
+
+        if (restoreController)
+        {
+            characterController.enabled = true;
+        }
+    }
+
+    private void DestroyActiveProjectiles()
+    {
+        InkProjectile[] projectiles = FindObjectsOfType<InkProjectile>();
+
+        for (int i = 0; i < projectiles.Length; i++)
+        {
+            InkProjectile projectile = projectiles[i];
+
+            if (projectile != null)
+            {
+                Destroy(projectile.gameObject);
+            }
+        }
+    }
+
+    private void ApplyPausedTimeScale(bool paused)
+    {
+        if (!pauseUsesTimeScale)
+        {
+            return;
+        }
+
+        if (paused)
+        {
+            if (!timeScaleOverridden)
+            {
+                timeScaleBeforePause = Time.timeScale;
+                timeScaleOverridden = true;
+            }
+
+            Time.timeScale = 0f;
+            return;
+        }
+
+        if (timeScaleOverridden)
+        {
+            Time.timeScale = timeScaleBeforePause;
+            timeScaleOverridden = false;
         }
     }
 

@@ -12,6 +12,7 @@ public class ScoreUI : MonoBehaviour
     [SerializeField] private Text teamAText = null;
     [SerializeField] private Text teamBText = null;
     [SerializeField] private Text statusText = null;
+    [SerializeField] private Text controlsText = null;
 
     [Header("Formatting")]
     [SerializeField] private string teamALabel = TeamVisualPalette.TeamALabel;
@@ -51,6 +52,12 @@ public class ScoreUI : MonoBehaviour
             statusText.text = FormatStatus(state, winningTeam);
             statusText.color = neutralColor;
         }
+
+        if (controlsText != null)
+        {
+            controlsText.text = FormatControls(state);
+            controlsText.color = neutralColor;
+        }
     }
 
     public static ScoreUI CreateRuntimeScoreUI()
@@ -74,7 +81,7 @@ public class ScoreUI : MonoBehaviour
         panelRect.anchorMax = new Vector2(0f, 1f);
         panelRect.pivot = new Vector2(0f, 1f);
         panelRect.anchoredPosition = new Vector2(24f, -24f);
-        panelRect.sizeDelta = new Vector2(360f, 150f);
+        panelRect.sizeDelta = new Vector2(420f, 184f);
 
         Image panelImage = panelObject.AddComponent<Image>();
         panelImage.color = new Color(0f, 0f, 0f, 0.45f);
@@ -85,6 +92,7 @@ public class ScoreUI : MonoBehaviour
         scoreUI.teamAText = CreateText(panelObject.transform, "TeamAText", new Vector2(16f, -58f), 24, FontStyle.Bold);
         scoreUI.teamBText = CreateText(panelObject.transform, "TeamBText", new Vector2(16f, -90f), 24, FontStyle.Bold);
         scoreUI.statusText = CreateText(panelObject.transform, "StatusText", new Vector2(16f, -122f), 20, FontStyle.Normal);
+        scoreUI.controlsText = CreateText(panelObject.transform, "ControlsText", new Vector2(16f, -150f), 18, FontStyle.Normal);
 
         return scoreUI;
     }
@@ -96,7 +104,7 @@ public class ScoreUI : MonoBehaviour
 
     private void EnsureRuntimeTextReferences()
     {
-        if (timerText != null && teamAText != null && teamBText != null && statusText != null)
+        if (timerText != null && teamAText != null && teamBText != null && statusText != null && controlsText != null)
         {
             return;
         }
@@ -122,6 +130,10 @@ public class ScoreUI : MonoBehaviour
             else if (text.name == "StatusText")
             {
                 statusText = text;
+            }
+            else if (text.name == "ControlsText")
+            {
+                controlsText = text;
             }
         }
     }
@@ -177,10 +189,27 @@ public class ScoreUI : MonoBehaviour
         {
             case GameManager.MatchState.Playing:
                 return "Match in progress";
+            case GameManager.MatchState.Paused:
+                return "Paused";
             case GameManager.MatchState.Finished:
-                return winningTeam == Team.None ? "Draw" : $"{GetTeamLabel(winningTeam)} wins";
+                return winningTeam == Team.None ? "Draw - press R to restart" : $"{GetTeamLabel(winningTeam)} wins - press R to restart";
             default:
                 return "Ready";
+        }
+    }
+
+    private static string FormatControls(GameManager.MatchState state)
+    {
+        switch (state)
+        {
+            case GameManager.MatchState.Playing:
+                return "R Restart | P Pause";
+            case GameManager.MatchState.Paused:
+                return "R Restart | P Resume";
+            case GameManager.MatchState.Finished:
+                return "R Restart";
+            default:
+                return "Enter Start | R Restart";
         }
     }
 

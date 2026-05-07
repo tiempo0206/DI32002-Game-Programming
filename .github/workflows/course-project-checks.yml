@@ -257,6 +257,19 @@ jobs:
             'guid: ee07f6abdd1964429868fa0d1187932c'
             'requirePaintPointNearAreaPlane: 1'
             'rebuildMaskFromPaintBlockersOnAwake: 1'
+            'resetCharactersOnMatchStart: 1'
+            'destroyProjectilesOnMatchStart: 1'
+            'playerRoot: {fileID:'
+            'playerController: {fileID:'
+            'teamBBot: {fileID:'
+            'teamASpawn: {fileID:'
+            'teamBSpawn: {fileID:'
+            'enableKeyboardControls: 1'
+            'startKey: 13'
+            'restartKey: 114'
+            'pauseKey: 112'
+            'alternatePauseKey: 27'
+            'pauseUsesTimeScale: 1'
             'team: 1'
             'team: 2'
           )
@@ -283,6 +296,37 @@ jobs:
 
           grep -q 'guid: 2523003a8ccb1411c976d590e5f00eec' 'Splat Fighters/Assets/Prefabs/Weapons/InkProjectile.prefab' || {
             echo "Expected InkProjectile prefab to use the TeamA projectile material."
+            exit 1
+          }
+
+          required_code_patterns=(
+            'Paused'
+            'RestartMatch'
+            'PauseMatch'
+            'ResumeMatch'
+            'ResetCharactersToSpawns'
+            'DestroyActiveProjectiles'
+          )
+
+          for pattern in "${required_code_patterns[@]}"; do
+            grep -q "$pattern" 'Splat Fighters/Assets/Scripts/Managers/GameManager.cs' || {
+              echo "Missing match flow GameManager code pattern: $pattern"
+              exit 1
+            }
+          done
+
+          grep -q 'ControlsText' 'Splat Fighters/Assets/Scripts/UI/ScoreUI.cs' || {
+            echo "Expected ScoreUI controls text support."
+            exit 1
+          }
+
+          grep -q 'ResetMotionState' 'Splat Fighters/Assets/Scripts/Player/PlayerController.cs' || {
+            echo "Expected PlayerController reset support."
+            exit 1
+          }
+
+          grep -q 'ResetBotState' 'Splat Fighters/Assets/Scripts/AI/BotController.cs' || {
+            echo "Expected BotController reset support."
             exit 1
           }
 

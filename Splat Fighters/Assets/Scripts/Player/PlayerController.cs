@@ -161,4 +161,9 @@ public class PlayerController : MonoBehaviour
 
         weapon.TryFire();
     }
+
+    public void ResetMotionState()
+    {
+        verticalVelocity = 0f;
+    }
 }

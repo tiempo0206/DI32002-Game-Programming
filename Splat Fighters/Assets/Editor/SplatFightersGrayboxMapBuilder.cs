@@ -60,6 +60,7 @@ public static class SplatFightersGrayboxMapBuilder
         ConfigurePaintableGroundForGrayboxMap();
         PositionExistingPlayerAtTeamASpawn(teamAPlayerMaterial);
         PositionExistingCameraForGrayboxMap();
+        ConfigureGameManagerForMatchFlow();
 
         EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
     }
@@ -264,6 +265,61 @@ public static class SplatFightersGrayboxMapBuilder
             Vector3.up);
 
         EditorUtility.SetDirty(camera);
+    }
+
+    private static void ConfigureGameManagerForMatchFlow()
+    {
+        GameManager gameManager = Object.FindObjectOfType<GameManager>();
+
+        if (gameManager == null)
+        {
+            return;
+        }
+
+        GameObject player = GameObject.Find("Player");
+        BotController bot = Object.FindObjectOfType<BotController>();
+        PaintManager paintManager = Object.FindObjectOfType<PaintManager>();
+        SpawnPoint teamASpawn = FindDefaultSpawnPoint(Team.TeamA);
+        SpawnPoint teamBSpawn = FindDefaultSpawnPoint(Team.TeamB);
+
+        SerializedObject managerSo = new SerializedObject(gameManager);
+        managerSo.FindProperty("startMatchOnAwake").boolValue = true;
+        managerSo.FindProperty("clearPaintOnMatchStart").boolValue = true;
+        managerSo.FindProperty("resetCharactersOnMatchStart").boolValue = true;
+        managerSo.FindProperty("destroyProjectilesOnMatchStart").boolValue = true;
+        managerSo.FindProperty("paintManager").objectReferenceValue = paintManager;
+        managerSo.FindProperty("playerRoot").objectReferenceValue = player != null ? player.transform : null;
+        managerSo.FindProperty("playerController").objectReferenceValue = player != null ? player.GetComponent<PlayerController>() : null;
+        managerSo.FindProperty("teamBBot").objectReferenceValue = bot;
+        managerSo.FindProperty("teamASpawn").objectReferenceValue = teamASpawn;
+        managerSo.FindProperty("teamBSpawn").objectReferenceValue = teamBSpawn;
+        managerSo.FindProperty("autoCreateScoreUI").boolValue = true;
+        managerSo.FindProperty("enableKeyboardControls").boolValue = true;
+        managerSo.FindProperty("startKey").intValue = (int)KeyCode.Return;
+        managerSo.FindProperty("restartKey").intValue = (int)KeyCode.R;
+        managerSo.FindProperty("pauseKey").intValue = (int)KeyCode.P;
+        managerSo.FindProperty("alternatePauseKey").intValue = (int)KeyCode.Escape;
+        managerSo.FindProperty("pauseUsesTimeScale").boolValue = true;
+        managerSo.ApplyModifiedPropertiesWithoutUndo();
+
+        EditorUtility.SetDirty(gameManager);
+    }
+
+    private static SpawnPoint FindDefaultSpawnPoint(Team team)
+    {
+        SpawnPoint[] spawnPoints = Object.FindObjectsOfType<SpawnPoint>();
+
+        for (int i = 0; i < spawnPoints.Length; i++)
+        {
+            SpawnPoint spawnPoint = spawnPoints[i];
+
+            if (spawnPoint != null && spawnPoint.Team == team && spawnPoint.DefaultForTeam)
+            {
+                return spawnPoint;
+            }
+        }
+
+        return null;
     }
 
     private static Transform CreateGroup(Transform parent, string name)

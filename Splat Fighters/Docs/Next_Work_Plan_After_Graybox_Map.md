@@ -114,14 +114,21 @@ Acceptance criteria:
 
 ### 4. Match Flow V1
 
+Status:
+
+Implemented in the current branch.
+
 Goal:
 
 Make the MVP demo loop easier to restart and present after one match ends.
 
-Suggested work:
+Implemented work:
 
-- Add a clear match-finished UI state.
-- Add restart/reset input for quick classroom playtests.
+- Added a paused match state.
+- Added `R` restart and `P` / `Escape` pause controls for quick classroom playtests.
+- Added match restart flow that resets timer, score, paint state, active projectiles, player spawn, and TeamB bot spawn.
+- Added HUD text for paused, finished, and restartable match states.
+- Updated scene generation so `GameManager` keeps explicit player, bot, and spawn references after regeneration.
 - Keep reset behavior limited to timer, score, paint state, player spawn, and bot spawn.
 - Avoid adding menus or broad UI refactors until the playable loop is stable.
 
@@ -131,6 +138,25 @@ Acceptance criteria:
 - Restart returns the scene to a playable state without reopening Unity.
 - Paint coverage resets correctly.
 - Player and TeamB bot restart from their team spawn areas.
+
+### 5. Ink Resource And Ground Benefits
+
+Goal:
+
+Give paint ownership a gameplay impact without expanding the MVP into a large mechanics refactor.
+
+Suggested work:
+
+- Add a small ink resource or cooldown constraint to repeated firing.
+- Add a simple movement benefit or refill benefit while standing on own team paint.
+- Use `PaintManager.TryGetTeamAtWorldPosition` for the first ground ownership query.
+- Keep penalties and damage out of scope until the resettable match loop is stable.
+
+Acceptance criteria:
+
+- Repeated firing has a readable resource or pacing limit.
+- Standing on own paint provides one clear benefit.
+- The behavior is explainable from existing paint grid ownership data.
 
 ## Risks To Watch
 

@@ -172,10 +172,18 @@ public static class SplatFightersMvpSceneSetup
         SerializedObject managerSo = new SerializedObject(gameManager);
         managerSo.FindProperty("startMatchOnAwake").boolValue = true;
         managerSo.FindProperty("clearPaintOnMatchStart").boolValue = true;
+        managerSo.FindProperty("resetCharactersOnMatchStart").boolValue = true;
+        managerSo.FindProperty("destroyProjectilesOnMatchStart").boolValue = true;
         managerSo.FindProperty("matchDurationSeconds").floatValue = 180f;
         managerSo.FindProperty("paintManager").objectReferenceValue = paintManager;
         managerSo.FindProperty("autoCreateScoreUI").boolValue = true;
         managerSo.FindProperty("scoreRefreshInterval").floatValue = 0.1f;
+        managerSo.FindProperty("enableKeyboardControls").boolValue = true;
+        managerSo.FindProperty("startKey").intValue = (int)KeyCode.Return;
+        managerSo.FindProperty("restartKey").intValue = (int)KeyCode.R;
+        managerSo.FindProperty("pauseKey").intValue = (int)KeyCode.P;
+        managerSo.FindProperty("alternatePauseKey").intValue = (int)KeyCode.Escape;
+        managerSo.FindProperty("pauseUsesTimeScale").boolValue = true;
         managerSo.ApplyModifiedPropertiesWithoutUndo();
     }
 
