@@ -96,9 +96,14 @@ jobs:
             'class activity/2D-shooter/Assets/Scripts/Enemies/EnemySpawner.cs'
             'class activity/2D-shooter/Assets/Scripts/ShootingProjectiles/ShootingController.cs'
             'class activity/2D-shooter/Assets/Scripts/UI/StartMenuController.cs'
+            'class activity/2D-shooter/Assets/Scripts/UI/ObjectiveDisplay.cs'
+            'class activity/2D-shooter/Assets/Scripts/UI/PlayerHealthDisplay.cs'
+            'class activity/2D-shooter/Assets/Scripts/UI/SceneFlowActions.cs'
             'class activity/2D-shooter/Assets/Prefabs/Effects/EnemyHitEffect.prefab'
             'class activity/2D-shooter/Assets/Prefabs/Effects/PlayerProjectileHitV2.prefab'
             'class activity/2D-shooter/Assets/Prefabs/Enemies/EnemyParts/EnemyGun.prefab'
+            'class activity/2D-shooter/Assets/Prefabs/Enemies/IndividualEnemies/StationaryShooters/StraightShooter.prefab'
+            'class activity/2D-shooter/Docs/5.9_Change_Log_and_Credits.md'
           )
 
           for file in "${required_files[@]}"; do
@@ -210,37 +215,78 @@ jobs:
           grep -q 'guid: b58ca2f55b8d54e44921b14b727bf610' "$player_fire"
           grep -q 'myRigidbody.MovePosition(nextPosition);' 'class activity/2D-shooter/Assets/Scripts/Player/Controller.cs'
 
-      - name: Validate 5.7 2D shooter start menu
+      - name: Validate 5.9 2D shooter improvement activity
         shell: bash
         run: |
           set -euo pipefail
 
           scene='class activity/2D-shooter/Assets/_Scenes/Level1_scene.unity'
           start_menu_controller='class activity/2D-shooter/Assets/Scripts/UI/StartMenuController.cs'
+          objective_display='class activity/2D-shooter/Assets/Scripts/UI/ObjectiveDisplay.cs'
+          health_display='class activity/2D-shooter/Assets/Scripts/UI/PlayerHealthDisplay.cs'
+          scene_flow='class activity/2D-shooter/Assets/Scripts/UI/SceneFlowActions.cs'
+          straight_shooter='class activity/2D-shooter/Assets/Prefabs/Enemies/IndividualEnemies/StationaryShooters/StraightShooter.prefab'
+          changelog='class activity/2D-shooter/Docs/5.9_Change_Log_and_Credits.md'
 
           required_menu_patterns=(
             'm_Name: StartMenu'
-            'm_Name: StartButton'
-            'm_Name: START'
-            'm_Name: 2D SPACE SHOOTER'
-            'm_Name: 5.7 CLASS ACTIVITY'
+            'm_Name: MainMenuPage'
+            'm_Name: InstructionsPage'
+            'm_Name: NewGameButton'
+            'm_Name: InstructionsButton'
+            'm_Name: ExitButton'
+            'm_Name: BackButton'
+            'm_Name: ObjectiveText'
+            'm_Name: HealthText'
+            'm_Name: HighScoreText'
+            'm_Name: TargetText'
+            'm_Name: MenuMusic'
+            'm_Name: SceneFlowActions'
+            'm_Name: RetryButton'
+            'm_Name: MenuButton'
+            'm_Text: 5.9 CLASS ACTIVITY'
+            "m_text: 'OBJECTIVE: Destroy 12 raiders and survive the asteroid belt.'"
+            "m_text: 'TARGET: 0/12'"
+            "m_text: 'HP: 5/5'"
             'guid: 557567248abe740679461196db7ab927'
-            'guid: 440c20dec0f2220499038bfec1cf8886'
-            'guid: 018cd37590e3e2341a620241eacc4e09'
+            'guid: 7cddbdfcb971144d6b4a815576649f03'
+            'guid: 655bef34f545147048e46b47affefc34'
+            'guid: 207985c3cf6d64a86bf5114cab404c11'
+            'guid: 2c7cc4c3cc08ca44ebdd6f1571de0373'
+            'guid: 0e8c16ddf47db704ea56bdef23e5044d'
             'gameplayBehaviours:'
+            'menuClickSound: {fileID: 8300000, guid: 2ee8db168070cea4bb1ea13a024acce9, type: 3}'
+            'hitSound: {fileID: 8300000, guid: 792618d7eb3d43b45803d6775714eb2d, type: 3}'
+            'deathSound: {fileID: 8300000, guid: 07dfbd4ab560947438f2c3cec15e5cce, type: 3}'
+            'fireSound: {fileID: 8300000, guid: 2f7ee51cc1e5f3e4fb1b273aa57cf7b4, type: 3}'
           )
 
           for pattern in "${required_menu_patterns[@]}"; do
             grep -q "$pattern" "$scene" || {
-              echo "Missing 5.7 start menu scene pattern: $pattern"
+              echo "Missing 5.9 improvement scene pattern: $pattern"
               exit 1
             }
           done
 
           test -f "$start_menu_controller"
+          test -f "$objective_display"
+          test -f "$health_display"
+          test -f "$scene_flow"
+          test -f "$straight_shooter"
+          test -f "$changelog"
           grep -q 'public class StartMenuController' "$start_menu_controller"
-          grep -q 'Time.timeScale = 0f;' "$start_menu_controller"
-          grep -q 'Time.timeScale = 1f;' "$start_menu_controller"
+          grep -q 'public static bool startImmediatelyOnNextLoad = false;' "$start_menu_controller"
+          grep -q 'private void SetMusicForGameplay(bool gameplayActive)' "$start_menu_controller"
+          grep -q 'public class ObjectiveDisplay' "$objective_display"
+          grep -q 'public class PlayerHealthDisplay' "$health_display"
+          grep -q 'public class SceneFlowActions' "$scene_flow"
+          grep -q 'RetryLevel' "$scene_flow"
+          grep -q 'ReturnToMenu' "$scene_flow"
+          grep -q 'fireSound: {fileID: 8300000, guid: 90c9af27c6a1be948a5cccf9730a5c61, type: 3}' "$straight_shooter"
+          grep -q 'hitSound: {fileID: 8300000, guid: f3b024d14c913d74ba5a66d5e9cb5e55, type: 3}' "$straight_shooter"
+          grep -q 'deathSound: {fileID: 8300000, guid: 013337b7074c32640b54b6f880c9f419, type: 3}' "$straight_shooter"
+          grep -q '## 5.9 Class Activity' "$changelog"
+          grep -q '## Credits' "$changelog"
 
       - name: Validate Splat Fighters graybox map scene
         shell: bash
@@ -254,6 +300,7 @@ jobs:
             'm_Name: GroundVisual'
             'm_Name: Player'
             'm_Name: FirePoint'
+            'm_Name: SwimFormVisual'
             'm_Name: PaintManager'
             'm_Name: GameManager'
             'm_Name: Main Camera'
@@ -303,6 +350,12 @@ jobs:
             'inkPerShot: 10'
             'ownPaintRecoveryMultiplier: 3.5'
             'groundProbe: {fileID:'
+            'swimKey: 304'
+            'playerTeam: 1'
+            'swimMoveSpeedMultiplier: 1.55'
+            'swimInkRecoveryMultiplier: 1.8'
+            'disableFireWhileSwimming: 1'
+            'swimFormVisual: {fileID:'
             'enableKeyboardControls: 1'
             'startKey: 13'
             'restartKey: 114'
@@ -384,6 +437,22 @@ jobs:
             echo "Expected PlayerController reset support."
             exit 1
           }
+
+          required_player_swim_patterns=(
+            'SwimHeld'
+            'IsSwimming'
+            'swimMoveSpeedMultiplier'
+            'swimInkRecoveryMultiplier'
+            'SetExternalRecoveryMultiplier'
+            'TryGetTeamAtWorldPosition'
+          )
+
+          for pattern in "${required_player_swim_patterns[@]}"; do
+            grep -q "$pattern" 'Splat Fighters/Assets/Scripts/Player/PlayerController.cs' 'Splat Fighters/Assets/Scripts/Player/PlayerInputHandler.cs' || {
+              echo "Missing swim movement player code pattern: $pattern"
+              exit 1
+            }
+          done
 
           grep -q 'ResetBotState' 'Splat Fighters/Assets/Scripts/AI/BotController.cs' || {
             echo "Expected BotController reset support."
