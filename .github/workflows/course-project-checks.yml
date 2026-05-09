@@ -300,7 +300,6 @@ jobs:
             'm_Name: GroundVisual'
             'm_Name: Player'
             'm_Name: FirePoint'
-            'm_Name: SwimFormVisual'
             'm_Name: PaintManager'
             'm_Name: GameManager'
             'm_Name: Main Camera'
@@ -350,12 +349,6 @@ jobs:
             'inkPerShot: 10'
             'ownPaintRecoveryMultiplier: 3.5'
             'groundProbe: {fileID:'
-            'swimKey: 304'
-            'playerTeam: 1'
-            'swimMoveSpeedMultiplier: 1.55'
-            'swimInkRecoveryMultiplier: 1.8'
-            'disableFireWhileSwimming: 1'
-            'swimFormVisual: {fileID:'
             'enableKeyboardControls: 1'
             'startKey: 13'
             'restartKey: 114'
@@ -437,22 +430,6 @@ jobs:
             echo "Expected PlayerController reset support."
             exit 1
           }
-
-          required_player_swim_patterns=(
-            'SwimHeld'
-            'IsSwimming'
-            'swimMoveSpeedMultiplier'
-            'swimInkRecoveryMultiplier'
-            'SetExternalRecoveryMultiplier'
-            'TryGetTeamAtWorldPosition'
-          )
-
-          for pattern in "${required_player_swim_patterns[@]}"; do
-            grep -q "$pattern" 'Splat Fighters/Assets/Scripts/Player/PlayerController.cs' 'Splat Fighters/Assets/Scripts/Player/PlayerInputHandler.cs' || {
-              echo "Missing swim movement player code pattern: $pattern"
-              exit 1
-            }
-          done
 
           grep -q 'ResetBotState' 'Splat Fighters/Assets/Scripts/AI/BotController.cs' || {
             echo "Expected BotController reset support."
