@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 /// <summary>
 /// Controls the start menu overlay, instructions page, and music handoff into gameplay.
@@ -26,6 +27,9 @@ public class StartMenuController : MonoBehaviour
     [Tooltip("The button that returns from instructions to the main menu page.")]
     [SerializeField] private Button backButton = null;
 
+    [Tooltip("Additional menu flow buttons that should play the menu click sound when pressed.")]
+    [SerializeField] private Button[] clickFeedbackButtons = new Button[0];
+
     [Tooltip("The menu music audio source.")]
     [SerializeField] private AudioSource menuMusicSource = null;
 
@@ -34,6 +38,12 @@ public class StartMenuController : MonoBehaviour
 
     [Tooltip("Optional one-shot sound for menu button presses.")]
     [SerializeField] private AudioClip menuClickSound = null;
+
+    [Tooltip("Optional in-game objective label to refresh at runtime.")]
+    [SerializeField] private TMP_Text objectiveText = null;
+
+    [Tooltip("Objective text shown during the playable portion of the level.")]
+    [SerializeField] [TextArea] private string runtimeObjectiveDescription = "MISSION: Destroy 15 raiders. Blue pickups trigger temporary speed and fire boosts.";
 
     [Tooltip("Volume of the menu click sound.")]
     [SerializeField] private float menuClickVolume = 0.85f;
@@ -63,7 +73,10 @@ public class StartMenuController : MonoBehaviour
             backButton.onClick.AddListener(ShowMainMenuPage);
         }
 
+        RegisterClickFeedbackButtons();
+
         OpenMenu();
+        UpdateObjectiveText();
 
         if (startImmediatelyOnNextLoad)
         {
@@ -88,6 +101,8 @@ public class StartMenuController : MonoBehaviour
         {
             backButton.onClick.RemoveListener(ShowMainMenuPage);
         }
+
+        UnregisterClickFeedbackButtons();
     }
 
     public void OpenMenu()
@@ -214,6 +229,23 @@ public class StartMenuController : MonoBehaviour
         }
     }
 
+    private void UpdateObjectiveText()
+    {
+        if (objectiveText == null)
+        {
+            GameObject objectiveObject = GameObject.Find("ObjectiveText");
+            if (objectiveObject != null)
+            {
+                objectiveText = objectiveObject.GetComponent<TMP_Text>();
+            }
+        }
+
+        if (objectiveText != null)
+        {
+            objectiveText.text = runtimeObjectiveDescription;
+        }
+    }
+
     private void PlayMenuClick()
     {
         if (menuClickSound == null)
@@ -228,5 +260,27 @@ public class StartMenuController : MonoBehaviour
         }
 
         AudioSource.PlayClipAtPoint(menuClickSound, soundPosition, menuClickVolume);
+    }
+
+    private void RegisterClickFeedbackButtons()
+    {
+        foreach (Button button in clickFeedbackButtons)
+        {
+            if (button != null)
+            {
+                button.onClick.AddListener(PlayMenuClick);
+            }
+        }
+    }
+
+    private void UnregisterClickFeedbackButtons()
+    {
+        foreach (Button button in clickFeedbackButtons)
+        {
+            if (button != null)
+            {
+                button.onClick.RemoveListener(PlayMenuClick);
+            }
+        }
     }
 }
