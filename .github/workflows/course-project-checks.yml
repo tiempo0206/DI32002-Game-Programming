@@ -58,6 +58,7 @@ jobs:
             'Splat Fighters/Assets/Scripts/Painting/PaintGridCell.cs'
             'Splat Fighters/Assets/Scripts/Painting/PaintableArea.cs'
             'Splat Fighters/Assets/Scripts/Painting/PaintManager.cs'
+            'Splat Fighters/Assets/Scripts/Combat/CharacterHealth.cs'
             'Splat Fighters/Assets/Scripts/Weapons/InkProjectile.cs'
             'Splat Fighters/Assets/Scripts/Weapons/InkWeapon.cs'
             'Splat Fighters/Assets/Scripts/AI/BotController.cs'
@@ -341,6 +342,9 @@ jobs:
             'playerRoot: {fileID:'
             'playerController: {fileID:'
             'teamBBot: {fileID:'
+            'playerHealth: {fileID:'
+            'teamBBotHealth: {fileID:'
+            'respawnDelaySeconds: 2'
             'teamASpawn: {fileID:'
             'teamBSpawn: {fileID:'
             'playerWeapon: {fileID:'
@@ -363,6 +367,8 @@ jobs:
             'pauseUsesTimeScale: 1'
             'team: 1'
             'team: 2'
+            'enemyPaintDamagePerSecond: 35'
+            'damageOnlyDuringMatch: 1'
           )
 
           for pattern in "${required_scene_patterns[@]}"; do
@@ -414,6 +420,11 @@ jobs:
 
           grep -q 'InkText' 'Splat Fighters/Assets/Scripts/UI/ScoreUI.cs' || {
             echo "Expected ScoreUI ink resource text support."
+            exit 1
+          }
+
+          grep -q 'HealthText' 'Splat Fighters/Assets/Scripts/UI/ScoreUI.cs' || {
+            echo "Expected ScoreUI health text support."
             exit 1
           }
 
@@ -469,6 +480,37 @@ jobs:
             echo "Expected BotController reset support."
             exit 1
           }
+
+          required_health_patterns=(
+            'public class CharacterHealth'
+            'Eliminated'
+            'enemyPaintDamagePerSecond'
+            'TryGetEnemyPaintTeam'
+            'ReviveFull'
+            'ApplyDamage'
+          )
+
+          for pattern in "${required_health_patterns[@]}"; do
+            grep -q "$pattern" 'Splat Fighters/Assets/Scripts/Combat/CharacterHealth.cs' || {
+              echo "Missing CharacterHealth code pattern: $pattern"
+              exit 1
+            }
+          done
+
+          required_respawn_patterns=(
+            'RespawnCharacterAfterDelay'
+            'HandleCharacterEliminated'
+            'StopRespawnRoutines'
+            'playerHealth'
+            'teamBBotHealth'
+          )
+
+          for pattern in "${required_respawn_patterns[@]}"; do
+            grep -q "$pattern" 'Splat Fighters/Assets/Scripts/Managers/GameManager.cs' || {
+              echo "Missing GameManager respawn code pattern: $pattern"
+              exit 1
+            }
+          done
 
           paintable_cell_count="$(python3 - <<'PY'
           from pathlib import Path

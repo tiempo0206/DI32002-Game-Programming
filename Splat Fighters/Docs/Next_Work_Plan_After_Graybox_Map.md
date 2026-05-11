@@ -245,17 +245,22 @@ Acceptance criteria:
 
 ### 8. Damage And Respawn V1
 
+Status:
+
+Implemented in the current branch.
+
 Goal:
 
 Add one direct opponent consequence while keeping territory control as the main objective.
 
-Suggested work:
+Implemented work:
 
-- Add lightweight health to player and TeamB bot.
-- Let enemy ink apply small damage only to opposing characters.
-- Respawn defeated characters at their team spawn after a short delay.
-- Clear active enemy pressure near spawn only if needed for playability.
-- Keep eliminations secondary to territory score.
+- Added lightweight `CharacterHealth` to the TeamA player and TeamB bot.
+- Let enemy-owned paint apply continuous damage only to opposing characters.
+- Added short delayed respawns back to each team spawn without restarting the match.
+- Disabled movement, firing, and renderers while a character is eliminated.
+- Added HUD health feedback for the player.
+- Kept eliminations secondary to territory score.
 
 Acceptance criteria:
 

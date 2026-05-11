@@ -139,6 +139,8 @@ public static class SplatFightersGrayboxMapBuilder
         AssignMaterial(bot, teamBMaterial);
         TeamVisualBinder visualBinder = bot.AddComponent<TeamVisualBinder>();
         visualBinder.Configure(Team.TeamB, null, teamBMaterial);
+        CharacterHealth health = bot.AddComponent<CharacterHealth>();
+        ConfigureCharacterHealth(health, Team.TeamB, bot.transform);
 
         GameObject firePointObject = new GameObject("TeamBBotFirePoint");
         firePointObject.transform.SetParent(bot.transform, false);
@@ -253,6 +255,7 @@ public static class SplatFightersGrayboxMapBuilder
 
         ConfigurePlayerInkResource(player);
         ConfigurePlayerSwimForm(player, teamAMaterial);
+        ConfigureCharacterHealth(GetOrCreateCharacterHealth(player), Team.TeamA, player.transform);
         visualBinder.Configure(Team.TeamA, teamAMaterial, null);
         EditorUtility.SetDirty(player);
         EditorUtility.SetDirty(visualBinder);
@@ -350,6 +353,37 @@ public static class SplatFightersGrayboxMapBuilder
         return swimFormVisual;
     }
 
+    private static CharacterHealth GetOrCreateCharacterHealth(GameObject character)
+    {
+        CharacterHealth health = character != null ? character.GetComponent<CharacterHealth>() : null;
+
+        if (health == null && character != null)
+        {
+            health = character.AddComponent<CharacterHealth>();
+        }
+
+        return health;
+    }
+
+    private static void ConfigureCharacterHealth(CharacterHealth health, Team team, Transform groundProbe)
+    {
+        if (health == null)
+        {
+            return;
+        }
+
+        SerializedObject healthSo = new SerializedObject(health);
+        healthSo.FindProperty("team").enumValueIndex = (int)team;
+        healthSo.FindProperty("maxHealth").floatValue = 100f;
+        healthSo.FindProperty("enemyPaintDamagePerSecond").floatValue = 35f;
+        healthSo.FindProperty("damageOnlyDuringMatch").boolValue = true;
+        healthSo.FindProperty("groundProbe").objectReferenceValue = groundProbe;
+        healthSo.FindProperty("hideRenderersWhileEliminated").boolValue = true;
+        healthSo.ApplyModifiedPropertiesWithoutUndo();
+
+        EditorUtility.SetDirty(health);
+    }
+
     private static void PositionExistingCameraForGrayboxMap()
     {
         Camera camera = Camera.main;
@@ -391,11 +425,14 @@ public static class SplatFightersGrayboxMapBuilder
         managerSo.FindProperty("paintManager").objectReferenceValue = paintManager;
         managerSo.FindProperty("playerRoot").objectReferenceValue = player != null ? player.transform : null;
         managerSo.FindProperty("playerController").objectReferenceValue = player != null ? player.GetComponent<PlayerController>() : null;
+        managerSo.FindProperty("playerHealth").objectReferenceValue = player != null ? player.GetComponent<CharacterHealth>() : null;
         managerSo.FindProperty("playerWeapon").objectReferenceValue = player != null ? player.GetComponentInChildren<InkWeapon>() : null;
         managerSo.FindProperty("teamBBot").objectReferenceValue = bot;
+        managerSo.FindProperty("teamBBotHealth").objectReferenceValue = bot != null ? bot.GetComponent<CharacterHealth>() : null;
         managerSo.FindProperty("teamASpawn").objectReferenceValue = teamASpawn;
         managerSo.FindProperty("teamBSpawn").objectReferenceValue = teamBSpawn;
         managerSo.FindProperty("autoCreateScoreUI").boolValue = true;
+        managerSo.FindProperty("respawnDelaySeconds").floatValue = 2f;
         managerSo.FindProperty("enableKeyboardControls").boolValue = true;
         managerSo.FindProperty("startKey").intValue = (int)KeyCode.Return;
         managerSo.FindProperty("restartKey").intValue = (int)KeyCode.R;

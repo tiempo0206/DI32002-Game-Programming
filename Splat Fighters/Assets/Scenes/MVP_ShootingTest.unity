@@ -1099,11 +1099,14 @@ MonoBehaviour:
   scoreUI: {fileID: 0}
   playerRoot: {fileID: 2025107691}
   playerController: {fileID: 2025107688}
+  playerHealth: {fileID: 2025107696}
   playerWeapon: {fileID: 2025107687}
   teamBBot: {fileID: 1246432307}
+  teamBBotHealth: {fileID: 1246432313}
   teamASpawn: {fileID: 261128372}
   teamBSpawn: {fileID: 1692312117}
   autoCreateScoreUI: 1
+  respawnDelaySeconds: 2
   scoreRefreshInterval: 0.1
   enableKeyboardControls: 1
   startKey: 13
@@ -2972,6 +2975,7 @@ GameObject:
   - component: {fileID: 1246432311}
   - component: {fileID: 1246432310}
   - component: {fileID: 1246432309}
+  - component: {fileID: 1246432313}
   - component: {fileID: 1246432308}
   - component: {fileID: 1246432307}
   m_Layer: 0
@@ -3094,6 +3098,24 @@ MonoBehaviour:
   teamAMaterial: {fileID: 0}
   teamBMaterial: {fileID: 2100000, guid: ee07f6abdd1964429868fa0d1187932c, type: 2}
   applyOnAwake: 1
+--- !u!114 &1246432313
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1246432305}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 99b3fd09d15047b9974b269018228d40, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  team: 2
+  maxHealth: 100
+  enemyPaintDamagePerSecond: 35
+  damageOnlyDuringMatch: 1
+  groundProbe: {fileID: 1246432306}
+  hideRenderersWhileEliminated: 1
 --- !u!143 &1246432310
 CharacterController:
   m_ObjectHideFlags: 0
@@ -12064,6 +12086,7 @@ GameObject:
   - component: {fileID: 2025107694}
   - component: {fileID: 2025107693}
   - component: {fileID: 2025107688}
+  - component: {fileID: 2025107696}
   - component: {fileID: 2025107687}
   - component: {fileID: 2025107690}
   - component: {fileID: 2025107692}
@@ -12144,6 +12167,24 @@ MonoBehaviour:
   jumpHeight: 1.2
   gravity: -25
   groundedStickForce: -2
+--- !u!114 &2025107696
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2025107686}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 99b3fd09d15047b9974b269018228d40, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  team: 1
+  maxHealth: 100
+  enemyPaintDamagePerSecond: 35
+  damageOnlyDuringMatch: 1
+  groundProbe: {fileID: 2025107691}
+  hideRenderersWhileEliminated: 1
 --- !u!23 &2025107689
 MeshRenderer:
   m_ObjectHideFlags: 0
