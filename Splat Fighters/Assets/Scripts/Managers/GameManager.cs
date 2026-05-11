@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 
 /// <summary>
@@ -30,11 +31,16 @@ public class GameManager : MonoBehaviour
     [SerializeField] private ScoreUI scoreUI = null;
     [SerializeField] private Transform playerRoot = null;
     [SerializeField] private PlayerController playerController = null;
+    [SerializeField] private CharacterHealth playerHealth = null;
     [SerializeField] private InkWeapon playerWeapon = null;
     [SerializeField] private BotController teamBBot = null;
+    [SerializeField] private CharacterHealth teamBBotHealth = null;
     [SerializeField] private SpawnPoint teamASpawn = null;
     [SerializeField] private SpawnPoint teamBSpawn = null;
     [SerializeField] private bool autoCreateScoreUI = true;
+
+    [Header("Respawn")]
+    [SerializeField, Min(0f)] private float respawnDelaySeconds = 2f;
 
     [Header("Score Refresh")]
     [SerializeField, Min(0.02f)] private float scoreRefreshInterval = 0.1f;
@@ -54,6 +60,8 @@ public class GameManager : MonoBehaviour
     private Team winningTeam = Team.None;
     private float timeScaleBeforePause = 1f;
     private bool timeScaleOverridden;
+    private Coroutine playerRespawnRoutine;
+    private Coroutine teamBBotRespawnRoutine;
 
     public event Action<MatchState> MatchStateChanged;
 
@@ -73,6 +81,7 @@ public class GameManager : MonoBehaviour
 
         Instance = this;
         ResolveReferences();
+        SubscribeToHealthEvents();
         matchTimer.Configure(matchDurationSeconds);
         matchTimer.Reset();
     }
@@ -115,6 +124,7 @@ public class GameManager : MonoBehaviour
     {
         if (Instance == this)
         {
+            UnsubscribeFromHealthEvents();
             ApplyPausedTimeScale(false);
             Instance = null;
         }
@@ -123,6 +133,8 @@ public class GameManager : MonoBehaviour
     public void StartMatch()
     {
         ResolveReferences();
+        SubscribeToHealthEvents();
+        StopRespawnRoutines();
 
         if (clearPaintOnMatchStart && paintManager != null)
         {
@@ -150,6 +162,7 @@ public class GameManager : MonoBehaviour
 
     public void EndMatch()
     {
+        StopRespawnRoutines();
         ApplyPausedTimeScale(false);
         matchTimer.Stop();
         RefreshScore(true);
@@ -161,6 +174,7 @@ public class GameManager : MonoBehaviour
     public void ResetMatch()
     {
         ApplyPausedTimeScale(false);
+        StopRespawnRoutines();
         matchTimer.Configure(matchDurationSeconds);
         matchTimer.Reset();
 
@@ -301,6 +315,11 @@ public class GameManager : MonoBehaviour
             playerController = playerRoot.GetComponent<PlayerController>();
         }
 
+        if (playerHealth == null && playerRoot != null)
+        {
+            playerHealth = playerRoot.GetComponent<CharacterHealth>();
+        }
+
         if (playerWeapon == null && playerRoot != null)
         {
             playerWeapon = playerRoot.GetComponentInChildren<InkWeapon>();
@@ -309,6 +328,11 @@ public class GameManager : MonoBehaviour
         if (teamBBot == null)
         {
             teamBBot = FindObjectOfType<BotController>();
+        }
+
+        if (teamBBotHealth == null && teamBBot != null)
+        {
+            teamBBotHealth = teamBBot.GetComponent<CharacterHealth>();
         }
 
         if (teamASpawn == null || teamBSpawn == null)
@@ -367,6 +391,11 @@ public class GameManager : MonoBehaviour
 
         TeleportCharacter(playerRoot, teamASpawn);
 
+        if (playerHealth != null)
+        {
+            playerHealth.ReviveFull();
+        }
+
         if (playerController != null)
         {
             playerController.ResetMotionState();
@@ -377,6 +406,12 @@ public class GameManager : MonoBehaviour
         if (teamBBot != null)
         {
             TeleportCharacter(teamBBot.transform, teamBSpawn);
+
+            if (teamBBotHealth != null)
+            {
+                teamBBotHealth.ReviveFull();
+            }
+
             teamBBot.ResetBotState();
             ResetWeaponResources(teamBBot.transform);
         }
@@ -437,6 +472,122 @@ public class GameManager : MonoBehaviour
             {
                 weapon.ResetInkResource();
             }
+        }
+    }
+
+    private void SubscribeToHealthEvents()
+    {
+        if (playerHealth != null)
+        {
+            playerHealth.Eliminated -= HandleCharacterEliminated;
+            playerHealth.Eliminated += HandleCharacterEliminated;
+        }
+
+        if (teamBBotHealth != null)
+        {
+            teamBBotHealth.Eliminated -= HandleCharacterEliminated;
+            teamBBotHealth.Eliminated += HandleCharacterEliminated;
+        }
+    }
+
+    private void UnsubscribeFromHealthEvents()
+    {
+        if (playerHealth != null)
+        {
+            playerHealth.Eliminated -= HandleCharacterEliminated;
+        }
+
+        if (teamBBotHealth != null)
+        {
+            teamBBotHealth.Eliminated -= HandleCharacterEliminated;
+        }
+    }
+
+    private void HandleCharacterEliminated(CharacterHealth health)
+    {
+        if (health == null || currentState != MatchState.Playing)
+        {
+            return;
+        }
+
+        if (health == playerHealth && playerRespawnRoutine == null)
+        {
+            playerRespawnRoutine = StartCoroutine(RespawnCharacterAfterDelay(playerHealth, playerRoot, teamASpawn, true));
+        }
+        else if (health == teamBBotHealth && teamBBot != null && teamBBotRespawnRoutine == null)
+        {
+            teamBBotRespawnRoutine = StartCoroutine(RespawnCharacterAfterDelay(teamBBotHealth, teamBBot.transform, teamBSpawn, false));
+        }
+    }
+
+    private IEnumerator RespawnCharacterAfterDelay(CharacterHealth health, Transform root, SpawnPoint spawnPoint, bool isPlayer)
+    {
+        float elapsed = 0f;
+
+        while (elapsed < respawnDelaySeconds)
+        {
+            if (currentState == MatchState.WaitingToStart || currentState == MatchState.Finished)
+            {
+                ClearRespawnRoutineReference(isPlayer);
+                yield break;
+            }
+
+            if (currentState == MatchState.Playing)
+            {
+                elapsed += Time.deltaTime;
+            }
+
+            yield return null;
+        }
+
+        if (currentState == MatchState.Playing)
+        {
+            TeleportCharacter(root, spawnPoint);
+
+            if (health != null)
+            {
+                health.ReviveFull();
+            }
+
+            if (isPlayer && playerController != null)
+            {
+                playerController.ResetMotionState();
+            }
+            else if (!isPlayer && teamBBot != null)
+            {
+                teamBBot.ResetBotState();
+            }
+
+            ResetWeaponResources(root);
+        }
+
+        ClearRespawnRoutineReference(isPlayer);
+    }
+
+    private void StopRespawnRoutines()
+    {
+        if (playerRespawnRoutine != null)
+        {
+            StopCoroutine(playerRespawnRoutine);
+            playerRespawnRoutine = null;
+        }
+
+        if (teamBBotRespawnRoutine != null)
+        {
+            StopCoroutine(teamBBotRespawnRoutine);
+            teamBBotRespawnRoutine = null;
+        }
+    }
+
+    private void ClearRespawnRoutineReference(bool isPlayer)
+    {
+        if (isPlayer)
+        {
+            playerRespawnRoutine = null;
+        }
+        else
+        {
+            teamBBotRespawnRoutine = null;
         }
     }
 
@@ -519,7 +670,9 @@ public class GameManager : MonoBehaviour
             playerWeapon == null || playerWeapon.HasEnoughInkToFire,
             playerController != null && playerController.IsSwimming,
             playerController != null && playerController.WantsToSwim,
-            playerController != null && playerController.IsOnEnemyPaint);
+            playerController != null && playerController.IsOnEnemyPaint,
+            playerHealth != null ? playerHealth.HealthPercent : -1f,
+            playerHealth != null && playerHealth.IsEliminated);
     }
 
     private void SetState(MatchState nextState)

@@ -177,6 +177,7 @@ public static class SplatFightersMvpSceneSetup
         managerSo.FindProperty("matchDurationSeconds").floatValue = 180f;
         managerSo.FindProperty("paintManager").objectReferenceValue = paintManager;
         managerSo.FindProperty("autoCreateScoreUI").boolValue = true;
+        managerSo.FindProperty("respawnDelaySeconds").floatValue = 2f;
         managerSo.FindProperty("scoreRefreshInterval").floatValue = 0.1f;
         managerSo.FindProperty("enableKeyboardControls").boolValue = true;
         managerSo.FindProperty("startKey").intValue = (int)KeyCode.Return;
@@ -248,10 +249,13 @@ public static class SplatFightersMvpSceneSetup
 
         PlayerInputHandler input = player.AddComponent<PlayerInputHandler>();
         PlayerController playerController = player.AddComponent<PlayerController>();
+        CharacterHealth health = player.AddComponent<CharacterHealth>();
         InkWeapon weapon = player.AddComponent<InkWeapon>();
         AimController aimController = player.AddComponent<AimController>();
         TeamVisualBinder visualBinder = player.AddComponent<TeamVisualBinder>();
         visualBinder.Configure(Team.TeamA, shooterMaterial, null);
+
+        ConfigureCharacterHealth(health, Team.TeamA, player.transform);
 
         SerializedObject inputSo = new SerializedObject(input);
         inputSo.FindProperty("swimKey").intValue = (int)KeyCode.LeftShift;
@@ -324,6 +328,23 @@ public static class SplatFightersMvpSceneSetup
         EditorUtility.SetDirty(input);
         EditorUtility.SetDirty(visualBinder);
         return player;
+    }
+
+    private static void ConfigureCharacterHealth(CharacterHealth health, Team team, Transform groundProbe)
+    {
+        if (health == null)
+        {
+            return;
+        }
+
+        SerializedObject healthSo = new SerializedObject(health);
+        healthSo.FindProperty("team").enumValueIndex = (int)team;
+        healthSo.FindProperty("maxHealth").floatValue = 100f;
+        healthSo.FindProperty("enemyPaintDamagePerSecond").floatValue = 35f;
+        healthSo.FindProperty("damageOnlyDuringMatch").boolValue = true;
+        healthSo.FindProperty("groundProbe").objectReferenceValue = groundProbe;
+        healthSo.FindProperty("hideRenderersWhileEliminated").boolValue = true;
+        healthSo.ApplyModifiedPropertiesWithoutUndo();
     }
 
     private static GameObject CreateSwimFormVisual(Transform parent, Material material)
