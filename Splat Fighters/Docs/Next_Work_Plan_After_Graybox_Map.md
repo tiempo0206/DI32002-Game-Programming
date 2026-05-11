@@ -220,16 +220,21 @@ Acceptance criteria:
 
 ### 7. Enemy Ink Movement Pressure V1
 
+Status:
+
+Implemented in the current branch.
+
 Goal:
 
 Make enemy paint matter immediately, matching the Splatoon idea that territory controls movement.
 
-Suggested work:
+Implemented work:
 
-- Slow TeamA movement on TeamB paint.
-- Disable or heavily limit swim-form benefits on TeamB paint.
-- Add simple feedback when standing on enemy paint.
-- Keep hard damage optional for this increment; the first target is movement pressure.
+- Slowed TeamA movement when the player is standing on TeamB paint.
+- Kept TeamA paint as the only surface that enables swim form and extra refill.
+- Left neutral ground at normal movement speed so traversal stays playable.
+- Added HUD feedback that shows `Enemy ink` while the player is on TeamB paint.
+- Kept hard damage out of this increment; this task is focused on movement pressure.
 
 Acceptance criteria:
 

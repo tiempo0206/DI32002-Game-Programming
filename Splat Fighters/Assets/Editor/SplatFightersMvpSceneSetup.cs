@@ -266,6 +266,7 @@ public static class SplatFightersMvpSceneSetup
         controllerSo.FindProperty("rotationMode").enumValueIndex = 2;
         controllerSo.FindProperty("playerTeam").enumValueIndex = (int)Team.TeamA;
         controllerSo.FindProperty("swimMoveSpeedMultiplier").floatValue = 1.55f;
+        controllerSo.FindProperty("enemyPaintMoveSpeedMultiplier").floatValue = 0.55f;
         controllerSo.FindProperty("swimInkRecoveryMultiplier").floatValue = 1.8f;
         controllerSo.FindProperty("disableFireWhileSwimming").boolValue = true;
         controllerSo.FindProperty("groundProbe").objectReferenceValue = player.transform;
