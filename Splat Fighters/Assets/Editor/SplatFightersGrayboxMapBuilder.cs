@@ -251,8 +251,9 @@ public static class SplatFightersGrayboxMapBuilder
             visualBinder = player.AddComponent<TeamVisualBinder>();
         }
 
-        visualBinder.Configure(Team.TeamA, teamAMaterial, null);
         ConfigurePlayerInkResource(player);
+        ConfigurePlayerSwimForm(player, teamAMaterial);
+        visualBinder.Configure(Team.TeamA, teamAMaterial, null);
         EditorUtility.SetDirty(player);
         EditorUtility.SetDirty(visualBinder);
     }
@@ -277,6 +278,75 @@ public static class SplatFightersGrayboxMapBuilder
         weaponSo.ApplyModifiedPropertiesWithoutUndo();
 
         EditorUtility.SetDirty(weapon);
+    }
+
+    private static void ConfigurePlayerSwimForm(GameObject player, Material teamAMaterial)
+    {
+        if (player == null)
+        {
+            return;
+        }
+
+        PlayerInputHandler input = player.GetComponent<PlayerInputHandler>();
+        PlayerController controller = player.GetComponent<PlayerController>();
+        MeshRenderer humanoidRenderer = player.GetComponent<MeshRenderer>();
+        GameObject swimFormVisual = GetOrCreateSwimFormVisual(player.transform, teamAMaterial);
+
+        if (input != null)
+        {
+            SerializedObject inputSo = new SerializedObject(input);
+            inputSo.FindProperty("swimKey").intValue = (int)KeyCode.LeftShift;
+            inputSo.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(input);
+        }
+
+        if (controller == null)
+        {
+            return;
+        }
+
+        SerializedObject controllerSo = new SerializedObject(controller);
+        controllerSo.FindProperty("playerTeam").enumValueIndex = (int)Team.TeamA;
+        controllerSo.FindProperty("swimMoveSpeedMultiplier").floatValue = 1.55f;
+        controllerSo.FindProperty("swimInkRecoveryMultiplier").floatValue = 1.8f;
+        controllerSo.FindProperty("disableFireWhileSwimming").boolValue = true;
+        controllerSo.FindProperty("groundProbe").objectReferenceValue = player.transform;
+        controllerSo.FindProperty("swimFormVisual").objectReferenceValue = swimFormVisual;
+
+        SerializedProperty humanoidRenderersProperty = controllerSo.FindProperty("humanoidRenderers");
+        humanoidRenderersProperty.ClearArray();
+
+        if (humanoidRenderer != null)
+        {
+            humanoidRenderersProperty.InsertArrayElementAtIndex(0);
+            humanoidRenderersProperty.GetArrayElementAtIndex(0).objectReferenceValue = humanoidRenderer;
+        }
+
+        controllerSo.ApplyModifiedPropertiesWithoutUndo();
+        EditorUtility.SetDirty(controller);
+    }
+
+    private static GameObject GetOrCreateSwimFormVisual(Transform parent, Material teamAMaterial)
+    {
+        Transform existing = parent.Find("SwimFormVisual");
+        GameObject swimFormVisual = existing != null ? existing.gameObject : GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        swimFormVisual.name = "SwimFormVisual";
+        swimFormVisual.transform.SetParent(parent, false);
+        swimFormVisual.transform.localPosition = new Vector3(0f, -0.78f, 0f);
+        swimFormVisual.transform.localRotation = Quaternion.identity;
+        swimFormVisual.transform.localScale = new Vector3(1.25f, 0.22f, 1.25f);
+
+        Collider collider = swimFormVisual.GetComponent<Collider>();
+
+        if (collider != null)
+        {
+            Object.DestroyImmediate(collider);
+        }
+
+        AssignMaterial(swimFormVisual, teamAMaterial);
+        swimFormVisual.SetActive(false);
+        EditorUtility.SetDirty(swimFormVisual);
+        return swimFormVisual;
     }
 
     private static void PositionExistingCameraForGrayboxMap()

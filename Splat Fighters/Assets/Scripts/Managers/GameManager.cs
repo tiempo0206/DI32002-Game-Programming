@@ -516,7 +516,9 @@ public class GameManager : MonoBehaviour
             winningTeam,
             playerWeapon != null ? playerWeapon.InkPercent : -1f,
             playerWeapon != null && playerWeapon.IsReceivingOwnPaintRecovery,
-            playerWeapon == null || playerWeapon.HasEnoughInkToFire);
+            playerWeapon == null || playerWeapon.HasEnoughInkToFire,
+            playerController != null && playerController.IsSwimming,
+            playerController != null && playerController.WantsToSwim);
     }
 
     private void SetState(MatchState nextState)

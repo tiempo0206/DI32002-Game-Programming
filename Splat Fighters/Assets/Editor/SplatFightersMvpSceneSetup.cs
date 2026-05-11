@@ -239,6 +239,8 @@ public static class SplatFightersMvpSceneSetup
         MeshRenderer renderer = player.GetComponent<MeshRenderer>();
         renderer.sharedMaterial = shooterMaterial;
 
+        GameObject swimFormVisual = CreateSwimFormVisual(player.transform, shooterMaterial);
+
         GameObject firePoint = new GameObject("FirePoint");
         firePoint.transform.SetParent(player.transform);
         firePoint.transform.position = new Vector3(0f, 1.35f, -6.3f);
@@ -251,6 +253,10 @@ public static class SplatFightersMvpSceneSetup
         TeamVisualBinder visualBinder = player.AddComponent<TeamVisualBinder>();
         visualBinder.Configure(Team.TeamA, shooterMaterial, null);
 
+        SerializedObject inputSo = new SerializedObject(input);
+        inputSo.FindProperty("swimKey").intValue = (int)KeyCode.LeftShift;
+        inputSo.ApplyModifiedPropertiesWithoutUndo();
+
         SerializedObject controllerSo = new SerializedObject(playerController);
         controllerSo.FindProperty("cameraTransform").objectReferenceValue = camera.transform;
         controllerSo.FindProperty("weapon").objectReferenceValue = weapon;
@@ -258,6 +264,16 @@ public static class SplatFightersMvpSceneSetup
         controllerSo.FindProperty("moveSpeed").floatValue = 6f;
         controllerSo.FindProperty("rotationSpeed").floatValue = 720f;
         controllerSo.FindProperty("rotationMode").enumValueIndex = 2;
+        controllerSo.FindProperty("playerTeam").enumValueIndex = (int)Team.TeamA;
+        controllerSo.FindProperty("swimMoveSpeedMultiplier").floatValue = 1.55f;
+        controllerSo.FindProperty("swimInkRecoveryMultiplier").floatValue = 1.8f;
+        controllerSo.FindProperty("disableFireWhileSwimming").boolValue = true;
+        controllerSo.FindProperty("groundProbe").objectReferenceValue = player.transform;
+        controllerSo.FindProperty("swimFormVisual").objectReferenceValue = swimFormVisual;
+        SerializedProperty humanoidRenderersProperty = controllerSo.FindProperty("humanoidRenderers");
+        humanoidRenderersProperty.ClearArray();
+        humanoidRenderersProperty.InsertArrayElementAtIndex(0);
+        humanoidRenderersProperty.GetArrayElementAtIndex(0).objectReferenceValue = renderer;
         controllerSo.FindProperty("enableJump").boolValue = true;
         controllerSo.FindProperty("jumpHeight").floatValue = 1.2f;
         controllerSo.ApplyModifiedPropertiesWithoutUndo();
@@ -307,6 +323,33 @@ public static class SplatFightersMvpSceneSetup
         EditorUtility.SetDirty(input);
         EditorUtility.SetDirty(visualBinder);
         return player;
+    }
+
+    private static GameObject CreateSwimFormVisual(Transform parent, Material material)
+    {
+        GameObject swimFormVisual = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+        swimFormVisual.name = "SwimFormVisual";
+        swimFormVisual.transform.SetParent(parent, false);
+        swimFormVisual.transform.localPosition = new Vector3(0f, -0.78f, 0f);
+        swimFormVisual.transform.localRotation = Quaternion.identity;
+        swimFormVisual.transform.localScale = new Vector3(1.25f, 0.22f, 1.25f);
+
+        Collider collider = swimFormVisual.GetComponent<Collider>();
+
+        if (collider != null)
+        {
+            Object.DestroyImmediate(collider);
+        }
+
+        MeshRenderer renderer = swimFormVisual.GetComponent<MeshRenderer>();
+
+        if (renderer != null)
+        {
+            renderer.sharedMaterial = material;
+        }
+
+        swimFormVisual.SetActive(false);
+        return swimFormVisual;
     }
 
     private static void ConfigureCameraFollow(Camera camera, Transform target)

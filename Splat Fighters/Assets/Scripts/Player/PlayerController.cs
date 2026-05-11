@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
@@ -26,6 +27,15 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float rotationSpeed = 720f;
     [SerializeField] private RotationMode rotationMode = RotationMode.MoveDirection;
 
+    [Header("Swim Form")]
+    [SerializeField] private Team playerTeam = Team.TeamA;
+    [SerializeField, Min(1f)] private float swimMoveSpeedMultiplier = 1.55f;
+    [SerializeField, Min(1f)] private float swimInkRecoveryMultiplier = 1.8f;
+    [SerializeField] private bool disableFireWhileSwimming = true;
+    [SerializeField] private Transform groundProbe = null;
+    [SerializeField] private GameObject swimFormVisual = null;
+    [SerializeField] private Renderer[] humanoidRenderers = new Renderer[0];
+
     [Header("Jump And Gravity")]
     [SerializeField] private bool enableJump = true;
     [SerializeField] private float jumpHeight = 1.2f;
@@ -35,6 +45,12 @@ public class PlayerController : MonoBehaviour
     private CharacterController characterController;
     private PlayerInputHandler input;
     private float verticalVelocity;
+    private bool isOnOwnPaint;
+    private bool isSwimming;
+
+    public bool IsOnOwnPaint => isOnOwnPaint;
+    public bool IsSwimming => isSwimming;
+    public bool WantsToSwim => input != null && input.SwimHeld;
 
     private void Awake()
     {
@@ -55,15 +71,29 @@ public class PlayerController : MonoBehaviour
         {
             cameraTransform = Camera.main.transform;
         }
+
+        if (groundProbe == null)
+        {
+            groundProbe = transform;
+        }
+
+        if (humanoidRenderers == null || humanoidRenderers.Length == 0)
+        {
+            humanoidRenderers = FindDefaultHumanoidRenderers();
+        }
+
+        ApplySwimVisualState(false);
     }
 
     private void Update()
     {
         Vector3 moveDirection = GetCameraRelativeMoveDirection(input.MoveInput);
 
+        UpdateSwimState();
         ApplyRotation(moveDirection);
         ApplyJumpAndGravity();
         MoveCharacter(moveDirection);
+        ApplySwimVisualState(isSwimming);
     }
 
     private void LateUpdate()
@@ -141,7 +171,8 @@ public class PlayerController : MonoBehaviour
 
     private void MoveCharacter(Vector3 moveDirection)
     {
-        Vector3 velocity = moveDirection * moveSpeed;
+        float currentMoveSpeed = isSwimming ? moveSpeed * swimMoveSpeedMultiplier : moveSpeed;
+        Vector3 velocity = moveDirection * currentMoveSpeed;
         velocity.y = verticalVelocity;
 
         characterController.Move(velocity * Time.deltaTime);
@@ -149,6 +180,11 @@ public class PlayerController : MonoBehaviour
 
     private void HandleFireInput()
     {
+        if (disableFireWhileSwimming && isSwimming)
+        {
+            return;
+        }
+
         if (!input.FireHeld || weapon == null)
         {
             return;
@@ -165,5 +201,88 @@ public class PlayerController : MonoBehaviour
     public void ResetMotionState()
     {
         verticalVelocity = 0f;
+        isSwimming = false;
+        isOnOwnPaint = false;
+
+        if (weapon != null)
+        {
+            weapon.SetExternalRecoveryMultiplier(1f);
+            weapon.SetExternalFireBlocked(false);
+        }
+
+        ApplySwimVisualState(false);
+    }
+
+    private void UpdateSwimState()
+    {
+        isOnOwnPaint = IsGroundOwnedByPlayerTeam();
+        isSwimming = input.SwimHeld && isOnOwnPaint;
+
+        if (weapon != null)
+        {
+            weapon.SetExternalRecoveryMultiplier(isSwimming ? swimInkRecoveryMultiplier : 1f);
+            weapon.SetExternalFireBlocked(disableFireWhileSwimming && isSwimming);
+        }
+    }
+
+    private bool IsGroundOwnedByPlayerTeam()
+    {
+        if (PaintManager.Instance == null || playerTeam == Team.None)
+        {
+            return false;
+        }
+
+        Vector3 probePosition = groundProbe != null ? groundProbe.position : transform.position;
+
+        if (!PaintManager.Instance.TryGetTeamAtWorldPosition(probePosition, out Team groundTeam))
+        {
+            return false;
+        }
+
+        return groundTeam == playerTeam;
+    }
+
+    private void ApplySwimVisualState(bool swimming)
+    {
+        for (int i = 0; i < humanoidRenderers.Length; i++)
+        {
+            Renderer humanoidRenderer = humanoidRenderers[i];
+
+            if (humanoidRenderer != null)
+            {
+                humanoidRenderer.enabled = !swimming;
+            }
+        }
+
+        if (swimFormVisual != null && swimFormVisual.activeSelf != swimming)
+        {
+            swimFormVisual.SetActive(swimming);
+        }
+    }
+
+    private Renderer[] FindDefaultHumanoidRenderers()
+    {
+        Renderer[] renderers = GetComponentsInChildren<Renderer>(true);
+
+        if (swimFormVisual == null)
+        {
+            return renderers;
+        }
+
+        List<Renderer> humanoidOnly = new List<Renderer>();
+
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            Renderer candidate = renderers[i];
+
+            if (candidate == null || candidate.transform.IsChildOf(swimFormVisual.transform))
+            {
+                continue;
+            }
+
+            humanoidOnly.Add(candidate);
+        }
+
+        return humanoidOnly.ToArray();
     }
 }

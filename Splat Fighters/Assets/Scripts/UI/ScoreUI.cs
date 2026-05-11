@@ -30,7 +30,9 @@ public class ScoreUI : MonoBehaviour
         Team winningTeam,
         float playerInkPercent,
         bool playerOnOwnPaint,
-        bool playerHasEnoughInk)
+        bool playerHasEnoughInk,
+        bool playerSwimming,
+        bool playerWantsToSwim)
     {
         EnsureRuntimeTextReferences();
 
@@ -53,8 +55,8 @@ public class ScoreUI : MonoBehaviour
 
         if (inkText != null)
         {
-            inkText.text = FormatInk(playerInkPercent, playerOnOwnPaint, playerHasEnoughInk);
-            inkText.color = playerOnOwnPaint ? teamAColor : neutralColor;
+            inkText.text = FormatInk(playerInkPercent, playerOnOwnPaint, playerHasEnoughInk, playerSwimming, playerWantsToSwim);
+            inkText.color = playerOnOwnPaint || playerSwimming ? teamAColor : neutralColor;
         }
 
         if (statusText != null)
@@ -218,7 +220,7 @@ public class ScoreUI : MonoBehaviour
         switch (state)
         {
             case GameManager.MatchState.Playing:
-                return "R Restart | P Pause";
+                return "Shift Swim | R Restart | P Pause";
             case GameManager.MatchState.Paused:
                 return "R Restart | P Resume";
             case GameManager.MatchState.Finished:
@@ -228,7 +230,12 @@ public class ScoreUI : MonoBehaviour
         }
     }
 
-    private static string FormatInk(float playerInkPercent, bool playerOnOwnPaint, bool playerHasEnoughInk)
+    private static string FormatInk(
+        float playerInkPercent,
+        bool playerOnOwnPaint,
+        bool playerHasEnoughInk,
+        bool playerSwimming,
+        bool playerWantsToSwim)
     {
         if (playerInkPercent < 0f)
         {
@@ -237,9 +244,17 @@ public class ScoreUI : MonoBehaviour
 
         string stateLabel = playerHasEnoughInk ? "Ready" : "Low";
 
-        if (playerOnOwnPaint)
+        if (playerSwimming)
+        {
+            stateLabel = "Swim";
+        }
+        else if (playerOnOwnPaint)
         {
             stateLabel = "Refill";
+        }
+        else if (playerWantsToSwim)
+        {
+            stateLabel = "Paint needed";
         }
 
         return $"Ink: {Mathf.Clamp(playerInkPercent, 0f, 100f):0}% | {stateLabel}";

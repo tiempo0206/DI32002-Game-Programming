@@ -192,17 +192,23 @@ Acceptance criteria:
 
 ### 6. Swim Form And Own-Ink Movement V1
 
+Status:
+
+Implemented in the current branch.
+
 Goal:
 
 Make owned paint feel like a mobility lane, not only a scoring texture.
 
-Suggested work:
+Implemented work:
 
-- Add a toggle or hold input for a swim-form state.
-- Increase movement speed while the player is on TeamA paint and in swim form.
-- Hide or lower the player capsule slightly while swimming to communicate the mode change.
-- Refill ink faster while swimming on TeamA paint.
-- Keep shooting disabled or limited while in swim form so players must switch between movement and attacking.
+- Added hold-to-swim input on `LeftShift`.
+- Enabled swim form only while the TeamA player is standing on TeamA paint.
+- Increased movement speed while swimming on TeamA paint.
+- Added an extra ink recovery multiplier while swimming on TeamA paint.
+- Hid the humanoid renderer and showed a low `SwimFormVisual` marker while swimming.
+- Disabled player firing while swimming.
+- Updated HUD ink state and controls text so swim mode is readable during playtests.
 
 Acceptance criteria:
 
