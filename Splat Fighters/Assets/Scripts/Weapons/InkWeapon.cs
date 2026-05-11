@@ -46,6 +46,8 @@ public class InkWeapon : MonoBehaviour
     private float nextFireTime;
     private float currentInk;
     private bool isReceivingOwnPaintRecovery;
+    private float externalRecoveryMultiplier = 1f;
+    private bool externalFireBlocked;
     private bool hasExternalAimDirection;
     private Vector3 externalAimDirection = Vector3.forward;
     private bool hasExternalAimTarget;
@@ -58,6 +60,8 @@ public class InkWeapon : MonoBehaviour
     public float InkPercent => maxInk <= 0f ? 0f : CurrentInk / maxInk * 100f;
     public bool HasEnoughInkToFire => !useInkResource || currentInk >= inkPerShot;
     public bool IsReceivingOwnPaintRecovery => isReceivingOwnPaintRecovery;
+    public float ExternalRecoveryMultiplier => externalRecoveryMultiplier;
+    public bool IsExternalFireBlocked => externalFireBlocked;
 
     private void Awake()
     {
@@ -69,7 +73,7 @@ public class InkWeapon : MonoBehaviour
         RecoverInk(Time.deltaTime);
 
         // MVP test input. This keeps the shooting chain testable before the full player input system exists.
-        if (enableKeyboardTestFire && Input.GetKey(testFireKey))
+        if (!externalFireBlocked && enableKeyboardTestFire && Input.GetKey(testFireKey))
         {
             TryFire();
         }
@@ -80,6 +84,11 @@ public class InkWeapon : MonoBehaviour
     /// </summary>
     public bool TryFire()
     {
+        if (externalFireBlocked)
+        {
+            return false;
+        }
+
         if (Time.time < nextFireTime)
         {
             return false;
@@ -122,6 +131,18 @@ public class InkWeapon : MonoBehaviour
     {
         currentInk = startWithFullInk ? maxInk : Mathf.Min(currentInk, maxInk);
         isReceivingOwnPaintRecovery = false;
+        externalRecoveryMultiplier = 1f;
+        externalFireBlocked = false;
+    }
+
+    public void SetExternalRecoveryMultiplier(float multiplier)
+    {
+        externalRecoveryMultiplier = Mathf.Max(1f, multiplier);
+    }
+
+    public void SetExternalFireBlocked(bool blocked)
+    {
+        externalFireBlocked = blocked;
     }
 
     /// <summary>
@@ -258,6 +279,7 @@ public class InkWeapon : MonoBehaviour
             recoveryRate *= ownPaintRecoveryMultiplier;
         }
 
+        recoveryRate *= externalRecoveryMultiplier;
         currentInk = Mathf.Min(maxInk, currentInk + recoveryRate * deltaTime);
     }
 

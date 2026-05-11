@@ -13,10 +13,12 @@ public class PlayerInputHandler : MonoBehaviour
     [Header("Action Keys")]
     [SerializeField] private KeyCode jumpKey = KeyCode.Space;
     [SerializeField] private KeyCode fireKey = KeyCode.Mouse0;
+    [SerializeField] private KeyCode swimKey = KeyCode.LeftShift;
 
     public Vector2 MoveInput { get; private set; }
     public bool JumpPressed { get; private set; }
     public bool FireHeld { get; private set; }
+    public bool SwimHeld { get; private set; }
 
     private void Update()
     {
@@ -26,5 +28,6 @@ public class PlayerInputHandler : MonoBehaviour
         MoveInput = Vector2.ClampMagnitude(new Vector2(horizontal, vertical), 1f);
         JumpPressed = Input.GetKeyDown(jumpKey);
         FireHeld = Input.GetKey(fireKey);
+        SwimHeld = Input.GetKey(swimKey);
     }
 }

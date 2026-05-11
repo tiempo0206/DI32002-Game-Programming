@@ -349,6 +349,11 @@ jobs:
             'inkPerShot: 10'
             'ownPaintRecoveryMultiplier: 3.5'
             'groundProbe: {fileID:'
+            'm_Name: SwimFormVisual'
+            'swimMoveSpeedMultiplier: 1.55'
+            'swimInkRecoveryMultiplier: 1.8'
+            'disableFireWhileSwimming: 1'
+            'swimKey: 304'
             'enableKeyboardControls: 1'
             'startKey: 13'
             'restartKey: 114'
@@ -428,6 +433,32 @@ jobs:
 
           grep -q 'ResetMotionState' 'Splat Fighters/Assets/Scripts/Player/PlayerController.cs' || {
             echo "Expected PlayerController reset support."
+            exit 1
+          }
+
+          required_swim_patterns=(
+            'SwimHeld'
+            'IsSwimming'
+            'IsGroundOwnedByPlayerTeam'
+            'SetExternalRecoveryMultiplier'
+            'SetExternalFireBlocked'
+            'FindDefaultHumanoidRenderers'
+          )
+
+          for pattern in "${required_swim_patterns[@]}"; do
+            grep -q "$pattern" 'Splat Fighters/Assets/Scripts/Player/PlayerController.cs' || {
+              echo "Missing swim form PlayerController code pattern: $pattern"
+              exit 1
+            }
+          done
+
+          grep -q 'swimKey' 'Splat Fighters/Assets/Scripts/Player/PlayerInputHandler.cs' || {
+            echo "Expected PlayerInputHandler swim input support."
+            exit 1
+          }
+
+          grep -q 'externalFireBlocked' 'Splat Fighters/Assets/Scripts/Weapons/InkWeapon.cs' || {
+            echo "Expected InkWeapon external fire block support for swim form."
             exit 1
           }
 
