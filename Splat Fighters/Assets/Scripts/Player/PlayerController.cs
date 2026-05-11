@@ -30,6 +30,7 @@ public class PlayerController : MonoBehaviour
     [Header("Swim Form")]
     [SerializeField] private Team playerTeam = Team.TeamA;
     [SerializeField, Min(1f)] private float swimMoveSpeedMultiplier = 1.55f;
+    [SerializeField, Range(0.1f, 1f)] private float enemyPaintMoveSpeedMultiplier = 0.55f;
     [SerializeField, Min(1f)] private float swimInkRecoveryMultiplier = 1.8f;
     [SerializeField] private bool disableFireWhileSwimming = true;
     [SerializeField] private Transform groundProbe = null;
@@ -46,9 +47,11 @@ public class PlayerController : MonoBehaviour
     private PlayerInputHandler input;
     private float verticalVelocity;
     private bool isOnOwnPaint;
+    private bool isOnEnemyPaint;
     private bool isSwimming;
 
     public bool IsOnOwnPaint => isOnOwnPaint;
+    public bool IsOnEnemyPaint => isOnEnemyPaint;
     public bool IsSwimming => isSwimming;
     public bool WantsToSwim => input != null && input.SwimHeld;
 
@@ -171,7 +174,17 @@ public class PlayerController : MonoBehaviour
 
     private void MoveCharacter(Vector3 moveDirection)
     {
-        float currentMoveSpeed = isSwimming ? moveSpeed * swimMoveSpeedMultiplier : moveSpeed;
+        float currentMoveSpeed = moveSpeed;
+
+        if (isSwimming)
+        {
+            currentMoveSpeed *= swimMoveSpeedMultiplier;
+        }
+        else if (isOnEnemyPaint)
+        {
+            currentMoveSpeed *= enemyPaintMoveSpeedMultiplier;
+        }
+
         Vector3 velocity = moveDirection * currentMoveSpeed;
         velocity.y = verticalVelocity;
 
@@ -203,6 +216,7 @@ public class PlayerController : MonoBehaviour
         verticalVelocity = 0f;
         isSwimming = false;
         isOnOwnPaint = false;
+        isOnEnemyPaint = false;
 
         if (weapon != null)
         {
@@ -215,7 +229,9 @@ public class PlayerController : MonoBehaviour
 
     private void UpdateSwimState()
     {
-        isOnOwnPaint = IsGroundOwnedByPlayerTeam();
+        Team groundTeam = GetGroundTeamUnderPlayer();
+        isOnOwnPaint = groundTeam == playerTeam;
+        isOnEnemyPaint = groundTeam != Team.None && playerTeam != Team.None && groundTeam != playerTeam;
         isSwimming = input.SwimHeld && isOnOwnPaint;
 
         if (weapon != null)
@@ -225,21 +241,21 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    private bool IsGroundOwnedByPlayerTeam()
+    private Team GetGroundTeamUnderPlayer()
     {
         if (PaintManager.Instance == null || playerTeam == Team.None)
         {
-            return false;
+            return Team.None;
         }
 
         Vector3 probePosition = groundProbe != null ? groundProbe.position : transform.position;
 
         if (!PaintManager.Instance.TryGetTeamAtWorldPosition(probePosition, out Team groundTeam))
         {
-            return false;
+            return Team.None;
         }
 
-        return groundTeam == playerTeam;
+        return groundTeam;
     }
 
     private void ApplySwimVisualState(bool swimming)

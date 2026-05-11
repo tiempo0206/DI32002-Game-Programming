@@ -518,7 +518,8 @@ public class GameManager : MonoBehaviour
             playerWeapon != null && playerWeapon.IsReceivingOwnPaintRecovery,
             playerWeapon == null || playerWeapon.HasEnoughInkToFire,
             playerController != null && playerController.IsSwimming,
-            playerController != null && playerController.WantsToSwim);
+            playerController != null && playerController.WantsToSwim,
+            playerController != null && playerController.IsOnEnemyPaint);
     }
 
     private void SetState(MatchState nextState)

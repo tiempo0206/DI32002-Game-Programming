@@ -351,6 +351,7 @@ jobs:
             'groundProbe: {fileID:'
             'm_Name: SwimFormVisual'
             'swimMoveSpeedMultiplier: 1.55'
+            'enemyPaintMoveSpeedMultiplier: 0.55'
             'swimInkRecoveryMultiplier: 1.8'
             'disableFireWhileSwimming: 1'
             'swimKey: 304'
@@ -439,7 +440,9 @@ jobs:
           required_swim_patterns=(
             'SwimHeld'
             'IsSwimming'
-            'IsGroundOwnedByPlayerTeam'
+            'IsOnEnemyPaint'
+            'GetGroundTeamUnderPlayer'
+            'enemyPaintMoveSpeedMultiplier'
             'SetExternalRecoveryMultiplier'
             'SetExternalFireBlocked'
             'FindDefaultHumanoidRenderers'

@@ -32,7 +32,8 @@ public class ScoreUI : MonoBehaviour
         bool playerOnOwnPaint,
         bool playerHasEnoughInk,
         bool playerSwimming,
-        bool playerWantsToSwim)
+        bool playerWantsToSwim,
+        bool playerOnEnemyPaint)
     {
         EnsureRuntimeTextReferences();
 
@@ -55,8 +56,8 @@ public class ScoreUI : MonoBehaviour
 
         if (inkText != null)
         {
-            inkText.text = FormatInk(playerInkPercent, playerOnOwnPaint, playerHasEnoughInk, playerSwimming, playerWantsToSwim);
-            inkText.color = playerOnOwnPaint || playerSwimming ? teamAColor : neutralColor;
+            inkText.text = FormatInk(playerInkPercent, playerOnOwnPaint, playerHasEnoughInk, playerSwimming, playerWantsToSwim, playerOnEnemyPaint);
+            inkText.color = playerOnEnemyPaint ? teamBColor : playerOnOwnPaint || playerSwimming ? teamAColor : neutralColor;
         }
 
         if (statusText != null)
@@ -235,7 +236,8 @@ public class ScoreUI : MonoBehaviour
         bool playerOnOwnPaint,
         bool playerHasEnoughInk,
         bool playerSwimming,
-        bool playerWantsToSwim)
+        bool playerWantsToSwim,
+        bool playerOnEnemyPaint)
     {
         if (playerInkPercent < 0f)
         {
@@ -247,6 +249,10 @@ public class ScoreUI : MonoBehaviour
         if (playerSwimming)
         {
             stateLabel = "Swim";
+        }
+        else if (playerOnEnemyPaint)
+        {
+            stateLabel = "Enemy ink";
         }
         else if (playerOnOwnPaint)
         {
