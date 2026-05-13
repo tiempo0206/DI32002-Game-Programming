@@ -418,6 +418,11 @@ jobs:
             exit 1
           }
 
+          grep -q 'PresentationText' 'Splat Fighters/Assets/Scripts/UI/ScoreUI.cs' || {
+            echo "Expected ScoreUI presentation banner text support."
+            exit 1
+          }
+
           grep -q 'InkText' 'Splat Fighters/Assets/Scripts/UI/ScoreUI.cs' || {
             echo "Expected ScoreUI ink resource text support."
             exit 1
@@ -427,6 +432,21 @@ jobs:
             echo "Expected ScoreUI health text support."
             exit 1
           }
+
+          required_presentation_patterns=(
+            'PresentationBanner'
+            'FormatPresentation'
+            'GetPresentationColor'
+            'Final'
+            'Turf War'
+          )
+
+          for pattern in "${required_presentation_patterns[@]}"; do
+            grep -q "$pattern" 'Splat Fighters/Assets/Scripts/UI/ScoreUI.cs' || {
+              echo "Missing ScoreUI presentation code pattern: $pattern"
+              exit 1
+            }
+          done
 
           required_weapon_patterns=(
             'useInkResource'
