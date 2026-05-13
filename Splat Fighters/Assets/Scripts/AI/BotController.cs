@@ -1,8 +1,8 @@
 using UnityEngine;
 
 /// <summary>
-/// Simple single-player bot for the MVP.
-/// It patrols fixed waypoints and fires at fixed ground targets with the existing InkWeapon.
+/// Simple single-player bot for the Turf War MVP.
+/// It patrols waypoints, contests enemy paint, and retreats when resources are low.
 /// </summary>
 [RequireComponent(typeof(CharacterController))]
 [DisallowMultipleComponent]
@@ -11,10 +11,16 @@ public class BotController : MonoBehaviour
     [Header("References")]
     [SerializeField] private CharacterController characterController = null;
     [SerializeField] private InkWeapon weapon = null;
+    [SerializeField] private CharacterHealth health = null;
     [SerializeField] private Transform firePoint = null;
+
+    [Header("Team")]
+    [SerializeField] private Team botTeam = Team.TeamB;
+    [SerializeField] private Team priorityPaintTargetTeam = Team.TeamA;
 
     [Header("Patrol")]
     [SerializeField] private Transform[] waypoints = new Transform[0];
+    [SerializeField] private Transform retreatTarget = null;
     [SerializeField] private bool patrolOnStart = true;
     [SerializeField] private float moveSpeed = 3.2f;
     [SerializeField] private float turnSpeed = 540f;
@@ -23,9 +29,20 @@ public class BotController : MonoBehaviour
     [Header("Shooting")]
     [SerializeField] private bool fireOnStart = true;
     [SerializeField] private Transform[] paintTargets = new Transform[0];
+    [SerializeField] private bool useTerritoryAwareAim = true;
+    [SerializeField] private bool targetUnpaintedCellsAfterEnemyPaint = true;
+    [SerializeField] private float territorySearchRadius = 16f;
     [SerializeField] private float fireInterval = 0.65f;
     [SerializeField] private float aimRefreshInterval = 1.2f;
     [SerializeField] private float fallbackAimDistance = 4f;
+
+    [Header("Retreat")]
+    [SerializeField] private bool retreatWhenPressured = true;
+    [SerializeField, Range(0f, 100f)] private float lowInkRetreatPercent = 28f;
+    [SerializeField, Range(0f, 100f)] private float resumeInkPercent = 62f;
+    [SerializeField, Range(0f, 100f)] private float lowHealthRetreatPercent = 45f;
+    [SerializeField] private float retreatReachDistance = 0.9f;
+    [SerializeField] private float retreatRecoveryMultiplier = 1.35f;
 
     [Header("Gravity")]
     [SerializeField] private float gravity = -25f;
@@ -42,6 +59,7 @@ public class BotController : MonoBehaviour
     private float nextFireTime;
     private float nextAimRefreshTime;
     private Vector3 currentAimTarget;
+    private bool isRetreating;
 
     private void Awake()
     {
@@ -52,7 +70,8 @@ public class BotController : MonoBehaviour
     private void Update()
     {
         ResolveReferences();
-        UpdatePatrol();
+        UpdateTacticalState();
+        UpdateMovement();
         UpdateAim();
         UpdateFire();
     }
@@ -77,6 +96,8 @@ public class BotController : MonoBehaviour
         verticalVelocity = 0f;
         nextFireTime = 0f;
         nextAimRefreshTime = 0f;
+        isRetreating = false;
+        SetWeaponRetreatModifiers(false);
         currentAimTarget = ResolveCurrentAimTarget();
     }
 
@@ -92,36 +113,77 @@ public class BotController : MonoBehaviour
             weapon = GetComponentInChildren<InkWeapon>();
         }
 
+        if (health == null)
+        {
+            health = GetComponent<CharacterHealth>();
+        }
+
         if (firePoint == null && weapon != null)
         {
             firePoint = weapon.FirePoint;
         }
     }
 
-    private void UpdatePatrol()
+    private void UpdateTacticalState()
+    {
+        if (!retreatWhenPressured)
+        {
+            isRetreating = false;
+            SetWeaponRetreatModifiers(false);
+            return;
+        }
+
+        bool lowInk = weapon != null && weapon.InkPercent <= lowInkRetreatPercent;
+        bool recoveredInk = weapon == null || weapon.InkPercent >= resumeInkPercent;
+        bool onEnemyPaint = IsStandingOnPaintOwnedBy(GetEnemyTeam());
+        bool nearRetreatTarget = IsNearRetreatTarget();
+        bool lowHealth = health != null && health.HealthPercent <= lowHealthRetreatPercent && !nearRetreatTarget;
+        bool recoveredHealth = health == null || health.HealthPercent > lowHealthRetreatPercent || nearRetreatTarget;
+
+        if (isRetreating)
+        {
+            isRetreating = !(recoveredInk && recoveredHealth && !onEnemyPaint && nearRetreatTarget);
+        }
+        else
+        {
+            isRetreating = lowInk || lowHealth || onEnemyPaint;
+        }
+
+        SetWeaponRetreatModifiers(isRetreating && !recoveredInk);
+    }
+
+    private void SetWeaponRetreatModifiers(bool holdFireForRecovery)
+    {
+        if (weapon == null)
+        {
+            return;
+        }
+
+        weapon.SetExternalRecoveryMultiplier(isRetreating ? retreatRecoveryMultiplier : 1f);
+        weapon.SetExternalFireBlocked(holdFireForRecovery);
+    }
+
+    private void UpdateMovement()
     {
         ApplyGravity();
 
         Vector3 horizontalMove = Vector3.zero;
+        Vector3 targetPosition = isRetreating ? ResolveRetreatTarget() : ResolvePatrolTarget();
+        float reachDistance = isRetreating ? retreatReachDistance : waypointReachDistance;
 
-        if (patrolOnStart && waypoints.Length > 0)
+        if (patrolOnStart && targetPosition != Vector3.zero)
         {
-            Transform waypoint = waypoints[currentWaypointIndex];
+            Vector3 toTarget = targetPosition - transform.position;
+            toTarget.y = 0f;
 
-            if (waypoint != null)
+            if (toTarget.magnitude <= reachDistance)
             {
-                Vector3 toWaypoint = waypoint.position - transform.position;
-                toWaypoint.y = 0f;
-
-                if (toWaypoint.magnitude <= waypointReachDistance)
-                {
-                    currentWaypointIndex = (currentWaypointIndex + 1) % waypoints.Length;
-                }
-                else
-                {
-                    horizontalMove = toWaypoint.normalized * moveSpeed;
-                    RotateToward(toWaypoint.normalized);
-                }
+                AdvanceWaypointIfNeeded();
+            }
+            else
+            {
+                horizontalMove = toTarget.normalized * moveSpeed;
+                RotateToward(toTarget.normalized);
             }
         }
 
@@ -165,7 +227,7 @@ public class BotController : MonoBehaviour
 
     private void UpdateFire()
     {
-        if (!fireOnStart || weapon == null || Time.time < nextFireTime)
+        if (!fireOnStart || weapon == null || Time.time < nextFireTime || isRetreating && weapon.InkPercent < resumeInkPercent)
         {
             return;
         }
@@ -197,6 +259,21 @@ public class BotController : MonoBehaviour
 
     private Vector3 ResolveCurrentAimTarget()
     {
+        if (useTerritoryAwareAim && PaintManager.Instance != null)
+        {
+            Vector3 origin = transform.position;
+
+            if (PaintManager.Instance.TryFindNearestCellOwnedBy(priorityPaintTargetTeam, origin, territorySearchRadius, out Vector3 enemyPaintTarget))
+            {
+                return enemyPaintTarget;
+            }
+
+            if (targetUnpaintedCellsAfterEnemyPaint && PaintManager.Instance.TryFindNearestCellOwnedBy(Team.None, origin, territorySearchRadius, out Vector3 unpaintedTarget))
+            {
+                return unpaintedTarget;
+            }
+        }
+
         if (paintTargets.Length > 0)
         {
             Transform target = paintTargets[Mathf.Clamp(currentPaintTargetIndex, 0, paintTargets.Length - 1)];
@@ -210,6 +287,80 @@ public class BotController : MonoBehaviour
         Vector3 fallback = transform.position + transform.forward * fallbackAimDistance;
         fallback.y = 0f;
         return fallback;
+    }
+
+    private Vector3 ResolvePatrolTarget()
+    {
+        if (waypoints.Length == 0)
+        {
+            return Vector3.zero;
+        }
+
+        Transform waypoint = waypoints[Mathf.Clamp(currentWaypointIndex, 0, waypoints.Length - 1)];
+        return waypoint != null ? waypoint.position : Vector3.zero;
+    }
+
+    private Vector3 ResolveRetreatTarget()
+    {
+        if (retreatTarget != null)
+        {
+            return retreatTarget.position;
+        }
+
+        if (PaintManager.Instance != null && PaintManager.Instance.TryFindNearestCellOwnedBy(botTeam, transform.position, territorySearchRadius, out Vector3 ownPaintTarget))
+        {
+            ownPaintTarget.y = transform.position.y;
+            return ownPaintTarget;
+        }
+
+        return ResolvePatrolTarget();
+    }
+
+    private void AdvanceWaypointIfNeeded()
+    {
+        if (isRetreating || waypoints.Length == 0)
+        {
+            return;
+        }
+
+        currentWaypointIndex = (currentWaypointIndex + 1) % waypoints.Length;
+    }
+
+    private bool IsNearRetreatTarget()
+    {
+        Vector3 toRetreatTarget = ResolveRetreatTarget() - transform.position;
+        toRetreatTarget.y = 0f;
+        return toRetreatTarget.magnitude <= retreatReachDistance;
+    }
+
+    private bool IsStandingOnPaintOwnedBy(Team team)
+    {
+        if (team == Team.None || PaintManager.Instance == null)
+        {
+            return false;
+        }
+
+        if (!PaintManager.Instance.TryGetTeamAtWorldPosition(transform.position, out Team groundTeam))
+        {
+            return false;
+        }
+
+        return groundTeam == team;
+    }
+
+    private Team GetEnemyTeam()
+    {
+        if (botTeam == Team.TeamA)
+        {
+            return Team.TeamB;
+        }
+
+        if (botTeam == Team.TeamB)
+        {
+            return Team.TeamA;
+        }
+
+        return Team.None;
     }
 
     private Vector3 GetFireOrigin()

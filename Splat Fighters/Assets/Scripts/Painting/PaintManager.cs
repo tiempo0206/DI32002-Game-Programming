@@ -174,6 +174,41 @@ public class PaintManager : MonoBehaviour
         return false;
     }
 
+    public bool TryFindNearestCellOwnedBy(Team owner, Vector3 origin, float maxDistance, out Vector3 worldPosition)
+    {
+        worldPosition = Vector3.zero;
+        float bestDistanceSqr = float.PositiveInfinity;
+        bool found = false;
+
+        for (int i = 0; i < paintableAreas.Count; i++)
+        {
+            PaintableArea area = paintableAreas[i];
+
+            if (area == null)
+            {
+                continue;
+            }
+
+            if (!area.TryFindNearestCellOwnedBy(owner, origin, maxDistance, out Vector3 candidate))
+            {
+                continue;
+            }
+
+            float distanceSqr = (candidate - origin).sqrMagnitude;
+
+            if (distanceSqr >= bestDistanceSqr)
+            {
+                continue;
+            }
+
+            bestDistanceSqr = distanceSqr;
+            worldPosition = candidate;
+            found = true;
+        }
+
+        return found;
+    }
+
     public void RegisterArea(PaintableArea area)
     {
         if (area == null || paintableAreas.Contains(area))
