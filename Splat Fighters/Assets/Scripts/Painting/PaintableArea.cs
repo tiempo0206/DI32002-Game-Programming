@@ -275,6 +275,43 @@ public class PaintableArea : MonoBehaviour
         return true;
     }
 
+    public bool TryFindNearestCellOwnedBy(Team owner, Vector3 origin, float maxDistance, out Vector3 worldPosition)
+    {
+        worldPosition = Vector3.zero;
+        EnsureGrid();
+
+        float maxDistanceSqr = maxDistance <= 0f ? float.PositiveInfinity : maxDistance * maxDistance;
+        float bestDistanceSqr = float.PositiveInfinity;
+        bool found = false;
+
+        for (int y = 0; y < gridHeight; y++)
+        {
+            for (int x = 0; x < gridWidth; x++)
+            {
+                PaintGridCell cell = cells[ToIndex(x, y)];
+
+                if (cell == null || !cell.IsPaintable || cell.Owner != owner)
+                {
+                    continue;
+                }
+
+                Vector3 candidate = GetCellCenterWorld(x, y);
+                float distanceSqr = (candidate - origin).sqrMagnitude;
+
+                if (distanceSqr > maxDistanceSqr || distanceSqr >= bestDistanceSqr)
+                {
+                    continue;
+                }
+
+                bestDistanceSqr = distanceSqr;
+                worldPosition = candidate;
+                found = true;
+            }
+        }
+
+        return found;
+    }
+
     public bool IsCellPaintable(int x, int y)
     {
         if (!IsValidCell(x, y))

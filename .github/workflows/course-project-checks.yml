@@ -501,6 +501,34 @@ jobs:
             exit 1
           }
 
+          required_bot_patterns=(
+            'useTerritoryAwareAim'
+            'priorityPaintTargetTeam'
+            'lowInkRetreatPercent'
+            'resumeInkPercent'
+            'retreatWhenPressured'
+            'ResolveRetreatTarget'
+            'IsStandingOnPaintOwnedBy'
+            'SetExternalFireBlocked'
+          )
+
+          for pattern in "${required_bot_patterns[@]}"; do
+            grep -q "$pattern" 'Splat Fighters/Assets/Scripts/AI/BotController.cs' || {
+              echo "Missing territory-aware bot code pattern: $pattern"
+              exit 1
+            }
+          done
+
+          grep -q 'TryFindNearestCellOwnedBy' 'Splat Fighters/Assets/Scripts/Painting/PaintManager.cs' || {
+            echo "Expected PaintManager territory query support."
+            exit 1
+          }
+
+          grep -q 'TryFindNearestCellOwnedBy' 'Splat Fighters/Assets/Scripts/Painting/PaintableArea.cs' || {
+            echo "Expected PaintableArea nearest-cell query support."
+            exit 1
+          }
+
           required_health_patterns=(
             'public class CharacterHealth'
             'Eliminated'

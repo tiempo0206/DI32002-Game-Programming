@@ -299,17 +299,20 @@ Goal:
 
 Make the bot contest territory more like an opponent instead of only following fixed targets.
 
-Suggested work:
+Status: Implemented in the current branch.
 
-- Use paint ownership queries to choose contested or enemy-owned ground targets.
-- Make the bot repaint nearby TeamA areas when they are close enough.
-- Let the bot retreat toward TeamB paint when low on ink or after taking damage.
-- Keep waypoint movement as a fallback until pathfinding is worth the added complexity.
+Implemented work:
+
+- Added nearest-cell ownership queries in `PaintableArea` and `PaintManager`.
+- Updated `BotController` to prioritize nearby TeamA paint, then unpainted cells, before fixed fallback targets.
+- Added retreat behavior for low ink, low health, or standing on enemy paint.
+- Kept waypoint movement as the stable fallback so the classroom demo remains deterministic.
 
 Acceptance criteria:
 
 - Bot chooses at least some paint targets from current territory state.
 - Bot can repaint TeamA territory during the match.
+- Bot retreats toward TeamB territory when low on ink or under paint pressure.
 - Bot behavior remains deterministic enough for classroom testing.
 - Score changes remain readable.
 

@@ -193,14 +193,28 @@ public static class SplatFightersGrayboxMapBuilder
         SerializedObject botSo = new SerializedObject(botController);
         botSo.FindProperty("characterController").objectReferenceValue = characterController;
         botSo.FindProperty("weapon").objectReferenceValue = weapon;
+        botSo.FindProperty("health").objectReferenceValue = health;
         botSo.FindProperty("firePoint").objectReferenceValue = firePointObject.transform;
+        botSo.FindProperty("botTeam").enumValueIndex = (int)Team.TeamB;
+        botSo.FindProperty("priorityPaintTargetTeam").enumValueIndex = (int)Team.TeamA;
         AssignTransformArray(botSo.FindProperty("waypoints"), waypoints);
+        GameObject teamBSpawn = GameObject.Find("TeamBSpawn");
+        botSo.FindProperty("retreatTarget").objectReferenceValue = teamBSpawn != null ? teamBSpawn.transform : waypoints[0];
         AssignTransformArray(botSo.FindProperty("paintTargets"), paintTargets);
         botSo.FindProperty("moveSpeed").floatValue = 3.2f;
         botSo.FindProperty("turnSpeed").floatValue = 540f;
         botSo.FindProperty("waypointReachDistance").floatValue = 0.6f;
+        botSo.FindProperty("useTerritoryAwareAim").boolValue = true;
+        botSo.FindProperty("targetUnpaintedCellsAfterEnemyPaint").boolValue = true;
+        botSo.FindProperty("territorySearchRadius").floatValue = 16f;
         botSo.FindProperty("fireInterval").floatValue = 0.65f;
         botSo.FindProperty("aimRefreshInterval").floatValue = 1.2f;
+        botSo.FindProperty("retreatWhenPressured").boolValue = true;
+        botSo.FindProperty("lowInkRetreatPercent").floatValue = 28f;
+        botSo.FindProperty("resumeInkPercent").floatValue = 62f;
+        botSo.FindProperty("lowHealthRetreatPercent").floatValue = 45f;
+        botSo.FindProperty("retreatReachDistance").floatValue = 0.9f;
+        botSo.FindProperty("retreatRecoveryMultiplier").floatValue = 1.35f;
         botSo.ApplyModifiedPropertiesWithoutUndo();
 
         EditorUtility.SetDirty(bot);
