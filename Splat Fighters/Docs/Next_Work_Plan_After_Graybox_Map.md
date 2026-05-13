@@ -271,16 +271,20 @@ Acceptance criteria:
 
 ### 9. Turf War Presentation V1
 
+Status:
+
+Implemented in the current branch.
+
 Goal:
 
 Make the match read like a small Turf War round during classroom demos.
 
-Suggested work:
+Implemented work:
 
-- Add a short match intro state with TeamA and TeamB labels.
-- Improve end-of-match results with winner, final percentages, and a simple territory comparison.
-- Add a basic map coverage summary or large score panel.
-- Keep Restart and Reset Paint controls available for fast demos.
+- Added a runtime presentation banner that clearly shows `TeamA vs TeamB | Turf War`.
+- Improved finished-state presentation with winner and final TeamA/TeamB percentages.
+- Kept the existing score panel, timer, ink, HP, and controls visible during demos.
+- Kept Restart controls available for fast repeated classroom demonstrations.
 
 Acceptance criteria:
 

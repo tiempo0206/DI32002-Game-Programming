@@ -8,6 +8,7 @@ using UnityEngine.UI;
 public class ScoreUI : MonoBehaviour
 {
     [Header("Text References")]
+    [SerializeField] private Text presentationText = null;
     [SerializeField] private Text timerText = null;
     [SerializeField] private Text teamAText = null;
     [SerializeField] private Text teamBText = null;
@@ -39,6 +40,12 @@ public class ScoreUI : MonoBehaviour
         bool playerEliminated)
     {
         EnsureRuntimeTextReferences();
+
+        if (presentationText != null)
+        {
+            presentationText.text = FormatPresentation(state, teamACoverage, teamBCoverage, winningTeam);
+            presentationText.color = GetPresentationColor(state, winningTeam);
+        }
 
         if (timerText != null)
         {
@@ -96,6 +103,19 @@ public class ScoreUI : MonoBehaviour
 
         canvasObject.AddComponent<GraphicRaycaster>();
 
+        GameObject bannerObject = new GameObject("PresentationBanner");
+        bannerObject.transform.SetParent(canvasObject.transform, false);
+        RectTransform bannerRect = bannerObject.AddComponent<RectTransform>();
+        bannerRect.anchorMin = new Vector2(0.5f, 1f);
+        bannerRect.anchorMax = new Vector2(0.5f, 1f);
+        bannerRect.pivot = new Vector2(0.5f, 1f);
+        bannerRect.anchoredPosition = new Vector2(0f, -24f);
+        bannerRect.sizeDelta = new Vector2(820f, 96f);
+
+        Image bannerImage = bannerObject.AddComponent<Image>();
+        bannerImage.color = new Color(0f, 0f, 0f, 0.5f);
+        bannerImage.raycastTarget = false;
+
         GameObject panelObject = new GameObject("ScorePanel");
         panelObject.transform.SetParent(canvasObject.transform, false);
         RectTransform panelRect = panelObject.AddComponent<RectTransform>();
@@ -110,6 +130,7 @@ public class ScoreUI : MonoBehaviour
         panelImage.raycastTarget = false;
 
         ScoreUI scoreUI = canvasObject.AddComponent<ScoreUI>();
+        scoreUI.presentationText = CreateText(bannerObject.transform, "PresentationText", new Vector2(16f, -14f), 28, FontStyle.Bold, new Vector2(788f, 68f), TextAnchor.MiddleCenter);
         scoreUI.timerText = CreateText(panelObject.transform, "TimerText", new Vector2(16f, -12f), 32, FontStyle.Bold);
         scoreUI.teamAText = CreateText(panelObject.transform, "TeamAText", new Vector2(16f, -58f), 24, FontStyle.Bold);
         scoreUI.teamBText = CreateText(panelObject.transform, "TeamBText", new Vector2(16f, -90f), 24, FontStyle.Bold);
@@ -128,7 +149,7 @@ public class ScoreUI : MonoBehaviour
 
     private void EnsureRuntimeTextReferences()
     {
-        if (timerText != null && teamAText != null && teamBText != null && inkText != null && healthText != null && statusText != null && controlsText != null)
+        if (presentationText != null && timerText != null && teamAText != null && teamBText != null && inkText != null && healthText != null && statusText != null && controlsText != null)
         {
             return;
         }
@@ -139,7 +160,11 @@ public class ScoreUI : MonoBehaviour
         {
             Text text = texts[i];
 
-            if (text.name == "TimerText")
+            if (text.name == "PresentationText")
+            {
+                presentationText = text;
+            }
+            else if (text.name == "TimerText")
             {
                 timerText = text;
             }
@@ -172,6 +197,11 @@ public class ScoreUI : MonoBehaviour
 
     private static Text CreateText(Transform parent, string name, Vector2 anchoredPosition, int fontSize, FontStyle fontStyle)
     {
+        return CreateText(parent, name, anchoredPosition, fontSize, fontStyle, new Vector2(320f, 32f), TextAnchor.UpperLeft);
+    }
+
+    private static Text CreateText(Transform parent, string name, Vector2 anchoredPosition, int fontSize, FontStyle fontStyle, Vector2 size, TextAnchor alignment)
+    {
         GameObject textObject = new GameObject(name);
         textObject.transform.SetParent(parent, false);
 
@@ -180,13 +210,13 @@ public class ScoreUI : MonoBehaviour
         rect.anchorMax = new Vector2(0f, 1f);
         rect.pivot = new Vector2(0f, 1f);
         rect.anchoredPosition = anchoredPosition;
-        rect.sizeDelta = new Vector2(320f, 32f);
+        rect.sizeDelta = size;
 
         Text text = textObject.AddComponent<Text>();
         text.font = GetDefaultFont();
         text.fontSize = fontSize;
         text.fontStyle = fontStyle;
-        text.alignment = TextAnchor.UpperLeft;
+        text.alignment = alignment;
         text.horizontalOverflow = HorizontalWrapMode.Overflow;
         text.verticalOverflow = VerticalWrapMode.Overflow;
         text.color = Color.white;
@@ -213,6 +243,40 @@ public class ScoreUI : MonoBehaviour
         int minutes = wholeSeconds / 60;
         int remaining = wholeSeconds % 60;
         return $"{minutes:00}:{remaining:00}";
+    }
+
+    private string FormatPresentation(GameManager.MatchState state, float teamACoverage, float teamBCoverage, Team winningTeam)
+    {
+        switch (state)
+        {
+            case GameManager.MatchState.Playing:
+                return $"{teamALabel} vs {teamBLabel} | Turf War";
+            case GameManager.MatchState.Paused:
+                return "Paused | Turf War";
+            case GameManager.MatchState.Finished:
+                string winner = winningTeam == Team.None ? "Draw" : $"{GetTeamLabel(winningTeam)} wins";
+                return $"{winner} | Final {teamALabel} {teamACoverage:0.0}% - {teamBLabel} {teamBCoverage:0.0}%";
+            default:
+                return $"{teamALabel} vs {teamBLabel} | Press Enter";
+        }
+    }
+
+    private Color GetPresentationColor(GameManager.MatchState state, Team winningTeam)
+    {
+        if (state == GameManager.MatchState.Finished)
+        {
+            if (winningTeam == Team.TeamA)
+            {
+                return teamAColor;
+            }
+
+            if (winningTeam == Team.TeamB)
+            {
+                return teamBColor;
+            }
+        }
+
+        return neutralColor;
     }
 
     private string FormatStatus(GameManager.MatchState state, Team winningTeam)
