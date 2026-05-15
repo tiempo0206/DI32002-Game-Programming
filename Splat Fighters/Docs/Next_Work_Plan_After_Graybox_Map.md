@@ -322,15 +322,18 @@ Goal:
 
 Add a small vertical movement payoff without turning the graybox map into a large traversal project.
 
-Suggested work:
+Status: Implemented in the current branch.
 
-- Add one or two wall or ramp surfaces that can show team paint.
-- Allow swim-form movement up selected owned-painted vertical surfaces.
-- Keep scoring focused on ground territory unless wall scoring is intentionally added later.
+Implemented work:
+
+- Added `PaintRouteSurface` as a limited route gate driven by paint ownership.
+- Added a TeamA-activated route probe and vertical route surface to the graybox map.
+- Let the player climb the route only while holding swim input and the route probe is owned by TeamA.
+- Kept scoring focused on ground territory; the vertical route is traversal-only for this increment.
 
 Acceptance criteria:
 
-- At least one vertical route can be enabled by painting it.
+- At least one vertical route can be enabled by painting its route probe.
 - Player can climb or traverse it only when owned by TeamA.
 - The route creates a useful flank or recovery path.
 - Existing ground score remains stable.

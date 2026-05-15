@@ -70,6 +70,7 @@ jobs:
             'Splat Fighters/Assets/Scripts/Player/AimController.cs'
             'Splat Fighters/Assets/Scripts/Level/SpawnPoint.cs'
             'Splat Fighters/Assets/Scripts/Level/PaintBlocker.cs'
+            'Splat Fighters/Assets/Scripts/Level/PaintRouteSurface.cs'
             'Splat Fighters/Assets/Scripts/Managers/GameManager.cs'
             'Splat Fighters/Assets/Scripts/Managers/MatchTimer.cs'
             'Splat Fighters/Assets/Scripts/UI/AimReticleUI.cs'
@@ -81,6 +82,7 @@ jobs:
             'Splat Fighters/Assets/Materials/Level/MAT_Level_Boundary.mat'
             'Splat Fighters/Assets/Materials/Level/MAT_Level_Cover.mat'
             'Splat Fighters/Assets/Materials/Level/MAT_Level_Platform.mat'
+            'Splat Fighters/Assets/Materials/Level/MAT_Level_PaintRoute.mat'
             'Splat Fighters/Assets/Materials/Level/MAT_Level_Ramp.mat'
             'Splat Fighters/Assets/Materials/Level/MAT_Level_Spawn_TeamA.mat'
             'Splat Fighters/Assets/Materials/Level/MAT_Level_Spawn_TeamB.mat'
@@ -309,6 +311,7 @@ jobs:
             'm_Name: Obstacles'
             'm_Name: Cover'
             'm_Name: Platforms'
+            'm_Name: PaintRoutes'
             'm_Name: SpawnPoints'
             'm_Name: AI'
             'm_Name: NorthBoundaryRail'
@@ -322,6 +325,9 @@ jobs:
             'm_Name: EastPlatformCover'
             'm_Name: WestPlatformRamp'
             'm_Name: EastPlatformRamp'
+            'm_Name: WestPaintRouteUpperDeck'
+            'm_Name: WestPaintRouteSurface'
+            'm_Name: WestPaintRouteProbe'
             'm_Name: TeamASpawn'
             'm_Name: TeamBSpawn'
             'm_Name: TeamBBot'
@@ -331,6 +337,7 @@ jobs:
             'guid: 3b1f6fa4a44a34fd2b8d3115d8b234c5'
             'guid: 523848afdbb78428f9909a6a36dedc79'
             'guid: 6eae5c84c8a24551a6a1738913276ea9'
+            'guid: 8f684db1311e4ab78a2c54eb5f71306c'
             'guid: e65d3f35aa204309aead02ea2b17a67a'
             'guid: 13b1c0840c8ae4d04a8bf41efc3983d2'
             'guid: 13eced9b9c66941f497c78ae0279d6df'
@@ -358,6 +365,8 @@ jobs:
             'enemyPaintMoveSpeedMultiplier: 0.55'
             'swimInkRecoveryMultiplier: 1.8'
             'disableFireWhileSwimming: 1'
+            'enablePaintRoutes: 1'
+            'paintRouteProbeRadius: 0.75'
             'swimKey: 304'
             'enableKeyboardControls: 1'
             'startKey: 13'
@@ -477,6 +486,9 @@ jobs:
             'SetExternalRecoveryMultiplier'
             'SetExternalFireBlocked'
             'FindDefaultHumanoidRenderers'
+            'IsUsingPaintRoute'
+            'ResolveActivePaintRoute'
+            'PaintRouteSurface'
           )
 
           for pattern in "${required_swim_patterns[@]}"; do
@@ -495,6 +507,21 @@ jobs:
             echo "Expected InkWeapon external fire block support for swim form."
             exit 1
           }
+
+          required_paint_route_patterns=(
+            'public class PaintRouteSurface'
+            'IsActiveForTeam'
+            'GetRouteVelocity'
+            'RequiredTeam'
+            'ProbePosition'
+          )
+
+          for pattern in "${required_paint_route_patterns[@]}"; do
+            grep -q "$pattern" 'Splat Fighters/Assets/Scripts/Level/PaintRouteSurface.cs' || {
+              echo "Missing paint route surface code pattern: $pattern"
+              exit 1
+            }
+          done
 
           grep -q 'ResetBotState' 'Splat Fighters/Assets/Scripts/AI/BotController.cs' || {
             echo "Expected BotController reset support."
