@@ -37,6 +37,11 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private GameObject swimFormVisual = null;
     [SerializeField] private Renderer[] humanoidRenderers = new Renderer[0];
 
+    [Header("Paint Routes")]
+    [SerializeField] private bool enablePaintRoutes = true;
+    [SerializeField, Min(0.1f)] private float paintRouteProbeRadius = 0.7f;
+    [SerializeField] private Vector3 paintRouteProbeOffset = new Vector3(0f, 0.45f, 0f);
+
     [Header("Jump And Gravity")]
     [SerializeField] private bool enableJump = true;
     [SerializeField] private float jumpHeight = 1.2f;
@@ -49,10 +54,14 @@ public class PlayerController : MonoBehaviour
     private bool isOnOwnPaint;
     private bool isOnEnemyPaint;
     private bool isSwimming;
+    private bool isUsingPaintRoute;
+    private PaintRouteSurface activePaintRoute;
+    private readonly Collider[] paintRouteHits = new Collider[12];
 
     public bool IsOnOwnPaint => isOnOwnPaint;
     public bool IsOnEnemyPaint => isOnEnemyPaint;
     public bool IsSwimming => isSwimming;
+    public bool IsUsingPaintRoute => isUsingPaintRoute;
     public bool WantsToSwim => input != null && input.SwimHeld;
 
     private void Awake()
@@ -159,6 +168,12 @@ public class PlayerController : MonoBehaviour
 
     private void ApplyJumpAndGravity()
     {
+        if (isUsingPaintRoute)
+        {
+            verticalVelocity = 0f;
+            return;
+        }
+
         if (characterController.isGrounded && verticalVelocity < 0f)
         {
             verticalVelocity = groundedStickForce;
@@ -186,7 +201,17 @@ public class PlayerController : MonoBehaviour
         }
 
         Vector3 velocity = moveDirection * currentMoveSpeed;
-        velocity.y = verticalVelocity;
+
+        if (isUsingPaintRoute && activePaintRoute != null)
+        {
+            Vector3 routeVelocity = activePaintRoute.GetRouteVelocity();
+            velocity += routeVelocity;
+            velocity.y = Mathf.Max(routeVelocity.y, 0f);
+        }
+        else
+        {
+            velocity.y = verticalVelocity;
+        }
 
         characterController.Move(velocity * Time.deltaTime);
     }
@@ -215,8 +240,10 @@ public class PlayerController : MonoBehaviour
     {
         verticalVelocity = 0f;
         isSwimming = false;
+        isUsingPaintRoute = false;
         isOnOwnPaint = false;
         isOnEnemyPaint = false;
+        activePaintRoute = null;
 
         if (weapon != null)
         {
@@ -232,7 +259,9 @@ public class PlayerController : MonoBehaviour
         Team groundTeam = GetGroundTeamUnderPlayer();
         isOnOwnPaint = groundTeam == playerTeam;
         isOnEnemyPaint = groundTeam != Team.None && playerTeam != Team.None && groundTeam != playerTeam;
-        isSwimming = input.SwimHeld && isOnOwnPaint;
+        activePaintRoute = ResolveActivePaintRoute();
+        isUsingPaintRoute = input.SwimHeld && activePaintRoute != null;
+        isSwimming = input.SwimHeld && (isOnOwnPaint || isUsingPaintRoute);
 
         if (weapon != null)
         {
@@ -256,6 +285,55 @@ public class PlayerController : MonoBehaviour
         }
 
         return groundTeam;
+    }
+
+    private PaintRouteSurface ResolveActivePaintRoute()
+    {
+        if (!enablePaintRoutes || !input.SwimHeld || playerTeam == Team.None)
+        {
+            return null;
+        }
+
+        Vector3 probeCenter = transform.position + paintRouteProbeOffset;
+        int hitCount = Physics.OverlapSphereNonAlloc(
+            probeCenter,
+            paintRouteProbeRadius,
+            paintRouteHits,
+            ~0,
+            QueryTriggerInteraction.Collide);
+
+        PaintRouteSurface bestRoute = null;
+        float bestDistanceSqr = float.PositiveInfinity;
+
+        for (int i = 0; i < hitCount; i++)
+        {
+            Collider hit = paintRouteHits[i];
+            paintRouteHits[i] = null;
+
+            if (hit == null)
+            {
+                continue;
+            }
+
+            PaintRouteSurface route = hit.GetComponentInParent<PaintRouteSurface>();
+
+            if (route == null || !route.IsActiveForTeam(playerTeam))
+            {
+                continue;
+            }
+
+            float distanceSqr = (route.transform.position - transform.position).sqrMagnitude;
+
+            if (distanceSqr >= bestDistanceSqr)
+            {
+                continue;
+            }
+
+            bestDistanceSqr = distanceSqr;
+            bestRoute = route;
+        }
+
+        return bestRoute;
     }
 
     private void ApplySwimVisualState(bool swimming)

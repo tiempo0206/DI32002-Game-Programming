@@ -37,6 +37,7 @@ public static class SplatFightersGrayboxMapBuilder
         Material coverMaterial = GetOrCreateMaterial("Assets/Materials/Level/MAT_Level_Cover.mat", new Color(0.42f, 0.47f, 0.48f));
         Material platformMaterial = GetOrCreateMaterial("Assets/Materials/Level/MAT_Level_Platform.mat", new Color(0.3f, 0.36f, 0.34f));
         Material rampMaterial = GetOrCreateMaterial("Assets/Materials/Level/MAT_Level_Ramp.mat", new Color(0.45f, 0.42f, 0.36f));
+        Material paintRouteMaterial = GetOrCreateMaterial("Assets/Materials/Level/MAT_Level_PaintRoute.mat", TeamVisualPalette.TeamAColor);
         Material teamAMaterial = GetOrCreateMaterial("Assets/Materials/Level/MAT_Level_Spawn_TeamA.mat", TeamVisualPalette.TeamAColor);
         Material teamBMaterial = GetOrCreateMaterial("Assets/Materials/Level/MAT_Level_Spawn_TeamB.mat", TeamVisualPalette.TeamBColor);
         Material teamAPlayerMaterial = GetOrCreateMaterial("Assets/Materials/Teams/MAT_TeamA_Player.mat", TeamVisualPalette.TeamAColor);
@@ -49,12 +50,14 @@ public static class SplatFightersGrayboxMapBuilder
         Transform obstacleRoot = CreateGroup(levelRoot.transform, "Obstacles");
         Transform coverRoot = CreateGroup(levelRoot.transform, "Cover");
         Transform platformRoot = CreateGroup(levelRoot.transform, "Platforms");
+        Transform routeRoot = CreateGroup(levelRoot.transform, "PaintRoutes");
         Transform spawnRoot = CreateGroup(levelRoot.transform, "SpawnPoints");
         Transform aiRoot = CreateGroup(levelRoot.transform, "AI");
 
         BuildBoundaryWalls(boundaryRoot, boundaryMaterial);
         BuildContestObstacles(obstacleRoot, coverRoot, coverMaterial);
         BuildSidePlatforms(platformRoot, platformMaterial, rampMaterial);
+        BuildPaintRoutes(routeRoot, platformMaterial, paintRouteMaterial);
         BuildSpawnPoints(spawnRoot, teamAMaterial, teamBMaterial);
         BuildTeamBBot(aiRoot, teamBBotMaterial);
         ConfigurePaintableGroundForGrayboxMap();
@@ -104,6 +107,31 @@ public static class SplatFightersGrayboxMapBuilder
 
         CreateRamp("WestPlatformRamp", new Vector3(-5.65f, 0.15f, 0f), new Vector3(2.2f, 0.22f, 3.0f), new Vector3(0f, 0f, -8f), rampMaterial, parent);
         CreateRamp("EastPlatformRamp", new Vector3(5.65f, 0.15f, 0f), new Vector3(2.2f, 0.22f, 3.0f), new Vector3(0f, 0f, 8f), rampMaterial, parent);
+    }
+
+    private static void BuildPaintRoutes(Transform parent, Material platformMaterial, Material routeMaterial)
+    {
+        CreateSolidCube("WestPaintRouteUpperDeck", new Vector3(-8.35f, 1.55f, -1.8f), new Vector3(2.4f, 0.3f, 1.7f), platformMaterial, parent);
+
+        Transform routeProbe = CreateMarker("WestPaintRouteProbe", new Vector3(-6.65f, 0f, -1.8f), parent);
+        GameObject routeSurface = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        routeSurface.name = "WestPaintRouteSurface";
+        routeSurface.transform.SetParent(parent, false);
+        routeSurface.transform.position = new Vector3(-7.1f, 1.05f, -1.8f);
+        routeSurface.transform.localScale = new Vector3(0.35f, 2.2f, 1.2f);
+        AssignMaterial(routeSurface, routeMaterial);
+
+        Collider routeCollider = routeSurface.GetComponent<Collider>();
+
+        if (routeCollider != null)
+        {
+            routeCollider.isTrigger = true;
+        }
+
+        PaintRouteSurface route = routeSurface.AddComponent<PaintRouteSurface>();
+        route.Configure(Team.TeamA, routeProbe, Vector3.up, 4.2f);
+        EditorUtility.SetDirty(routeSurface);
+        EditorUtility.SetDirty(route);
     }
 
     private static void BuildSpawnPoints(Transform parent, Material teamAMaterial, Material teamBMaterial)
@@ -330,6 +358,9 @@ public static class SplatFightersGrayboxMapBuilder
         controllerSo.FindProperty("disableFireWhileSwimming").boolValue = true;
         controllerSo.FindProperty("groundProbe").objectReferenceValue = player.transform;
         controllerSo.FindProperty("swimFormVisual").objectReferenceValue = swimFormVisual;
+        controllerSo.FindProperty("enablePaintRoutes").boolValue = true;
+        controllerSo.FindProperty("paintRouteProbeRadius").floatValue = 0.75f;
+        controllerSo.FindProperty("paintRouteProbeOffset").vector3Value = new Vector3(0f, 0.45f, 0f);
 
         SerializedProperty humanoidRenderersProperty = controllerSo.FindProperty("humanoidRenderers");
         humanoidRenderersProperty.ClearArray();

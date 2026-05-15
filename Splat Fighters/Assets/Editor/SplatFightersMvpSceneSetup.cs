@@ -275,6 +275,9 @@ public static class SplatFightersMvpSceneSetup
         controllerSo.FindProperty("disableFireWhileSwimming").boolValue = true;
         controllerSo.FindProperty("groundProbe").objectReferenceValue = player.transform;
         controllerSo.FindProperty("swimFormVisual").objectReferenceValue = swimFormVisual;
+        controllerSo.FindProperty("enablePaintRoutes").boolValue = true;
+        controllerSo.FindProperty("paintRouteProbeRadius").floatValue = 0.75f;
+        controllerSo.FindProperty("paintRouteProbeOffset").vector3Value = new Vector3(0f, 0.45f, 0f);
         SerializedProperty humanoidRenderersProperty = controllerSo.FindProperty("humanoidRenderers");
         humanoidRenderersProperty.ClearArray();
         humanoidRenderersProperty.InsertArrayElementAtIndex(0);
