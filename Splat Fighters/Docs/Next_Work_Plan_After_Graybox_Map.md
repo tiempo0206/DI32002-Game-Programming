@@ -366,7 +366,27 @@ Acceptance criteria:
 - The alternate tool has a different paint pattern from the shooter. Implemented as an editor-enabled roller prototype.
 - The current shooter remains the default classroom-demo weapon.
 
-### 13. Stretch Modes After Turf War Core
+### 13. Repository Template Cleanup
+
+Goal:
+
+Keep the Unity project focused on the Splat Fighters prototype instead of the original URP template.
+
+Status: Implemented.
+
+Implemented work:
+
+- Removed URP Empty Template `Readme`, `TutorialInfo`, `SampleScene`, and `SampleSceneProfile` assets.
+- Updated Splat Fighters Build Settings to load `MVP_ShootingTest.unity`.
+- Updated the project default scene reference away from `SampleScene`.
+
+Acceptance criteria:
+
+- Build Settings point to `MVP_ShootingTest.unity`.
+- Template Readme/TutorialInfo/SampleScene assets are not tracked.
+- CI blocks stale `SampleScene` references from returning.
+
+### 14. Stretch Modes After Turf War Core
 
 Goal:
 
