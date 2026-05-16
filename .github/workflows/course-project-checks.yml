@@ -54,6 +54,7 @@ jobs:
           required_files=(
             'Splat Fighters/Packages/manifest.json'
             'Splat Fighters/ProjectSettings/ProjectVersion.txt'
+            'Splat Fighters/ProjectSettings/EditorBuildSettings.asset'
             'Splat Fighters/Assets/Scripts/Painting/Team.cs'
             'Splat Fighters/Assets/Scripts/Painting/PaintGridCell.cs'
             'Splat Fighters/Assets/Scripts/Painting/PaintableArea.cs'
@@ -300,6 +301,37 @@ jobs:
           set -euo pipefail
 
           scene='Splat Fighters/Assets/Scenes/MVP_ShootingTest.unity'
+          build_settings='Splat Fighters/ProjectSettings/EditorBuildSettings.asset'
+          project_settings='Splat Fighters/ProjectSettings/ProjectSettings.asset'
+
+          removed_template_paths=(
+            'Splat Fighters/Assets/Readme.asset'
+            'Splat Fighters/Assets/Scenes/SampleScene.unity'
+            'Splat Fighters/Assets/Settings/SampleSceneProfile.asset'
+            'Splat Fighters/Assets/TutorialInfo'
+          )
+
+          for path in "${removed_template_paths[@]}"; do
+            if [ -e "$path" ]; then
+              echo "Found removed Unity template leftover: $path"
+              exit 1
+            fi
+          done
+
+          grep -q 'path: Assets/Scenes/MVP_ShootingTest.unity' "$build_settings" || {
+            echo "Expected Splat Fighters build settings to point at MVP_ShootingTest."
+            exit 1
+          }
+
+          grep -q 'guid: a1f4345ac2e014b679fae8c9823bc7ee' "$build_settings" || {
+            echo "Expected Splat Fighters build settings to use the MVP_ShootingTest scene GUID."
+            exit 1
+          }
+
+          if grep -R 'Assets/Scenes/SampleScene.unity' "$build_settings" "$project_settings" 'Splat Fighters/Assets'; then
+            echo "Found stale SampleScene reference in Splat Fighters."
+            exit 1
+          fi
 
           required_scene_patterns=(
             'm_Name: PaintableGround'
