@@ -68,6 +68,7 @@ jobs:
             'Splat Fighters/Assets/Scripts/Player/PlayerController.cs'
             'Splat Fighters/Assets/Scripts/Player/ThirdPersonCameraFollow.cs'
             'Splat Fighters/Assets/Scripts/Player/AimController.cs'
+            'Splat Fighters/Assets/Scripts/Player/SpecialMeter.cs'
             'Splat Fighters/Assets/Scripts/Level/SpawnPoint.cs'
             'Splat Fighters/Assets/Scripts/Level/PaintBlocker.cs'
             'Splat Fighters/Assets/Scripts/Level/PaintRouteSurface.cs'
@@ -342,6 +343,7 @@ jobs:
             'guid: 13b1c0840c8ae4d04a8bf41efc3983d2'
             'guid: 13eced9b9c66941f497c78ae0279d6df'
             'guid: ee07f6abdd1964429868fa0d1187932c'
+            'guid: 4cf88df31b8c4e5f859ab98461e6d6a5'
             'requirePaintPointNearAreaPlane: 1'
             'rebuildMaskFromPaintBlockersOnAwake: 1'
             'resetCharactersOnMatchStart: 1'
@@ -351,6 +353,9 @@ jobs:
             'teamBBot: {fileID:'
             'playerHealth: {fileID:'
             'teamBBotHealth: {fileID:'
+            'playerSpecialMeter: {fileID:'
+            'changedCellsForFullCharge: 180'
+            'resetWhenPaintCleared: 1'
             'respawnDelaySeconds: 2'
             'teamASpawn: {fileID:'
             'teamBSpawn: {fileID:'
@@ -413,6 +418,7 @@ jobs:
             'ResetCharactersToSpawns'
             'DestroyActiveProjectiles'
             'ResetWeaponResources'
+            'ResetSpecialMeters'
           )
 
           for pattern in "${required_code_patterns[@]}"; do
@@ -441,6 +447,41 @@ jobs:
             echo "Expected ScoreUI health text support."
             exit 1
           }
+
+          grep -q 'SpecialText' 'Splat Fighters/Assets/Scripts/UI/ScoreUI.cs' || {
+            echo "Expected ScoreUI special meter text support."
+            exit 1
+          }
+
+          required_special_patterns=(
+            'public class SpecialMeter'
+            'ChargePercent'
+            'IsReady'
+            'AddChargeFromPaint'
+            'PaintApplied'
+            'PaintCleared'
+          )
+
+          for pattern in "${required_special_patterns[@]}"; do
+            grep -q "$pattern" 'Splat Fighters/Assets/Scripts/Player/SpecialMeter.cs' || {
+              echo "Missing special meter code pattern: $pattern"
+              exit 1
+            }
+          done
+
+          required_paint_event_patterns=(
+            'event Action<Team, int, Vector3, float> PaintApplied'
+            'event Action PaintCleared'
+            'PaintApplied?.Invoke'
+            'PaintCleared?.Invoke'
+          )
+
+          for pattern in "${required_paint_event_patterns[@]}"; do
+            grep -q "$pattern" 'Splat Fighters/Assets/Scripts/Painting/PaintManager.cs' || {
+              echo "Missing PaintManager special-charge event pattern: $pattern"
+              exit 1
+            }
+          done
 
           required_presentation_patterns=(
             'PresentationBanner'
