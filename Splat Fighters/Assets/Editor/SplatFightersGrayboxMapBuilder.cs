@@ -300,6 +300,7 @@ public static class SplatFightersGrayboxMapBuilder
         ConfigureCharacterHealth(GetOrCreateCharacterHealth(player), Team.TeamA, player.transform);
         ConfigurePlayerSpecialMeter(player);
         ConfigurePlayerSpecialPaintBurst(player);
+        ConfigurePlayerRollerTool(player, teamAMaterial);
         visualBinder.Configure(Team.TeamA, teamAMaterial, null);
         EditorUtility.SetDirty(player);
         EditorUtility.SetDirty(visualBinder);
@@ -357,6 +358,43 @@ public static class SplatFightersGrayboxMapBuilder
         burstSo.ApplyModifiedPropertiesWithoutUndo();
 
         EditorUtility.SetDirty(specialPaintBurst);
+    }
+
+    private static void ConfigurePlayerRollerTool(GameObject player, Material teamAMaterial)
+    {
+        if (player == null)
+        {
+            return;
+        }
+
+        GameObject rollerTool = GetOrCreateRollerTool(player.transform, teamAMaterial);
+        RollerPaintTool rollerPaintTool = rollerTool.GetComponent<RollerPaintTool>();
+
+        if (rollerPaintTool == null)
+        {
+            rollerPaintTool = rollerTool.AddComponent<RollerPaintTool>();
+        }
+
+        SerializedObject rollerSo = new SerializedObject(rollerPaintTool);
+        rollerSo.FindProperty("team").enumValueIndex = (int)Team.TeamA;
+        rollerSo.FindProperty("paintKey").intValue = (int)KeyCode.Mouse0;
+        rollerSo.FindProperty("requireInput").boolValue = true;
+        rollerSo.FindProperty("requireMatchPlaying").boolValue = true;
+        rollerSo.FindProperty("paintOrigin").objectReferenceValue = player.transform;
+        rollerSo.FindProperty("paintInterval").floatValue = 0.08f;
+        rollerSo.FindProperty("paintRadius").floatValue = 1.05f;
+        rollerSo.FindProperty("forwardOffset").floatValue = 1.15f;
+        rollerSo.FindProperty("halfWidth").floatValue = 0.65f;
+        rollerSo.FindProperty("swathSamples").intValue = 3;
+        rollerSo.FindProperty("fallbackPaintPlaneY").floatValue = 0f;
+        rollerSo.FindProperty("groundProbeLayers").intValue = ~0;
+        rollerSo.FindProperty("requireMovementForTrail").boolValue = true;
+        rollerSo.FindProperty("minMoveDistance").floatValue = 0.06f;
+        rollerSo.ApplyModifiedPropertiesWithoutUndo();
+        rollerPaintTool.enabled = false;
+
+        EditorUtility.SetDirty(rollerTool);
+        EditorUtility.SetDirty(rollerPaintTool);
     }
 
     private static void ConfigurePlayerInkResource(GameObject player)
@@ -452,6 +490,27 @@ public static class SplatFightersGrayboxMapBuilder
         swimFormVisual.SetActive(false);
         EditorUtility.SetDirty(swimFormVisual);
         return swimFormVisual;
+    }
+
+    private static GameObject GetOrCreateRollerTool(Transform parent, Material teamAMaterial)
+    {
+        Transform existing = parent.Find("RollerTool");
+        GameObject rollerTool = existing != null ? existing.gameObject : GameObject.CreatePrimitive(PrimitiveType.Cube);
+        rollerTool.name = "RollerTool";
+        rollerTool.transform.SetParent(parent, false);
+        rollerTool.transform.localPosition = new Vector3(0f, -0.55f, 0.9f);
+        rollerTool.transform.localRotation = Quaternion.identity;
+        rollerTool.transform.localScale = new Vector3(1.55f, 0.2f, 0.35f);
+
+        Collider collider = rollerTool.GetComponent<Collider>();
+
+        if (collider != null)
+        {
+            Object.DestroyImmediate(collider);
+        }
+
+        AssignMaterial(rollerTool, teamAMaterial);
+        return rollerTool;
     }
 
     private static CharacterHealth GetOrCreateCharacterHealth(GameObject character)

@@ -353,17 +353,17 @@ Implemented work:
 - Added HUD special meter text with a ready state.
 - Reset the player special meter when paint is cleared or a match resets.
 - Added `SpecialPaintBurst` so a ready meter can be spent on one larger paint burst.
+- Added a disabled-by-default `RollerPaintTool` prototype for close-range continuous swath painting.
 
 Remaining work:
 
-- Add one alternate close-range paint tool, such as a roller-style prototype.
 - Keep weapon switching editor-configured instead of building a full loadout UI.
 
 Acceptance criteria:
 
 - Painting territory can charge a special meter. Implemented.
 - A special action provides a visible temporary advantage. Implemented as a paint burst.
-- The alternate tool has a different paint pattern from the shooter.
+- The alternate tool has a different paint pattern from the shooter. Implemented as an editor-enabled roller prototype.
 - The current shooter remains the default classroom-demo weapon.
 
 ### 13. Stretch Modes After Turf War Core
