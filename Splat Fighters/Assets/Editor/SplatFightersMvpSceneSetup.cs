@@ -252,6 +252,7 @@ public static class SplatFightersMvpSceneSetup
         CharacterHealth health = player.AddComponent<CharacterHealth>();
         InkWeapon weapon = player.AddComponent<InkWeapon>();
         SpecialMeter specialMeter = player.AddComponent<SpecialMeter>();
+        SpecialPaintBurst specialPaintBurst = player.AddComponent<SpecialPaintBurst>();
         AimController aimController = player.AddComponent<AimController>();
         TeamVisualBinder visualBinder = player.AddComponent<TeamVisualBinder>();
         visualBinder.Configure(Team.TeamA, shooterMaterial, null);
@@ -316,6 +317,17 @@ public static class SplatFightersMvpSceneSetup
         specialSo.FindProperty("startingChargePercent").floatValue = 0f;
         specialSo.FindProperty("resetWhenPaintCleared").boolValue = true;
         specialSo.ApplyModifiedPropertiesWithoutUndo();
+
+        SerializedObject burstSo = new SerializedObject(specialPaintBurst);
+        burstSo.FindProperty("specialMeter").objectReferenceValue = specialMeter;
+        burstSo.FindProperty("aimController").objectReferenceValue = aimController;
+        burstSo.FindProperty("team").enumValueIndex = (int)Team.TeamA;
+        burstSo.FindProperty("burstPaintRadius").floatValue = 4.25f;
+        burstSo.FindProperty("fallbackDistance").floatValue = 4.5f;
+        burstSo.FindProperty("activationKey").intValue = (int)KeyCode.Q;
+        burstSo.FindProperty("requireMatchPlaying").boolValue = true;
+        burstSo.FindProperty("logActivation").boolValue = false;
+        burstSo.ApplyModifiedPropertiesWithoutUndo();
 
         SerializedObject aimSo = new SerializedObject(aimController);
         aimSo.FindProperty("aimCamera").objectReferenceValue = camera;
