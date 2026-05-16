@@ -95,6 +95,7 @@ jobs:
             'Splat Fighters/Assets/Materials/Teams/MAT_TeamB_Bot.mat'
             'Splat Fighters/Assets/Materials/Teams/MAT_TeamB_Projectile.mat'
             'Splat Fighters/Docs/Splat_Fighters_Project_Technical_Documentation.docx'
+            'Splat Fighters/Docs/ADR-001-Input-System-Strategy.md'
             'class activity/2D-shooter/Packages/manifest.json'
             'class activity/2D-shooter/Packages/packages-lock.json'
             'class activity/2D-shooter/ProjectSettings/ProjectVersion.txt'
@@ -671,6 +672,25 @@ jobs:
             exit 1
           }
 
+          required_input_strategy_patterns=(
+            'Legacy Unity Input Manager'
+            'PlayerInputHandler'
+            'com.unity.inputsystem'
+            'Future Migration Trigger'
+          )
+
+          for pattern in "${required_input_strategy_patterns[@]}"; do
+            grep -q "$pattern" 'Splat Fighters/Docs/ADR-001-Input-System-Strategy.md' || {
+              echo "Missing input strategy ADR pattern: $pattern"
+              exit 1
+            }
+          done
+
+          if grep -q 'com.unity.inputsystem' 'Splat Fighters/Packages/manifest.json'; then
+            echo "Splat Fighters should not declare New Input System until the migration task is implemented."
+            exit 1
+          fi
+
           required_health_patterns=(
             'public class CharacterHealth'
             'Eliminated'
@@ -765,6 +785,17 @@ jobs:
               missing = required_entries - names
               if missing:
                   raise SystemExit(f"Missing docx entries: {sorted(missing)}")
+
+              document = docx.read("word/document.xml").decode("utf-8")
+              stale_terms = [
+                  "Input: New Input System",
+                  "PlayerInputReader.cs",
+                  "Reads New Input System actions",
+              ]
+
+              for term in stale_terms:
+                  if term in document:
+                      raise SystemExit(f"Stale input documentation term remains: {term}")
 
           print("Word document package is valid.")
           PY

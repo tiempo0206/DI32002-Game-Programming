@@ -386,7 +386,33 @@ Acceptance criteria:
 - Template Readme/TutorialInfo/SampleScene assets are not tracked.
 - CI blocks stale `SampleScene` references from returning.
 
-### 14. Stretch Modes After Turf War Core
+### 14. Input System Strategy
+
+Goal:
+
+Keep implementation and documentation aligned around how the MVP reads player input.
+
+Status: Implemented.
+
+Decision:
+
+- Splat Fighters will keep the legacy Unity Input Manager for the local classroom MVP.
+- `PlayerInputHandler` remains the movement/action adapter.
+- A New Input System migration should be a separate task only when controller support, rebinding, multiple local players, or action-map separation becomes required.
+
+Implemented work:
+
+- Added `ADR-001-Input-System-Strategy.md`.
+- Updated the technical Word document so it no longer claims New Input System runtime support.
+- Added CI checks to prevent stale New Input System claims from returning.
+
+Acceptance criteria:
+
+- The final input strategy is documented.
+- Runtime code and documentation no longer conflict.
+- Existing keyboard and mouse controls remain unchanged.
+
+### 15. Stretch Modes After Turf War Core
 
 Goal:
 
