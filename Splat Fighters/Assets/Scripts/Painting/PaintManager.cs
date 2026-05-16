@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -9,6 +10,9 @@ using UnityEngine;
 public class PaintManager : MonoBehaviour
 {
     public static PaintManager Instance { get; private set; }
+
+    public event Action<Team, int, Vector3, float> PaintApplied;
+    public event Action PaintCleared;
 
     [Header("Area References")]
     [SerializeField] private bool autoFindAreasOnAwake = true;
@@ -60,6 +64,11 @@ public class PaintManager : MonoBehaviour
             }
 
             totalChangedCells += area.PaintAtWorldPosition(worldPosition, radius, team);
+        }
+
+        if (totalChangedCells > 0)
+        {
+            PaintApplied?.Invoke(team, totalChangedCells, worldPosition, radius);
         }
 
         return totalChangedCells;
@@ -255,5 +264,7 @@ public class PaintManager : MonoBehaviour
 
             area.ClearPaint();
         }
+
+        PaintCleared?.Invoke();
     }
 }

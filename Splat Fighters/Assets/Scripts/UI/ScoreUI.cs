@@ -14,6 +14,7 @@ public class ScoreUI : MonoBehaviour
     [SerializeField] private Text teamBText = null;
     [SerializeField] private Text inkText = null;
     [SerializeField] private Text healthText = null;
+    [SerializeField] private Text specialText = null;
     [SerializeField] private Text statusText = null;
     [SerializeField] private Text controlsText = null;
 
@@ -37,7 +38,9 @@ public class ScoreUI : MonoBehaviour
         bool playerWantsToSwim,
         bool playerOnEnemyPaint,
         float playerHealthPercent,
-        bool playerEliminated)
+        bool playerEliminated,
+        float playerSpecialPercent,
+        bool playerSpecialReady)
     {
         EnsureRuntimeTextReferences();
 
@@ -74,6 +77,12 @@ public class ScoreUI : MonoBehaviour
         {
             healthText.text = FormatHealth(playerHealthPercent, playerEliminated);
             healthText.color = playerEliminated ? teamBColor : neutralColor;
+        }
+
+        if (specialText != null)
+        {
+            specialText.text = FormatSpecial(playerSpecialPercent, playerSpecialReady);
+            specialText.color = playerSpecialReady ? teamAColor : neutralColor;
         }
 
         if (statusText != null)
@@ -123,7 +132,7 @@ public class ScoreUI : MonoBehaviour
         panelRect.anchorMax = new Vector2(0f, 1f);
         panelRect.pivot = new Vector2(0f, 1f);
         panelRect.anchoredPosition = new Vector2(24f, -24f);
-        panelRect.sizeDelta = new Vector2(420f, 244f);
+        panelRect.sizeDelta = new Vector2(420f, 272f);
 
         Image panelImage = panelObject.AddComponent<Image>();
         panelImage.color = new Color(0f, 0f, 0f, 0.45f);
@@ -136,8 +145,9 @@ public class ScoreUI : MonoBehaviour
         scoreUI.teamBText = CreateText(panelObject.transform, "TeamBText", new Vector2(16f, -90f), 24, FontStyle.Bold);
         scoreUI.inkText = CreateText(panelObject.transform, "InkText", new Vector2(16f, -122f), 20, FontStyle.Bold);
         scoreUI.healthText = CreateText(panelObject.transform, "HealthText", new Vector2(16f, -150f), 20, FontStyle.Bold);
-        scoreUI.statusText = CreateText(panelObject.transform, "StatusText", new Vector2(16f, -180f), 20, FontStyle.Normal);
-        scoreUI.controlsText = CreateText(panelObject.transform, "ControlsText", new Vector2(16f, -208f), 18, FontStyle.Normal);
+        scoreUI.specialText = CreateText(panelObject.transform, "SpecialText", new Vector2(16f, -178f), 20, FontStyle.Bold);
+        scoreUI.statusText = CreateText(panelObject.transform, "StatusText", new Vector2(16f, -208f), 20, FontStyle.Normal);
+        scoreUI.controlsText = CreateText(panelObject.transform, "ControlsText", new Vector2(16f, -236f), 18, FontStyle.Normal);
 
         return scoreUI;
     }
@@ -149,7 +159,7 @@ public class ScoreUI : MonoBehaviour
 
     private void EnsureRuntimeTextReferences()
     {
-        if (presentationText != null && timerText != null && teamAText != null && teamBText != null && inkText != null && healthText != null && statusText != null && controlsText != null)
+        if (presentationText != null && timerText != null && teamAText != null && teamBText != null && inkText != null && healthText != null && specialText != null && statusText != null && controlsText != null)
         {
             return;
         }
@@ -183,6 +193,10 @@ public class ScoreUI : MonoBehaviour
             else if (text.name == "HealthText")
             {
                 healthText = text;
+            }
+            else if (text.name == "SpecialText")
+            {
+                specialText = text;
             }
             else if (text.name == "StatusText")
             {
@@ -357,6 +371,21 @@ public class ScoreUI : MonoBehaviour
         }
 
         return $"HP: {Mathf.Clamp(playerHealthPercent, 0f, 100f):0}%";
+    }
+
+    private static string FormatSpecial(float playerSpecialPercent, bool playerSpecialReady)
+    {
+        if (playerSpecialPercent < 0f)
+        {
+            return "Special: --";
+        }
+
+        if (playerSpecialReady)
+        {
+            return "Special: Ready";
+        }
+
+        return $"Special: {Mathf.Clamp(playerSpecialPercent, 0f, 100f):0}%";
     }
 
     private string GetTeamLabel(Team team)

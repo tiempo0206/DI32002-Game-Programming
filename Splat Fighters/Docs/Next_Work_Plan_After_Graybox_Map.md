@@ -344,16 +344,24 @@ Goal:
 
 Introduce Splatoon-like weapon identity without building a large arsenal.
 
-Suggested work:
+Status: In progress through smaller Agile slices.
+
+Implemented work:
+
+- Added `SpecialMeter` so TeamA painting charges a visible player special meter.
+- Added `PaintManager` paint events so territory changes can drive future progression systems.
+- Added HUD special meter text with a ready state.
+- Reset the player special meter when paint is cleared or a match resets.
+
+Remaining work:
 
 - Add one alternate close-range paint tool, such as a roller-style prototype.
-- Add a simple special meter that charges from painting territory.
 - Add one special action, such as a larger paint burst or temporary high-output firing.
 - Keep weapon switching editor-configured instead of building a full loadout UI.
 
 Acceptance criteria:
 
-- Painting territory can charge a special meter.
+- Painting territory can charge a special meter. Implemented.
 - A special action provides a visible temporary advantage.
 - The alternate tool has a different paint pattern from the shooter.
 - The current shooter remains the default classroom-demo weapon.

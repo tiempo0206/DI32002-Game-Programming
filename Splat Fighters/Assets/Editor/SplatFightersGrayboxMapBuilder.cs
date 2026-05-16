@@ -298,9 +298,34 @@ public static class SplatFightersGrayboxMapBuilder
         ConfigurePlayerInkResource(player);
         ConfigurePlayerSwimForm(player, teamAMaterial);
         ConfigureCharacterHealth(GetOrCreateCharacterHealth(player), Team.TeamA, player.transform);
+        ConfigurePlayerSpecialMeter(player);
         visualBinder.Configure(Team.TeamA, teamAMaterial, null);
         EditorUtility.SetDirty(player);
         EditorUtility.SetDirty(visualBinder);
+    }
+
+    private static void ConfigurePlayerSpecialMeter(GameObject player)
+    {
+        if (player == null)
+        {
+            return;
+        }
+
+        SpecialMeter specialMeter = player.GetComponent<SpecialMeter>();
+
+        if (specialMeter == null)
+        {
+            specialMeter = player.AddComponent<SpecialMeter>();
+        }
+
+        SerializedObject specialSo = new SerializedObject(specialMeter);
+        specialSo.FindProperty("team").enumValueIndex = (int)Team.TeamA;
+        specialSo.FindProperty("changedCellsForFullCharge").intValue = 180;
+        specialSo.FindProperty("startingChargePercent").floatValue = 0f;
+        specialSo.FindProperty("resetWhenPaintCleared").boolValue = true;
+        specialSo.ApplyModifiedPropertiesWithoutUndo();
+
+        EditorUtility.SetDirty(specialMeter);
     }
 
     private static void ConfigurePlayerInkResource(GameObject player)
@@ -472,6 +497,7 @@ public static class SplatFightersGrayboxMapBuilder
         managerSo.FindProperty("playerController").objectReferenceValue = player != null ? player.GetComponent<PlayerController>() : null;
         managerSo.FindProperty("playerHealth").objectReferenceValue = player != null ? player.GetComponent<CharacterHealth>() : null;
         managerSo.FindProperty("playerWeapon").objectReferenceValue = player != null ? player.GetComponentInChildren<InkWeapon>() : null;
+        managerSo.FindProperty("playerSpecialMeter").objectReferenceValue = player != null ? player.GetComponentInChildren<SpecialMeter>() : null;
         managerSo.FindProperty("teamBBot").objectReferenceValue = bot;
         managerSo.FindProperty("teamBBotHealth").objectReferenceValue = bot != null ? bot.GetComponent<CharacterHealth>() : null;
         managerSo.FindProperty("teamASpawn").objectReferenceValue = teamASpawn;

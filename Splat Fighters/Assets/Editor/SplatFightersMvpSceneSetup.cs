@@ -251,6 +251,7 @@ public static class SplatFightersMvpSceneSetup
         PlayerController playerController = player.AddComponent<PlayerController>();
         CharacterHealth health = player.AddComponent<CharacterHealth>();
         InkWeapon weapon = player.AddComponent<InkWeapon>();
+        SpecialMeter specialMeter = player.AddComponent<SpecialMeter>();
         AimController aimController = player.AddComponent<AimController>();
         TeamVisualBinder visualBinder = player.AddComponent<TeamVisualBinder>();
         visualBinder.Configure(Team.TeamA, shooterMaterial, null);
@@ -308,6 +309,13 @@ public static class SplatFightersMvpSceneSetup
         weaponSo.FindProperty("teamBProjectileColor").colorValue = TeamVisualPalette.TeamBColor;
         weaponSo.FindProperty("enableKeyboardTestFire").boolValue = false;
         weaponSo.ApplyModifiedPropertiesWithoutUndo();
+
+        SerializedObject specialSo = new SerializedObject(specialMeter);
+        specialSo.FindProperty("team").enumValueIndex = (int)Team.TeamA;
+        specialSo.FindProperty("changedCellsForFullCharge").intValue = 180;
+        specialSo.FindProperty("startingChargePercent").floatValue = 0f;
+        specialSo.FindProperty("resetWhenPaintCleared").boolValue = true;
+        specialSo.ApplyModifiedPropertiesWithoutUndo();
 
         SerializedObject aimSo = new SerializedObject(aimController);
         aimSo.FindProperty("aimCamera").objectReferenceValue = camera;

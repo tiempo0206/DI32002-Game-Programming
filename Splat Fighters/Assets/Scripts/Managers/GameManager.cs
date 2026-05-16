@@ -33,6 +33,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private PlayerController playerController = null;
     [SerializeField] private CharacterHealth playerHealth = null;
     [SerializeField] private InkWeapon playerWeapon = null;
+    [SerializeField] private SpecialMeter playerSpecialMeter = null;
     [SerializeField] private BotController teamBBot = null;
     [SerializeField] private CharacterHealth teamBBotHealth = null;
     [SerializeField] private SpawnPoint teamASpawn = null;
@@ -325,6 +326,11 @@ public class GameManager : MonoBehaviour
             playerWeapon = playerRoot.GetComponentInChildren<InkWeapon>();
         }
 
+        if (playerSpecialMeter == null && playerRoot != null)
+        {
+            playerSpecialMeter = playerRoot.GetComponentInChildren<SpecialMeter>();
+        }
+
         if (teamBBot == null)
         {
             teamBBot = FindObjectOfType<BotController>();
@@ -402,6 +408,7 @@ public class GameManager : MonoBehaviour
         }
 
         ResetWeaponResources(playerRoot);
+        ResetSpecialMeters(playerRoot);
 
         if (teamBBot != null)
         {
@@ -414,6 +421,7 @@ public class GameManager : MonoBehaviour
 
             teamBBot.ResetBotState();
             ResetWeaponResources(teamBBot.transform);
+            ResetSpecialMeters(teamBBot.transform);
         }
     }
 
@@ -471,6 +479,26 @@ public class GameManager : MonoBehaviour
             if (weapon != null)
             {
                 weapon.ResetInkResource();
+            }
+        }
+    }
+
+    private void ResetSpecialMeters(Transform root)
+    {
+        if (root == null)
+        {
+            return;
+        }
+
+        SpecialMeter[] specialMeters = root.GetComponentsInChildren<SpecialMeter>();
+
+        for (int i = 0; i < specialMeters.Length; i++)
+        {
+            SpecialMeter meter = specialMeters[i];
+
+            if (meter != null)
+            {
+                meter.ResetCharge();
             }
         }
     }
@@ -672,7 +700,9 @@ public class GameManager : MonoBehaviour
             playerController != null && playerController.WantsToSwim,
             playerController != null && playerController.IsOnEnemyPaint,
             playerHealth != null ? playerHealth.HealthPercent : -1f,
-            playerHealth != null && playerHealth.IsEliminated);
+            playerHealth != null && playerHealth.IsEliminated,
+            playerSpecialMeter != null ? playerSpecialMeter.ChargePercent : -1f,
+            playerSpecialMeter != null && playerSpecialMeter.IsReady);
     }
 
     private void SetState(MatchState nextState)
