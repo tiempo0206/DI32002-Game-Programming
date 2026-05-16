@@ -247,12 +247,30 @@ public static class SplatFightersMvpSceneSetup
         firePoint.transform.position = new Vector3(0f, 1.35f, -6.3f);
         firePoint.transform.rotation = Quaternion.LookRotation(new Vector3(0f, 0.05f, 0f) - firePoint.transform.position, Vector3.up);
 
+        GameObject rollerTool = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        rollerTool.name = "RollerTool";
+        rollerTool.transform.SetParent(player.transform);
+        rollerTool.transform.localPosition = new Vector3(0f, -0.55f, 0.9f);
+        rollerTool.transform.localRotation = Quaternion.identity;
+        rollerTool.transform.localScale = new Vector3(1.55f, 0.2f, 0.35f);
+
+        Collider rollerCollider = rollerTool.GetComponent<Collider>();
+
+        if (rollerCollider != null)
+        {
+            Object.DestroyImmediate(rollerCollider);
+        }
+
+        MeshRenderer rollerRenderer = rollerTool.GetComponent<MeshRenderer>();
+        rollerRenderer.sharedMaterial = shooterMaterial;
+
         PlayerInputHandler input = player.AddComponent<PlayerInputHandler>();
         PlayerController playerController = player.AddComponent<PlayerController>();
         CharacterHealth health = player.AddComponent<CharacterHealth>();
         InkWeapon weapon = player.AddComponent<InkWeapon>();
         SpecialMeter specialMeter = player.AddComponent<SpecialMeter>();
         SpecialPaintBurst specialPaintBurst = player.AddComponent<SpecialPaintBurst>();
+        RollerPaintTool rollerPaintTool = rollerTool.AddComponent<RollerPaintTool>();
         AimController aimController = player.AddComponent<AimController>();
         TeamVisualBinder visualBinder = player.AddComponent<TeamVisualBinder>();
         visualBinder.Configure(Team.TeamA, shooterMaterial, null);
@@ -328,6 +346,24 @@ public static class SplatFightersMvpSceneSetup
         burstSo.FindProperty("requireMatchPlaying").boolValue = true;
         burstSo.FindProperty("logActivation").boolValue = false;
         burstSo.ApplyModifiedPropertiesWithoutUndo();
+
+        SerializedObject rollerSo = new SerializedObject(rollerPaintTool);
+        rollerSo.FindProperty("team").enumValueIndex = (int)Team.TeamA;
+        rollerSo.FindProperty("paintKey").intValue = (int)KeyCode.Mouse0;
+        rollerSo.FindProperty("requireInput").boolValue = true;
+        rollerSo.FindProperty("requireMatchPlaying").boolValue = true;
+        rollerSo.FindProperty("paintOrigin").objectReferenceValue = player.transform;
+        rollerSo.FindProperty("paintInterval").floatValue = 0.08f;
+        rollerSo.FindProperty("paintRadius").floatValue = 1.05f;
+        rollerSo.FindProperty("forwardOffset").floatValue = 1.15f;
+        rollerSo.FindProperty("halfWidth").floatValue = 0.65f;
+        rollerSo.FindProperty("swathSamples").intValue = 3;
+        rollerSo.FindProperty("fallbackPaintPlaneY").floatValue = 0f;
+        rollerSo.FindProperty("groundProbeLayers").intValue = ~0;
+        rollerSo.FindProperty("requireMovementForTrail").boolValue = true;
+        rollerSo.FindProperty("minMoveDistance").floatValue = 0.06f;
+        rollerSo.ApplyModifiedPropertiesWithoutUndo();
+        rollerPaintTool.enabled = false;
 
         SerializedObject aimSo = new SerializedObject(aimController);
         aimSo.FindProperty("aimCamera").objectReferenceValue = camera;

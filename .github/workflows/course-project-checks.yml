@@ -61,6 +61,7 @@ jobs:
             'Splat Fighters/Assets/Scripts/Combat/CharacterHealth.cs'
             'Splat Fighters/Assets/Scripts/Weapons/InkProjectile.cs'
             'Splat Fighters/Assets/Scripts/Weapons/InkWeapon.cs'
+            'Splat Fighters/Assets/Scripts/Weapons/RollerPaintTool.cs'
             'Splat Fighters/Assets/Scripts/AI/BotController.cs'
             'Splat Fighters/Assets/Scripts/Visuals/TeamVisualPalette.cs'
             'Splat Fighters/Assets/Scripts/Visuals/TeamVisualBinder.cs'
@@ -305,6 +306,7 @@ jobs:
             'm_Name: GroundVisual'
             'm_Name: Player'
             'm_Name: FirePoint'
+            'm_Name: RollerTool'
             'm_Name: PaintManager'
             'm_Name: GameManager'
             'm_Name: Main Camera'
@@ -346,6 +348,7 @@ jobs:
             'guid: ee07f6abdd1964429868fa0d1187932c'
             'guid: 4cf88df31b8c4e5f859ab98461e6d6a5'
             'guid: 322b3e2d5c7a4fe99f839080ec5d0992'
+            'guid: 5bc59f8f6ed34b1883bcf162bb96c1d7'
             'requirePaintPointNearAreaPlane: 1'
             'rebuildMaskFromPaintBlockersOnAwake: 1'
             'resetCharactersOnMatchStart: 1'
@@ -360,6 +363,9 @@ jobs:
             'resetWhenPaintCleared: 1'
             'burstPaintRadius: 4.25'
             'activationKey: 113'
+            'paintInterval: 0.08'
+            'paintRadius: 1.05'
+            'swathSamples: 3'
             'respawnDelaySeconds: 2'
             'teamASpawn: {fileID:'
             'teamBSpawn: {fileID:'
@@ -485,6 +491,22 @@ jobs:
           for pattern in "${required_special_burst_patterns[@]}"; do
             grep -q "$pattern" 'Splat Fighters/Assets/Scripts/Player/SpecialPaintBurst.cs' || {
               echo "Missing special paint burst code pattern: $pattern"
+              exit 1
+            }
+          done
+
+          required_roller_patterns=(
+            'public class RollerPaintTool'
+            'PaintCurrentSwath'
+            'paintInterval'
+            'paintRadius'
+            'swathSamples'
+            'PaintAtWorldPosition'
+          )
+
+          for pattern in "${required_roller_patterns[@]}"; do
+            grep -q "$pattern" 'Splat Fighters/Assets/Scripts/Weapons/RollerPaintTool.cs' || {
+              echo "Missing roller paint tool code pattern: $pattern"
               exit 1
             }
           done
