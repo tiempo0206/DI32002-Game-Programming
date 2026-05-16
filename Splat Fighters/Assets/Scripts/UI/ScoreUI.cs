@@ -313,7 +313,7 @@ public class ScoreUI : MonoBehaviour
         switch (state)
         {
             case GameManager.MatchState.Playing:
-                return "Shift Swim | R Restart | P Pause";
+                return "Shift Swim | Q Special | R Restart | P Pause";
             case GameManager.MatchState.Paused:
                 return "R Restart | P Resume";
             case GameManager.MatchState.Finished:

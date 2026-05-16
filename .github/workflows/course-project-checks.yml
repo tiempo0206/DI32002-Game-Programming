@@ -69,6 +69,7 @@ jobs:
             'Splat Fighters/Assets/Scripts/Player/ThirdPersonCameraFollow.cs'
             'Splat Fighters/Assets/Scripts/Player/AimController.cs'
             'Splat Fighters/Assets/Scripts/Player/SpecialMeter.cs'
+            'Splat Fighters/Assets/Scripts/Player/SpecialPaintBurst.cs'
             'Splat Fighters/Assets/Scripts/Level/SpawnPoint.cs'
             'Splat Fighters/Assets/Scripts/Level/PaintBlocker.cs'
             'Splat Fighters/Assets/Scripts/Level/PaintRouteSurface.cs'
@@ -344,6 +345,7 @@ jobs:
             'guid: 13eced9b9c66941f497c78ae0279d6df'
             'guid: ee07f6abdd1964429868fa0d1187932c'
             'guid: 4cf88df31b8c4e5f859ab98461e6d6a5'
+            'guid: 322b3e2d5c7a4fe99f839080ec5d0992'
             'requirePaintPointNearAreaPlane: 1'
             'rebuildMaskFromPaintBlockersOnAwake: 1'
             'resetCharactersOnMatchStart: 1'
@@ -356,6 +358,8 @@ jobs:
             'playerSpecialMeter: {fileID:'
             'changedCellsForFullCharge: 180'
             'resetWhenPaintCleared: 1'
+            'burstPaintRadius: 4.25'
+            'activationKey: 113'
             'respawnDelaySeconds: 2'
             'teamASpawn: {fileID:'
             'teamBSpawn: {fileID:'
@@ -465,6 +469,22 @@ jobs:
           for pattern in "${required_special_patterns[@]}"; do
             grep -q "$pattern" 'Splat Fighters/Assets/Scripts/Player/SpecialMeter.cs' || {
               echo "Missing special meter code pattern: $pattern"
+              exit 1
+            }
+          done
+
+          required_special_burst_patterns=(
+            'public class SpecialPaintBurst'
+            'TryActivate'
+            'ConsumeReadyCharge'
+            'burstPaintRadius'
+            'activationKey'
+            'PaintAtWorldPosition'
+          )
+
+          for pattern in "${required_special_burst_patterns[@]}"; do
+            grep -q "$pattern" 'Splat Fighters/Assets/Scripts/Player/SpecialPaintBurst.cs' || {
+              echo "Missing special paint burst code pattern: $pattern"
               exit 1
             }
           done

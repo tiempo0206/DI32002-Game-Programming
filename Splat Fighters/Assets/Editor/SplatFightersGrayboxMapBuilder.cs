@@ -299,6 +299,7 @@ public static class SplatFightersGrayboxMapBuilder
         ConfigurePlayerSwimForm(player, teamAMaterial);
         ConfigureCharacterHealth(GetOrCreateCharacterHealth(player), Team.TeamA, player.transform);
         ConfigurePlayerSpecialMeter(player);
+        ConfigurePlayerSpecialPaintBurst(player);
         visualBinder.Configure(Team.TeamA, teamAMaterial, null);
         EditorUtility.SetDirty(player);
         EditorUtility.SetDirty(visualBinder);
@@ -326,6 +327,36 @@ public static class SplatFightersGrayboxMapBuilder
         specialSo.ApplyModifiedPropertiesWithoutUndo();
 
         EditorUtility.SetDirty(specialMeter);
+    }
+
+    private static void ConfigurePlayerSpecialPaintBurst(GameObject player)
+    {
+        if (player == null)
+        {
+            return;
+        }
+
+        SpecialMeter specialMeter = player.GetComponent<SpecialMeter>();
+        AimController aimController = player.GetComponent<AimController>();
+        SpecialPaintBurst specialPaintBurst = player.GetComponent<SpecialPaintBurst>();
+
+        if (specialPaintBurst == null)
+        {
+            specialPaintBurst = player.AddComponent<SpecialPaintBurst>();
+        }
+
+        SerializedObject burstSo = new SerializedObject(specialPaintBurst);
+        burstSo.FindProperty("specialMeter").objectReferenceValue = specialMeter;
+        burstSo.FindProperty("aimController").objectReferenceValue = aimController;
+        burstSo.FindProperty("team").enumValueIndex = (int)Team.TeamA;
+        burstSo.FindProperty("burstPaintRadius").floatValue = 4.25f;
+        burstSo.FindProperty("fallbackDistance").floatValue = 4.5f;
+        burstSo.FindProperty("activationKey").intValue = (int)KeyCode.Q;
+        burstSo.FindProperty("requireMatchPlaying").boolValue = true;
+        burstSo.FindProperty("logActivation").boolValue = false;
+        burstSo.ApplyModifiedPropertiesWithoutUndo();
+
+        EditorUtility.SetDirty(specialPaintBurst);
     }
 
     private static void ConfigurePlayerInkResource(GameObject player)

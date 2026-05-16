@@ -352,17 +352,17 @@ Implemented work:
 - Added `PaintManager` paint events so territory changes can drive future progression systems.
 - Added HUD special meter text with a ready state.
 - Reset the player special meter when paint is cleared or a match resets.
+- Added `SpecialPaintBurst` so a ready meter can be spent on one larger paint burst.
 
 Remaining work:
 
 - Add one alternate close-range paint tool, such as a roller-style prototype.
-- Add one special action, such as a larger paint burst or temporary high-output firing.
 - Keep weapon switching editor-configured instead of building a full loadout UI.
 
 Acceptance criteria:
 
 - Painting territory can charge a special meter. Implemented.
-- A special action provides a visible temporary advantage.
+- A special action provides a visible temporary advantage. Implemented as a paint burst.
 - The alternate tool has a different paint pattern from the shooter.
 - The current shooter remains the default classroom-demo weapon.
 
