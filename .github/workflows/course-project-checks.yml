@@ -100,6 +100,7 @@ jobs:
             'Splat Fighters/Assets/Materials/Teams/MAT_TeamB_Projectile.mat'
             'Splat Fighters/Docs/Splat_Fighters_Project_Technical_Documentation.docx'
             'Splat Fighters/Docs/ADR-001-Input-System-Strategy.md'
+            'Splat Fighters/Docs/Public_Asset_Usage.md'
             'class activity/2D-shooter/Packages/manifest.json'
             'class activity/2D-shooter/Packages/packages-lock.json'
             'class activity/2D-shooter/ProjectSettings/ProjectVersion.txt'
