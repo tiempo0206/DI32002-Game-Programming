@@ -404,6 +404,7 @@ public static class SplatFightersGrayboxMapBuilder
         ConfigurePlayerSpecialMeter(player);
         ConfigurePlayerSpecialPaintBurst(player);
         ConfigurePlayerRollerTool(player, teamAMaterial);
+        ConfigurePlayerToolSwitcher(player);
         visualBinder.Configure(Team.TeamA, teamAMaterial, null);
         EditorUtility.SetDirty(player);
         EditorUtility.SetDirty(visualBinder);
@@ -498,6 +499,61 @@ public static class SplatFightersGrayboxMapBuilder
 
         EditorUtility.SetDirty(rollerTool);
         EditorUtility.SetDirty(rollerPaintTool);
+    }
+
+    private static void ConfigurePlayerToolSwitcher(GameObject player)
+    {
+        if (player == null)
+        {
+            return;
+        }
+
+        InkWeapon weapon = player.GetComponentInChildren<InkWeapon>();
+        RollerPaintTool rollerPaintTool = player.GetComponentInChildren<RollerPaintTool>(true);
+        PlayerToolSwitcher toolSwitcher = player.GetComponent<PlayerToolSwitcher>();
+
+        if (toolSwitcher == null)
+        {
+            toolSwitcher = player.AddComponent<PlayerToolSwitcher>();
+        }
+
+        SerializedObject toolSo = new SerializedObject(toolSwitcher);
+        toolSo.FindProperty("defaultTool").enumValueIndex = (int)PlayerToolSwitcher.ToolMode.Shooter;
+        toolSo.FindProperty("currentTool").enumValueIndex = (int)PlayerToolSwitcher.ToolMode.Shooter;
+        toolSo.FindProperty("shooter").objectReferenceValue = weapon;
+        toolSo.FindProperty("roller").objectReferenceValue = rollerPaintTool;
+        toolSo.FindProperty("enableKeyboardSwitching").boolValue = true;
+        toolSo.FindProperty("shooterKey").intValue = (int)KeyCode.Alpha1;
+        toolSo.FindProperty("rollerKey").intValue = (int)KeyCode.Alpha2;
+        SerializedProperty rollerRenderersProperty = toolSo.FindProperty("rollerRenderers");
+        rollerRenderersProperty.ClearArray();
+
+        if (rollerPaintTool != null)
+        {
+            Renderer[] rollerRenderers = rollerPaintTool.GetComponentsInChildren<Renderer>(true);
+
+            for (int i = 0; i < rollerRenderers.Length; i++)
+            {
+                rollerRenderersProperty.InsertArrayElementAtIndex(i);
+                rollerRenderersProperty.GetArrayElementAtIndex(i).objectReferenceValue = rollerRenderers[i];
+                rollerRenderers[i].enabled = false;
+                EditorUtility.SetDirty(rollerRenderers[i]);
+            }
+        }
+
+        toolSo.ApplyModifiedPropertiesWithoutUndo();
+
+        PlayerController controller = player.GetComponent<PlayerController>();
+
+        if (controller != null)
+        {
+            SerializedObject controllerSo = new SerializedObject(controller);
+            controllerSo.FindProperty("toolSwitcher").objectReferenceValue = toolSwitcher;
+            controllerSo.ApplyModifiedPropertiesWithoutUndo();
+            EditorUtility.SetDirty(controller);
+        }
+
+        EditorUtility.SetDirty(toolSwitcher);
     }
 
     private static void ConfigurePlayerInkResource(GameObject player)
@@ -693,6 +749,7 @@ public static class SplatFightersGrayboxMapBuilder
         managerSo.FindProperty("playerController").objectReferenceValue = player != null ? player.GetComponent<PlayerController>() : null;
         managerSo.FindProperty("playerHealth").objectReferenceValue = player != null ? player.GetComponent<CharacterHealth>() : null;
         managerSo.FindProperty("playerWeapon").objectReferenceValue = player != null ? player.GetComponentInChildren<InkWeapon>() : null;
+        managerSo.FindProperty("playerToolSwitcher").objectReferenceValue = player != null ? player.GetComponent<PlayerToolSwitcher>() : null;
         managerSo.FindProperty("playerSpecialMeter").objectReferenceValue = player != null ? player.GetComponentInChildren<SpecialMeter>() : null;
         managerSo.FindProperty("centerZoneObjective").objectReferenceValue = centerZone;
         managerSo.FindProperty("centerTowerObjective").objectReferenceValue = centerTower;

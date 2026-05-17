@@ -41,6 +41,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private PlayerController playerController = null;
     [SerializeField] private CharacterHealth playerHealth = null;
     [SerializeField] private InkWeapon playerWeapon = null;
+    [SerializeField] private PlayerToolSwitcher playerToolSwitcher = null;
     [SerializeField] private SpecialMeter playerSpecialMeter = null;
     [SerializeField] private SplatZoneObjective centerZoneObjective = null;
     [SerializeField] private TowerObjective centerTowerObjective = null;
@@ -352,6 +353,11 @@ public class GameManager : MonoBehaviour
         if (playerWeapon == null && playerRoot != null)
         {
             playerWeapon = playerRoot.GetComponentInChildren<InkWeapon>();
+        }
+
+        if (playerToolSwitcher == null && playerRoot != null)
+        {
+            playerToolSwitcher = playerRoot.GetComponentInChildren<PlayerToolSwitcher>();
         }
 
         if (playerSpecialMeter == null && playerRoot != null)
@@ -749,6 +755,7 @@ public class GameManager : MonoBehaviour
             playerWeapon != null ? playerWeapon.InkPercent : -1f,
             playerWeapon != null && playerWeapon.IsReceivingOwnPaintRecovery,
             playerWeapon == null || playerWeapon.HasEnoughInkToFire,
+            playerToolSwitcher != null ? playerToolSwitcher.CurrentToolLabel : "Shooter",
             playerController != null && playerController.IsSwimming,
             playerController != null && playerController.WantsToSwim,
             playerController != null && playerController.IsOnEnemyPaint,
