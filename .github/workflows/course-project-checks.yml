@@ -400,6 +400,7 @@ jobs:
             'rebuildMaskFromPaintBlockersOnAwake: 1'
             'resetCharactersOnMatchStart: 1'
             'destroyProjectilesOnMatchStart: 1'
+            'matchMode: 0'
             'playerRoot: {fileID:'
             'playerController: {fileID:'
             'teamBBot: {fileID:'
@@ -444,6 +445,7 @@ jobs:
             'restartKey: 114'
             'pauseKey: 112'
             'alternatePauseKey: 27'
+            'cycleModeKey: 109'
             'pauseUsesTimeScale: 1'
             'team: 1'
             'team: 2'
@@ -485,6 +487,8 @@ jobs:
             'DestroyActiveProjectiles'
             'ResetWeaponResources'
             'ResetSpecialMeters'
+            'MatchMode'
+            'CycleMatchMode'
           )
 
           for pattern in "${required_code_patterns[@]}"; do
@@ -526,6 +530,16 @@ jobs:
 
           grep -q 'TowerText' 'Splat Fighters/Assets/Scripts/UI/ScoreUI.cs' || {
             echo "Expected ScoreUI Tower objective text support."
+            exit 1
+          }
+
+          grep -q 'FormatMatchMode' 'Splat Fighters/Assets/Scripts/UI/ScoreUI.cs' || {
+            echo "Expected ScoreUI match mode presentation support."
+            exit 1
+          }
+
+          grep -q 'M Mode' 'Splat Fighters/Assets/Scripts/UI/ScoreUI.cs' || {
+            echo "Expected ScoreUI mode-cycle controls text."
             exit 1
           }
 

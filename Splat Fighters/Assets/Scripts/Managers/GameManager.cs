@@ -16,6 +16,13 @@ public class GameManager : MonoBehaviour
         Finished
     }
 
+    public enum MatchMode
+    {
+        TurfWar,
+        SplatZones,
+        TowerControl
+    }
+
     public static GameManager Instance { get; private set; }
 
     [Header("Match")]
@@ -23,6 +30,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private bool clearPaintOnMatchStart = true;
     [SerializeField] private bool resetCharactersOnMatchStart = true;
     [SerializeField] private bool destroyProjectilesOnMatchStart = true;
+    [SerializeField] private MatchMode matchMode = MatchMode.TurfWar;
     [SerializeField, Min(1f)] private float matchDurationSeconds = 180f;
     [SerializeField] private MatchTimer matchTimer = new MatchTimer();
 
@@ -54,6 +62,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private KeyCode restartKey = KeyCode.R;
     [SerializeField] private KeyCode pauseKey = KeyCode.P;
     [SerializeField] private KeyCode alternatePauseKey = KeyCode.Escape;
+    [SerializeField] private KeyCode cycleModeKey = KeyCode.M;
     [SerializeField] private bool pauseUsesTimeScale = true;
 
     private MatchState currentState = MatchState.WaitingToStart;
@@ -69,6 +78,7 @@ public class GameManager : MonoBehaviour
     public event Action<MatchState> MatchStateChanged;
 
     public MatchState CurrentState => currentState;
+    public MatchMode CurrentMatchMode => matchMode;
     public float RemainingSeconds => matchTimer.RemainingSeconds;
     public float MatchDurationSeconds => matchTimer.DurationSeconds;
     public float TeamACoverage => teamACoverage;
@@ -251,6 +261,12 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    public void CycleMatchMode()
+    {
+        matchMode = matchMode == MatchMode.TowerControl ? MatchMode.TurfWar : (MatchMode)((int)matchMode + 1);
+        UpdateScoreUI();
+    }
+
     public float GetCoveragePercent(Team team)
     {
         switch (team)
@@ -292,6 +308,12 @@ public class GameManager : MonoBehaviour
     private void DebugTogglePause()
     {
         TogglePause();
+    }
+
+    [ContextMenu("Debug Cycle Match Mode")]
+    private void DebugCycleMatchMode()
+    {
+        CycleMatchMode();
     }
 
     private void ResolveReferences()
@@ -398,6 +420,12 @@ public class GameManager : MonoBehaviour
         if (Input.GetKeyDown(startKey) && currentState == MatchState.WaitingToStart)
         {
             StartMatch();
+            return;
+        }
+
+        if (Input.GetKeyDown(cycleModeKey))
+        {
+            CycleMatchMode();
             return;
         }
 
@@ -712,6 +740,7 @@ public class GameManager : MonoBehaviour
         }
 
         scoreUI.UpdateView(
+            matchMode,
             currentState,
             matchTimer.RemainingSeconds,
             teamACoverage,
