@@ -39,6 +39,7 @@ public static class SplatFightersGrayboxMapBuilder
         Material rampMaterial = GetOrCreateMaterial("Assets/Materials/Level/MAT_Level_Ramp.mat", new Color(0.45f, 0.42f, 0.36f));
         Material paintRouteMaterial = GetOrCreateMaterial("Assets/Materials/Level/MAT_Level_PaintRoute.mat", TeamVisualPalette.TeamAColor);
         Material objectiveMaterial = GetOrCreateMaterial("Assets/Materials/Level/MAT_Level_SplatZone.mat", new Color(1f, 1f, 1f, 0.32f));
+        Material towerMaterial = GetOrCreateMaterial("Assets/Materials/Level/MAT_Level_TowerObjective.mat", new Color(0.88f, 0.88f, 0.92f));
         Material teamAMaterial = GetOrCreateMaterial("Assets/Materials/Level/MAT_Level_Spawn_TeamA.mat", TeamVisualPalette.TeamAColor);
         Material teamBMaterial = GetOrCreateMaterial("Assets/Materials/Level/MAT_Level_Spawn_TeamB.mat", TeamVisualPalette.TeamBColor);
         Material teamAPlayerMaterial = GetOrCreateMaterial("Assets/Materials/Teams/MAT_TeamA_Player.mat", TeamVisualPalette.TeamAColor);
@@ -61,6 +62,7 @@ public static class SplatFightersGrayboxMapBuilder
         BuildSidePlatforms(platformRoot, platformMaterial, rampMaterial);
         BuildPaintRoutes(routeRoot, platformMaterial, paintRouteMaterial);
         BuildSplatZoneObjective(objectiveRoot, objectiveMaterial);
+        BuildTowerObjective(objectiveRoot, towerMaterial);
         BuildSpawnPoints(spawnRoot, teamAMaterial, teamBMaterial);
         BuildTeamBBot(aiRoot, teamBBotMaterial);
         ConfigurePaintableGroundForGrayboxMap();
@@ -169,6 +171,70 @@ public static class SplatFightersGrayboxMapBuilder
 
         EditorUtility.SetDirty(zoneObject);
         EditorUtility.SetDirty(zone);
+    }
+
+    private static void BuildTowerObjective(Transform parent, Material material)
+    {
+        Transform routeRoot = CreateGroup(parent, "CenterTowerRoute");
+        Transform teamBGoal = CreateMarker("CenterTower_TeamBGoal", new Vector3(0f, 0f, -5.2f), routeRoot);
+        Transform centerPoint = CreateMarker("CenterTower_CenterPoint", new Vector3(0f, 0f, 0f), routeRoot);
+        Transform teamAGoal = CreateMarker("CenterTower_TeamAGoal", new Vector3(0f, 0f, 5.2f), routeRoot);
+
+        GameObject towerRoot = new GameObject("CenterTowerObjective");
+        towerRoot.transform.SetParent(parent, false);
+        towerRoot.transform.position = centerPoint.position;
+
+        GameObject platform = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        platform.name = "CenterTowerPlatform";
+        platform.transform.SetParent(towerRoot.transform, false);
+        platform.transform.localPosition = new Vector3(0f, 1.15f, 0f);
+        platform.transform.localScale = new Vector3(1.6f, 0.18f, 1.6f);
+        AssignMaterial(platform, material);
+
+        Collider platformCollider = platform.GetComponent<Collider>();
+
+        if (platformCollider != null)
+        {
+            Object.DestroyImmediate(platformCollider);
+        }
+
+        GameObject mast = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        mast.name = "CenterTowerMast";
+        mast.transform.SetParent(towerRoot.transform, false);
+        mast.transform.localPosition = new Vector3(0f, 1.95f, 0f);
+        mast.transform.localScale = new Vector3(0.18f, 0.72f, 0.18f);
+        AssignMaterial(mast, material);
+
+        Collider mastCollider = mast.GetComponent<Collider>();
+
+        if (mastCollider != null)
+        {
+            Object.DestroyImmediate(mastCollider);
+        }
+
+        TowerObjective tower = towerRoot.AddComponent<TowerObjective>();
+        SerializedObject towerSo = new SerializedObject(tower);
+        towerSo.FindProperty("teamBGoal").objectReferenceValue = teamBGoal;
+        towerSo.FindProperty("centerPoint").objectReferenceValue = centerPoint;
+        towerSo.FindProperty("teamAGoal").objectReferenceValue = teamAGoal;
+        towerSo.FindProperty("routeProgress").floatValue = 0f;
+        towerSo.FindProperty("moveSpeed").floatValue = 0.22f;
+        towerSo.FindProperty("controlSize").vector2Value = new Vector2(3.2f, 2.6f);
+        towerSo.FindProperty("controlHeight").floatValue = 0.5f;
+        towerSo.FindProperty("controlThresholdPercent").floatValue = 52f;
+        towerSo.FindProperty("minimumPaintedPercent").floatValue = 18f;
+        towerSo.FindProperty("refreshInterval").floatValue = 0.15f;
+        towerSo.FindProperty("towerRenderer").objectReferenceValue = platform.GetComponent<MeshRenderer>();
+        towerSo.FindProperty("neutralColor").colorValue = Color.white;
+        towerSo.FindProperty("contestedColor").colorValue = new Color(1f, 0.95f, 0.2f, 1f);
+        towerSo.FindProperty("teamAColor").colorValue = TeamVisualPalette.TeamAColor;
+        towerSo.FindProperty("teamBColor").colorValue = TeamVisualPalette.TeamBColor;
+        towerSo.ApplyModifiedPropertiesWithoutUndo();
+
+        EditorUtility.SetDirty(towerRoot);
+        EditorUtility.SetDirty(platform);
+        EditorUtility.SetDirty(mast);
+        EditorUtility.SetDirty(tower);
     }
 
     private static void BuildSpawnPoints(Transform parent, Material teamAMaterial, Material teamBMaterial)
@@ -612,6 +678,7 @@ public static class SplatFightersGrayboxMapBuilder
         BotController bot = Object.FindObjectOfType<BotController>();
         PaintManager paintManager = Object.FindObjectOfType<PaintManager>();
         SplatZoneObjective centerZone = Object.FindObjectOfType<SplatZoneObjective>();
+        TowerObjective centerTower = Object.FindObjectOfType<TowerObjective>();
         SpawnPoint teamASpawn = FindDefaultSpawnPoint(Team.TeamA);
         SpawnPoint teamBSpawn = FindDefaultSpawnPoint(Team.TeamB);
 
@@ -627,6 +694,7 @@ public static class SplatFightersGrayboxMapBuilder
         managerSo.FindProperty("playerWeapon").objectReferenceValue = player != null ? player.GetComponentInChildren<InkWeapon>() : null;
         managerSo.FindProperty("playerSpecialMeter").objectReferenceValue = player != null ? player.GetComponentInChildren<SpecialMeter>() : null;
         managerSo.FindProperty("centerZoneObjective").objectReferenceValue = centerZone;
+        managerSo.FindProperty("centerTowerObjective").objectReferenceValue = centerTower;
         managerSo.FindProperty("teamBBot").objectReferenceValue = bot;
         managerSo.FindProperty("teamBBotHealth").objectReferenceValue = bot != null ? bot.GetComponent<CharacterHealth>() : null;
         managerSo.FindProperty("teamASpawn").objectReferenceValue = teamASpawn;

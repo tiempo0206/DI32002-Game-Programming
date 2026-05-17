@@ -16,6 +16,7 @@ public class ScoreUI : MonoBehaviour
     [SerializeField] private Text healthText = null;
     [SerializeField] private Text specialText = null;
     [SerializeField] private Text zoneText = null;
+    [SerializeField] private Text towerText = null;
     [SerializeField] private Text statusText = null;
     [SerializeField] private Text controlsText = null;
 
@@ -45,7 +46,13 @@ public class ScoreUI : MonoBehaviour
         Team zoneOwner,
         bool zoneContested,
         float zoneTeamAPercent,
-        float zoneTeamBPercent)
+        float zoneTeamBPercent,
+        Team towerOwner,
+        bool towerContested,
+        Team towerLeadingTeam,
+        float towerProgressPercent,
+        float towerTeamAPercent,
+        float towerTeamBPercent)
     {
         EnsureRuntimeTextReferences();
 
@@ -96,6 +103,12 @@ public class ScoreUI : MonoBehaviour
             zoneText.color = zoneOwner == Team.TeamA ? teamAColor : zoneOwner == Team.TeamB ? teamBColor : neutralColor;
         }
 
+        if (towerText != null)
+        {
+            towerText.text = FormatTower(towerOwner, towerContested, towerLeadingTeam, towerProgressPercent, towerTeamAPercent, towerTeamBPercent);
+            towerText.color = towerOwner == Team.TeamA ? teamAColor : towerOwner == Team.TeamB ? teamBColor : neutralColor;
+        }
+
         if (statusText != null)
         {
             statusText.text = FormatStatus(state, winningTeam);
@@ -143,7 +156,7 @@ public class ScoreUI : MonoBehaviour
         panelRect.anchorMax = new Vector2(0f, 1f);
         panelRect.pivot = new Vector2(0f, 1f);
         panelRect.anchoredPosition = new Vector2(24f, -24f);
-        panelRect.sizeDelta = new Vector2(460f, 304f);
+        panelRect.sizeDelta = new Vector2(500f, 336f);
 
         Image panelImage = panelObject.AddComponent<Image>();
         panelImage.color = new Color(0f, 0f, 0f, 0.45f);
@@ -157,9 +170,10 @@ public class ScoreUI : MonoBehaviour
         scoreUI.inkText = CreateText(panelObject.transform, "InkText", new Vector2(16f, -122f), 20, FontStyle.Bold);
         scoreUI.healthText = CreateText(panelObject.transform, "HealthText", new Vector2(16f, -150f), 20, FontStyle.Bold);
         scoreUI.specialText = CreateText(panelObject.transform, "SpecialText", new Vector2(16f, -178f), 20, FontStyle.Bold);
-        scoreUI.zoneText = CreateText(panelObject.transform, "ZoneText", new Vector2(16f, -206f), 20, FontStyle.Bold, new Vector2(400f, 32f), TextAnchor.UpperLeft);
-        scoreUI.statusText = CreateText(panelObject.transform, "StatusText", new Vector2(16f, -236f), 20, FontStyle.Normal);
-        scoreUI.controlsText = CreateText(panelObject.transform, "ControlsText", new Vector2(16f, -264f), 18, FontStyle.Normal, new Vector2(410f, 32f), TextAnchor.UpperLeft);
+        scoreUI.zoneText = CreateText(panelObject.transform, "ZoneText", new Vector2(16f, -206f), 19, FontStyle.Bold, new Vector2(450f, 32f), TextAnchor.UpperLeft);
+        scoreUI.towerText = CreateText(panelObject.transform, "TowerText", new Vector2(16f, -234f), 19, FontStyle.Bold, new Vector2(450f, 32f), TextAnchor.UpperLeft);
+        scoreUI.statusText = CreateText(panelObject.transform, "StatusText", new Vector2(16f, -264f), 20, FontStyle.Normal);
+        scoreUI.controlsText = CreateText(panelObject.transform, "ControlsText", new Vector2(16f, -292f), 18, FontStyle.Normal, new Vector2(450f, 32f), TextAnchor.UpperLeft);
 
         return scoreUI;
     }
@@ -171,7 +185,7 @@ public class ScoreUI : MonoBehaviour
 
     private void EnsureRuntimeTextReferences()
     {
-        if (presentationText != null && timerText != null && teamAText != null && teamBText != null && inkText != null && healthText != null && specialText != null && zoneText != null && statusText != null && controlsText != null)
+        if (presentationText != null && timerText != null && teamAText != null && teamBText != null && inkText != null && healthText != null && specialText != null && zoneText != null && towerText != null && statusText != null && controlsText != null)
         {
             return;
         }
@@ -213,6 +227,10 @@ public class ScoreUI : MonoBehaviour
             else if (text.name == "ZoneText")
             {
                 zoneText = text;
+            }
+            else if (text.name == "TowerText")
+            {
+                towerText = text;
             }
             else if (text.name == "StatusText")
             {
@@ -422,6 +440,28 @@ public class ScoreUI : MonoBehaviour
         }
 
         return $"Zone: Neutral | {teamALabel} {zoneTeamAPercent:0}% / {teamBLabel} {zoneTeamBPercent:0}%";
+    }
+
+    private string FormatTower(Team towerOwner, bool towerContested, Team towerLeadingTeam, float towerProgressPercent, float towerTeamAPercent, float towerTeamBPercent)
+    {
+        if (towerProgressPercent < 0f || towerTeamAPercent < 0f || towerTeamBPercent < 0f)
+        {
+            return "Tower: --";
+        }
+
+        string control = "Neutral";
+
+        if (towerContested)
+        {
+            control = "Contested";
+        }
+        else if (towerOwner == Team.TeamA || towerOwner == Team.TeamB)
+        {
+            control = $"{GetTeamLabel(towerOwner)} pushing";
+        }
+
+        string lead = towerLeadingTeam == Team.TeamA || towerLeadingTeam == Team.TeamB ? GetTeamLabel(towerLeadingTeam) : "Center";
+        return $"Tower: {control} | {lead} {towerProgressPercent:0}%";
     }
 
     private string GetTeamLabel(Team team)
