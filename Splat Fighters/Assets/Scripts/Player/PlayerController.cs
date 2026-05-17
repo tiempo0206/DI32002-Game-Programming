@@ -21,6 +21,7 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private Transform cameraTransform = null;
     [SerializeField] private InkWeapon weapon = null;
     [SerializeField] private AimController aimController = null;
+    [SerializeField] private PlayerToolSwitcher toolSwitcher = null;
 
     [Header("Movement")]
     [SerializeField] private float moveSpeed = 6f;
@@ -77,6 +78,11 @@ public class PlayerController : MonoBehaviour
         if (aimController == null)
         {
             aimController = GetComponentInChildren<AimController>();
+        }
+
+        if (toolSwitcher == null)
+        {
+            toolSwitcher = GetComponentInChildren<PlayerToolSwitcher>();
         }
 
         if (cameraTransform == null && Camera.main != null)
@@ -223,7 +229,7 @@ public class PlayerController : MonoBehaviour
             return;
         }
 
-        if (!input.FireHeld || weapon == null)
+        if (!input.FireHeld || weapon == null || toolSwitcher != null && !toolSwitcher.IsShooterActive)
         {
             return;
         }
@@ -251,6 +257,11 @@ public class PlayerController : MonoBehaviour
             weapon.SetExternalFireBlocked(false);
         }
 
+        if (toolSwitcher != null)
+        {
+            toolSwitcher.ResetToDefaultTool();
+        }
+
         ApplySwimVisualState(false);
     }
 
@@ -266,7 +277,8 @@ public class PlayerController : MonoBehaviour
         if (weapon != null)
         {
             weapon.SetExternalRecoveryMultiplier(isSwimming ? swimInkRecoveryMultiplier : 1f);
-            weapon.SetExternalFireBlocked(disableFireWhileSwimming && isSwimming);
+            bool toolBlocksShooter = toolSwitcher != null && !toolSwitcher.IsShooterActive;
+            weapon.SetExternalFireBlocked(disableFireWhileSwimming && isSwimming || toolBlocksShooter);
         }
     }
 

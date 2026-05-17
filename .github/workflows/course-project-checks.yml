@@ -63,6 +63,7 @@ jobs:
             'Splat Fighters/Assets/Scripts/Weapons/InkProjectile.cs'
             'Splat Fighters/Assets/Scripts/Weapons/InkWeapon.cs'
             'Splat Fighters/Assets/Scripts/Weapons/RollerPaintTool.cs'
+            'Splat Fighters/Assets/Scripts/Weapons/PlayerToolSwitcher.cs'
             'Splat Fighters/Assets/Scripts/AI/BotController.cs'
             'Splat Fighters/Assets/Scripts/Visuals/TeamVisualPalette.cs'
             'Splat Fighters/Assets/Scripts/Visuals/TeamVisualBinder.cs'
@@ -397,6 +398,7 @@ jobs:
             'guid: 322b3e2d5c7a4fe99f839080ec5d0992'
             'guid: 5bc59f8f6ed34b1883bcf162bb96c1d7'
             'guid: 0b7bd9469b3e4ababafbdc4e50a71b6f'
+            'guid: 0297631b5333b42d5a5984b79ba419a4'
             'requirePaintPointNearAreaPlane: 1'
             'rebuildMaskFromPaintBlockersOnAwake: 1'
             'resetCharactersOnMatchStart: 1'
@@ -407,6 +409,7 @@ jobs:
             'teamBBot: {fileID:'
             'playerHealth: {fileID:'
             'teamBBotHealth: {fileID:'
+            'playerToolSwitcher: {fileID:'
             'playerSpecialMeter: {fileID:'
             'changedCellsForFullCharge: 180'
             'resetWhenPaintCleared: 1'
@@ -415,6 +418,10 @@ jobs:
             'paintInterval: 0.08'
             'paintRadius: 1.05'
             'swathSamples: 3'
+            'defaultTool: 0'
+            'currentTool: 0'
+            'shooterKey: 49'
+            'rollerKey: 50'
             'centerZoneObjective: {fileID:'
             'zoneSize: {x: 5, y: 3}'
             'controlThresholdPercent: 55'
@@ -490,6 +497,7 @@ jobs:
             'ResetSpecialMeters'
             'MatchMode'
             'CycleMatchMode'
+            'playerToolSwitcher'
           )
 
           for pattern in "${required_code_patterns[@]}"; do
@@ -544,6 +552,11 @@ jobs:
             exit 1
           }
 
+          grep -q 'Tool:' 'Splat Fighters/Assets/Scripts/UI/ScoreUI.cs' || {
+            echo "Expected ScoreUI active tool text."
+            exit 1
+          }
+
           required_special_patterns=(
             'public class SpecialMeter'
             'ChargePercent'
@@ -588,6 +601,25 @@ jobs:
           for pattern in "${required_roller_patterns[@]}"; do
             grep -q "$pattern" 'Splat Fighters/Assets/Scripts/Weapons/RollerPaintTool.cs' || {
               echo "Missing roller paint tool code pattern: $pattern"
+              exit 1
+            }
+          done
+
+          required_tool_switcher_patterns=(
+            'public class PlayerToolSwitcher'
+            'ToolMode'
+            'IsShooterActive'
+            'IsRollerActive'
+            'CurrentToolLabel'
+            'ResetToDefaultTool'
+            'SetTool'
+            'Alpha1'
+            'Alpha2'
+          )
+
+          for pattern in "${required_tool_switcher_patterns[@]}"; do
+            grep -q "$pattern" 'Splat Fighters/Assets/Scripts/Weapons/PlayerToolSwitcher.cs' || {
+              echo "Missing player tool switcher code pattern: $pattern"
               exit 1
             }
           done

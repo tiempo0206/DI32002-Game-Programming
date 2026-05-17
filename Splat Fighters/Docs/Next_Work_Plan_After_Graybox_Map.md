@@ -344,7 +344,7 @@ Goal:
 
 Introduce Splatoon-like weapon identity without building a large arsenal.
 
-Status: In progress through smaller Agile slices.
+Status: Implemented through smaller Agile slices.
 
 Implemented work:
 
@@ -354,17 +354,17 @@ Implemented work:
 - Reset the player special meter when paint is cleared or a match resets.
 - Added `SpecialPaintBurst` so a ready meter can be spent on one larger paint burst.
 - Added a disabled-by-default `RollerPaintTool` prototype for close-range continuous swath painting.
-
-Remaining work:
-
-- Keep weapon switching editor-configured instead of building a full loadout UI.
+- Added `PlayerToolSwitcher` so the player can switch between Shooter and Roller with `1` / `2`.
+- Kept the shooter as the default classroom-demo weapon.
+- Kept switching keyboard-driven and editor-configured instead of building a full loadout UI.
 
 Acceptance criteria:
 
 - Painting territory can charge a special meter. Implemented.
 - A special action provides a visible temporary advantage. Implemented as a paint burst.
 - The alternate tool has a different paint pattern from the shooter. Implemented as an editor-enabled roller prototype.
-- The current shooter remains the default classroom-demo weapon.
+- The current shooter remains the default classroom-demo weapon. Implemented.
+- The player can switch between shooter and roller tools during local playtests. Implemented.
 
 ### 13. Repository Template Cleanup
 

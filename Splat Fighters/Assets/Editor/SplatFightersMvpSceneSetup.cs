@@ -174,6 +174,7 @@ public static class SplatFightersMvpSceneSetup
         managerSo.FindProperty("clearPaintOnMatchStart").boolValue = true;
         managerSo.FindProperty("resetCharactersOnMatchStart").boolValue = true;
         managerSo.FindProperty("destroyProjectilesOnMatchStart").boolValue = true;
+        managerSo.FindProperty("matchMode").enumValueIndex = (int)GameManager.MatchMode.TurfWar;
         managerSo.FindProperty("matchDurationSeconds").floatValue = 180f;
         managerSo.FindProperty("paintManager").objectReferenceValue = paintManager;
         managerSo.FindProperty("autoCreateScoreUI").boolValue = true;
@@ -184,6 +185,7 @@ public static class SplatFightersMvpSceneSetup
         managerSo.FindProperty("restartKey").intValue = (int)KeyCode.R;
         managerSo.FindProperty("pauseKey").intValue = (int)KeyCode.P;
         managerSo.FindProperty("alternatePauseKey").intValue = (int)KeyCode.Escape;
+        managerSo.FindProperty("cycleModeKey").intValue = (int)KeyCode.M;
         managerSo.FindProperty("pauseUsesTimeScale").boolValue = true;
         managerSo.ApplyModifiedPropertiesWithoutUndo();
     }
@@ -271,6 +273,7 @@ public static class SplatFightersMvpSceneSetup
         SpecialMeter specialMeter = player.AddComponent<SpecialMeter>();
         SpecialPaintBurst specialPaintBurst = player.AddComponent<SpecialPaintBurst>();
         RollerPaintTool rollerPaintTool = rollerTool.AddComponent<RollerPaintTool>();
+        PlayerToolSwitcher toolSwitcher = player.AddComponent<PlayerToolSwitcher>();
         AimController aimController = player.AddComponent<AimController>();
         TeamVisualBinder visualBinder = player.AddComponent<TeamVisualBinder>();
         visualBinder.Configure(Team.TeamA, shooterMaterial, null);
@@ -285,6 +288,7 @@ public static class SplatFightersMvpSceneSetup
         controllerSo.FindProperty("cameraTransform").objectReferenceValue = camera.transform;
         controllerSo.FindProperty("weapon").objectReferenceValue = weapon;
         controllerSo.FindProperty("aimController").objectReferenceValue = aimController;
+        controllerSo.FindProperty("toolSwitcher").objectReferenceValue = toolSwitcher;
         controllerSo.FindProperty("moveSpeed").floatValue = 6f;
         controllerSo.FindProperty("rotationSpeed").floatValue = 720f;
         controllerSo.FindProperty("rotationMode").enumValueIndex = 2;
@@ -365,6 +369,20 @@ public static class SplatFightersMvpSceneSetup
         rollerSo.ApplyModifiedPropertiesWithoutUndo();
         rollerPaintTool.enabled = false;
 
+        SerializedObject toolSo = new SerializedObject(toolSwitcher);
+        toolSo.FindProperty("defaultTool").enumValueIndex = (int)PlayerToolSwitcher.ToolMode.Shooter;
+        toolSo.FindProperty("currentTool").enumValueIndex = (int)PlayerToolSwitcher.ToolMode.Shooter;
+        toolSo.FindProperty("shooter").objectReferenceValue = weapon;
+        toolSo.FindProperty("roller").objectReferenceValue = rollerPaintTool;
+        toolSo.FindProperty("enableKeyboardSwitching").boolValue = true;
+        toolSo.FindProperty("shooterKey").intValue = (int)KeyCode.Alpha1;
+        toolSo.FindProperty("rollerKey").intValue = (int)KeyCode.Alpha2;
+        SerializedProperty rollerRenderersProperty = toolSo.FindProperty("rollerRenderers");
+        rollerRenderersProperty.ClearArray();
+        rollerRenderersProperty.InsertArrayElementAtIndex(0);
+        rollerRenderersProperty.GetArrayElementAtIndex(0).objectReferenceValue = rollerRenderer;
+        toolSo.ApplyModifiedPropertiesWithoutUndo();
+
         SerializedObject aimSo = new SerializedObject(aimController);
         aimSo.FindProperty("aimCamera").objectReferenceValue = camera;
         aimSo.FindProperty("weapon").objectReferenceValue = weapon;
@@ -385,6 +403,7 @@ public static class SplatFightersMvpSceneSetup
         aimSo.ApplyModifiedPropertiesWithoutUndo();
 
         EditorUtility.SetDirty(input);
+        EditorUtility.SetDirty(toolSwitcher);
         EditorUtility.SetDirty(visualBinder);
         return player;
     }

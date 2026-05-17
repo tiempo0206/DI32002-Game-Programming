@@ -37,6 +37,7 @@ public class ScoreUI : MonoBehaviour
         float playerInkPercent,
         bool playerOnOwnPaint,
         bool playerHasEnoughInk,
+        string playerToolLabel,
         bool playerSwimming,
         bool playerWantsToSwim,
         bool playerOnEnemyPaint,
@@ -82,7 +83,7 @@ public class ScoreUI : MonoBehaviour
 
         if (inkText != null)
         {
-            inkText.text = FormatInk(playerInkPercent, playerOnOwnPaint, playerHasEnoughInk, playerSwimming, playerWantsToSwim, playerOnEnemyPaint);
+            inkText.text = FormatInk(playerInkPercent, playerOnOwnPaint, playerHasEnoughInk, playerToolLabel, playerSwimming, playerWantsToSwim, playerOnEnemyPaint);
             inkText.color = playerOnEnemyPaint ? teamBColor : playerOnOwnPaint || playerSwimming ? teamAColor : neutralColor;
         }
 
@@ -350,13 +351,13 @@ public class ScoreUI : MonoBehaviour
         switch (state)
         {
             case GameManager.MatchState.Playing:
-                return "Shift Swim | Q Special | M Mode | R Restart | P Pause";
+                return "1 Shooter | 2 Roller | Shift Swim | Q Special | M Mode";
             case GameManager.MatchState.Paused:
-                return "M Mode | R Restart | P Resume";
+                return "1/2 Tool | M Mode | R Restart | P Resume";
             case GameManager.MatchState.Finished:
-                return "M Mode | R Restart";
+                return "1/2 Tool | M Mode | R Restart";
             default:
-                return "Enter Start | M Mode | R Restart";
+                return "Enter Start | 1/2 Tool | M Mode | R Restart";
         }
     }
 
@@ -364,6 +365,7 @@ public class ScoreUI : MonoBehaviour
         float playerInkPercent,
         bool playerOnOwnPaint,
         bool playerHasEnoughInk,
+        string playerToolLabel,
         bool playerSwimming,
         bool playerWantsToSwim,
         bool playerOnEnemyPaint)
@@ -392,7 +394,8 @@ public class ScoreUI : MonoBehaviour
             stateLabel = "Paint needed";
         }
 
-        return $"Ink: {Mathf.Clamp(playerInkPercent, 0f, 100f):0}% | {stateLabel}";
+        string toolLabel = string.IsNullOrEmpty(playerToolLabel) ? "Shooter" : playerToolLabel;
+        return $"Tool: {toolLabel} | Ink: {Mathf.Clamp(playerInkPercent, 0f, 100f):0}% | {stateLabel}";
     }
 
     private static string FormatHealth(float playerHealthPercent, bool playerEliminated)
