@@ -458,7 +458,31 @@ Acceptance criteria:
 - HUD text communicates tower control and progress.
 - Existing Turf War score, Splat Zone HUD, match flow, bot, ink, health, swim, and special systems remain stable.
 
-### 17. Stretch Modes After Turf War Core
+### 17. Match Mode Selector V1
+
+Goal:
+
+Present one active demo mode at a time so Turf War, Splat Zones, and Tower Control feel like clear match rules instead of simultaneous HUD noise.
+
+Status: Implemented in the current branch.
+
+Implemented work:
+
+- Added `GameManager.MatchMode` with Turf War as the default mode.
+- Added `M` keyboard cycling between Turf War, Splat Zones, and Tower Control.
+- Updated the presentation banner to show the active mode name.
+- Updated objective HUD lines so they focus on the selected mode.
+- Kept restart/reset behavior stable while preserving the selected mode.
+
+Acceptance criteria:
+
+- `GameManager` has a serialized match mode with Turf War as the default.
+- A keyboard shortcut cycles between Turf War, Splat Zones, and Tower Control.
+- The presentation banner shows the active mode name.
+- HUD objective text focuses on the active mode.
+- Core score, timer, restart, pause, bot, ink, health, swim, special, Splat Zone, and Tower systems remain stable.
+
+### 18. Stretch Modes After Turf War Core
 
 Goal:
 

@@ -687,6 +687,7 @@ public static class SplatFightersGrayboxMapBuilder
         managerSo.FindProperty("clearPaintOnMatchStart").boolValue = true;
         managerSo.FindProperty("resetCharactersOnMatchStart").boolValue = true;
         managerSo.FindProperty("destroyProjectilesOnMatchStart").boolValue = true;
+        managerSo.FindProperty("matchMode").enumValueIndex = (int)GameManager.MatchMode.TurfWar;
         managerSo.FindProperty("paintManager").objectReferenceValue = paintManager;
         managerSo.FindProperty("playerRoot").objectReferenceValue = player != null ? player.transform : null;
         managerSo.FindProperty("playerController").objectReferenceValue = player != null ? player.GetComponent<PlayerController>() : null;
@@ -706,6 +707,7 @@ public static class SplatFightersGrayboxMapBuilder
         managerSo.FindProperty("restartKey").intValue = (int)KeyCode.R;
         managerSo.FindProperty("pauseKey").intValue = (int)KeyCode.P;
         managerSo.FindProperty("alternatePauseKey").intValue = (int)KeyCode.Escape;
+        managerSo.FindProperty("cycleModeKey").intValue = (int)KeyCode.M;
         managerSo.FindProperty("pauseUsesTimeScale").boolValue = true;
         managerSo.ApplyModifiedPropertiesWithoutUndo();
 

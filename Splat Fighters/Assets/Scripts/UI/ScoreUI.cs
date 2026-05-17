@@ -28,6 +28,7 @@ public class ScoreUI : MonoBehaviour
     [SerializeField] private Color neutralColor = Color.white;
 
     public void UpdateView(
+        GameManager.MatchMode matchMode,
         GameManager.MatchState state,
         float remainingSeconds,
         float teamACoverage,
@@ -58,7 +59,7 @@ public class ScoreUI : MonoBehaviour
 
         if (presentationText != null)
         {
-            presentationText.text = FormatPresentation(state, teamACoverage, teamBCoverage, winningTeam);
+            presentationText.text = FormatPresentation(matchMode, state, teamACoverage, teamBCoverage, winningTeam);
             presentationText.color = GetPresentationColor(state, winningTeam);
         }
 
@@ -99,14 +100,14 @@ public class ScoreUI : MonoBehaviour
 
         if (zoneText != null)
         {
-            zoneText.text = FormatZone(zoneOwner, zoneContested, zoneTeamAPercent, zoneTeamBPercent);
-            zoneText.color = zoneOwner == Team.TeamA ? teamAColor : zoneOwner == Team.TeamB ? teamBColor : neutralColor;
+            zoneText.text = FormatObjectiveLine(matchMode, zoneOwner, zoneContested, zoneTeamAPercent, zoneTeamBPercent);
+            zoneText.color = matchMode == GameManager.MatchMode.SplatZones && zoneOwner == Team.TeamA ? teamAColor : matchMode == GameManager.MatchMode.SplatZones && zoneOwner == Team.TeamB ? teamBColor : neutralColor;
         }
 
         if (towerText != null)
         {
-            towerText.text = FormatTower(towerOwner, towerContested, towerLeadingTeam, towerProgressPercent, towerTeamAPercent, towerTeamBPercent);
-            towerText.color = towerOwner == Team.TeamA ? teamAColor : towerOwner == Team.TeamB ? teamBColor : neutralColor;
+            towerText.text = FormatTowerLine(matchMode, towerOwner, towerContested, towerLeadingTeam, towerProgressPercent, towerTeamAPercent, towerTeamBPercent);
+            towerText.color = matchMode == GameManager.MatchMode.TowerControl && towerOwner == Team.TeamA ? teamAColor : matchMode == GameManager.MatchMode.TowerControl && towerOwner == Team.TeamB ? teamBColor : neutralColor;
         }
 
         if (statusText != null)
@@ -293,19 +294,21 @@ public class ScoreUI : MonoBehaviour
         return $"{minutes:00}:{remaining:00}";
     }
 
-    private string FormatPresentation(GameManager.MatchState state, float teamACoverage, float teamBCoverage, Team winningTeam)
+    private string FormatPresentation(GameManager.MatchMode matchMode, GameManager.MatchState state, float teamACoverage, float teamBCoverage, Team winningTeam)
     {
+        string modeLabel = FormatMatchMode(matchMode);
+
         switch (state)
         {
             case GameManager.MatchState.Playing:
-                return $"{teamALabel} vs {teamBLabel} | Turf War";
+                return $"{teamALabel} vs {teamBLabel} | {modeLabel}";
             case GameManager.MatchState.Paused:
-                return "Paused | Turf War";
+                return $"Paused | {modeLabel}";
             case GameManager.MatchState.Finished:
                 string winner = winningTeam == Team.None ? "Draw" : $"{GetTeamLabel(winningTeam)} wins";
-                return $"{winner} | Final {teamALabel} {teamACoverage:0.0}% - {teamBLabel} {teamBCoverage:0.0}%";
+                return $"{winner} | {modeLabel} | Final {teamALabel} {teamACoverage:0.0}% - {teamBLabel} {teamBCoverage:0.0}%";
             default:
-                return $"{teamALabel} vs {teamBLabel} | Press Enter";
+                return $"{teamALabel} vs {teamBLabel} | {modeLabel} | Press Enter";
         }
     }
 
@@ -347,13 +350,13 @@ public class ScoreUI : MonoBehaviour
         switch (state)
         {
             case GameManager.MatchState.Playing:
-                return "Shift Swim | Q Special | R Restart | P Pause";
+                return "Shift Swim | Q Special | M Mode | R Restart | P Pause";
             case GameManager.MatchState.Paused:
-                return "R Restart | P Resume";
+                return "M Mode | R Restart | P Resume";
             case GameManager.MatchState.Finished:
-                return "R Restart";
+                return "M Mode | R Restart";
             default:
-                return "Enter Start | R Restart";
+                return "Enter Start | M Mode | R Restart";
         }
     }
 
@@ -442,6 +445,19 @@ public class ScoreUI : MonoBehaviour
         return $"Zone: Neutral | {teamALabel} {zoneTeamAPercent:0}% / {teamBLabel} {zoneTeamBPercent:0}%";
     }
 
+    private string FormatObjectiveLine(GameManager.MatchMode matchMode, Team zoneOwner, bool zoneContested, float zoneTeamAPercent, float zoneTeamBPercent)
+    {
+        switch (matchMode)
+        {
+            case GameManager.MatchMode.SplatZones:
+                return FormatZone(zoneOwner, zoneContested, zoneTeamAPercent, zoneTeamBPercent);
+            case GameManager.MatchMode.TowerControl:
+                return "Mode: Tower Control | Paint pushes tower";
+            default:
+                return "Mode: Turf War | Total paint wins";
+        }
+    }
+
     private string FormatTower(Team towerOwner, bool towerContested, Team towerLeadingTeam, float towerProgressPercent, float towerTeamAPercent, float towerTeamBPercent)
     {
         if (towerProgressPercent < 0f || towerTeamAPercent < 0f || towerTeamBPercent < 0f)
@@ -462,6 +478,34 @@ public class ScoreUI : MonoBehaviour
 
         string lead = towerLeadingTeam == Team.TeamA || towerLeadingTeam == Team.TeamB ? GetTeamLabel(towerLeadingTeam) : "Center";
         return $"Tower: {control} | {lead} {towerProgressPercent:0}%";
+    }
+
+    private string FormatTowerLine(GameManager.MatchMode matchMode, Team towerOwner, bool towerContested, Team towerLeadingTeam, float towerProgressPercent, float towerTeamAPercent, float towerTeamBPercent)
+    {
+        if (matchMode == GameManager.MatchMode.TowerControl)
+        {
+            return FormatTower(towerOwner, towerContested, towerLeadingTeam, towerProgressPercent, towerTeamAPercent, towerTeamBPercent);
+        }
+
+        if (matchMode == GameManager.MatchMode.SplatZones)
+        {
+            return "Tower: inactive | Zone is active";
+        }
+
+        return "Objectives: M cycles demo mode";
+    }
+
+    private static string FormatMatchMode(GameManager.MatchMode matchMode)
+    {
+        switch (matchMode)
+        {
+            case GameManager.MatchMode.SplatZones:
+                return "Splat Zones";
+            case GameManager.MatchMode.TowerControl:
+                return "Tower Control";
+            default:
+                return "Turf War";
+        }
     }
 
     private string GetTeamLabel(Team team)
