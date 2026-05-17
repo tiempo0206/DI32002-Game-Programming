@@ -414,6 +414,30 @@ Acceptance criteria:
 
 ### 15. Stretch Modes After Turf War Core
 
+### 15. Splat Zones-Style Center Objective V1
+
+Goal:
+
+Demonstrate a small objective-mode layer without replacing the stable Turf War loop.
+
+Status: Implemented.
+
+Implemented work:
+
+- Added `SplatZoneObjective` for center-zone local paint ownership.
+- Added `PaintManager.GetTeamCellCountsInWorldBounds` for objective scoring queries.
+- Added `CenterSplatZone` to the graybox map and wired it to `GameManager`.
+- Added HUD text for neutral, contested, and controlled zone states.
+
+Acceptance criteria:
+
+- A center objective zone exists in the MVP scene.
+- Zone ownership is calculated from local TeamA/TeamB paint coverage.
+- HUD text communicates zone ownership.
+- Existing Turf War score and match flow remain stable.
+
+### 16. Stretch Modes After Turf War Core
+
 Goal:
 
 Only expand modes after the local Turf War loop is fun and explainable.
