@@ -34,6 +34,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private CharacterHealth playerHealth = null;
     [SerializeField] private InkWeapon playerWeapon = null;
     [SerializeField] private SpecialMeter playerSpecialMeter = null;
+    [SerializeField] private SplatZoneObjective centerZoneObjective = null;
     [SerializeField] private BotController teamBBot = null;
     [SerializeField] private CharacterHealth teamBBotHealth = null;
     [SerializeField] private SpawnPoint teamASpawn = null;
@@ -329,6 +330,11 @@ public class GameManager : MonoBehaviour
         if (playerSpecialMeter == null && playerRoot != null)
         {
             playerSpecialMeter = playerRoot.GetComponentInChildren<SpecialMeter>();
+        }
+
+        if (centerZoneObjective == null)
+        {
+            centerZoneObjective = FindObjectOfType<SplatZoneObjective>();
         }
 
         if (teamBBot == null)
@@ -702,7 +708,11 @@ public class GameManager : MonoBehaviour
             playerHealth != null ? playerHealth.HealthPercent : -1f,
             playerHealth != null && playerHealth.IsEliminated,
             playerSpecialMeter != null ? playerSpecialMeter.ChargePercent : -1f,
-            playerSpecialMeter != null && playerSpecialMeter.IsReady);
+            playerSpecialMeter != null && playerSpecialMeter.IsReady,
+            centerZoneObjective != null ? centerZoneObjective.ControllingTeam : Team.None,
+            centerZoneObjective != null && centerZoneObjective.IsContested,
+            centerZoneObjective != null ? centerZoneObjective.TeamAPercent : -1f,
+            centerZoneObjective != null ? centerZoneObjective.TeamBPercent : -1f);
     }
 
     private void SetState(MatchState nextState)

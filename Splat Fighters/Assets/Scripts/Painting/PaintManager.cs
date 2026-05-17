@@ -218,6 +218,55 @@ public class PaintManager : MonoBehaviour
         return found;
     }
 
+    public bool GetTeamCellCountsInWorldBounds(Bounds bounds, out int totalPaintableCells, out int teamACells, out int teamBCells)
+    {
+        totalPaintableCells = 0;
+        teamACells = 0;
+        teamBCells = 0;
+
+        for (int i = 0; i < paintableAreas.Count; i++)
+        {
+            PaintableArea area = paintableAreas[i];
+
+            if (area == null)
+            {
+                continue;
+            }
+
+            for (int y = 0; y < area.GridHeight; y++)
+            {
+                for (int x = 0; x < area.GridWidth; x++)
+                {
+                    if (!area.IsCellPaintable(x, y))
+                    {
+                        continue;
+                    }
+
+                    Vector3 cellCenter = area.GetCellCenterWorld(x, y);
+
+                    if (!bounds.Contains(cellCenter))
+                    {
+                        continue;
+                    }
+
+                    totalPaintableCells++;
+
+                    switch (area.GetCellOwner(x, y))
+                    {
+                        case Team.TeamA:
+                            teamACells++;
+                            break;
+                        case Team.TeamB:
+                            teamBCells++;
+                            break;
+                    }
+                }
+            }
+        }
+
+        return totalPaintableCells > 0;
+    }
+
     public void RegisterArea(PaintableArea area)
     {
         if (area == null || paintableAreas.Contains(area))

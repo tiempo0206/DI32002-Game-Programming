@@ -38,6 +38,7 @@ public static class SplatFightersGrayboxMapBuilder
         Material platformMaterial = GetOrCreateMaterial("Assets/Materials/Level/MAT_Level_Platform.mat", new Color(0.3f, 0.36f, 0.34f));
         Material rampMaterial = GetOrCreateMaterial("Assets/Materials/Level/MAT_Level_Ramp.mat", new Color(0.45f, 0.42f, 0.36f));
         Material paintRouteMaterial = GetOrCreateMaterial("Assets/Materials/Level/MAT_Level_PaintRoute.mat", TeamVisualPalette.TeamAColor);
+        Material objectiveMaterial = GetOrCreateMaterial("Assets/Materials/Level/MAT_Level_SplatZone.mat", new Color(1f, 1f, 1f, 0.32f));
         Material teamAMaterial = GetOrCreateMaterial("Assets/Materials/Level/MAT_Level_Spawn_TeamA.mat", TeamVisualPalette.TeamAColor);
         Material teamBMaterial = GetOrCreateMaterial("Assets/Materials/Level/MAT_Level_Spawn_TeamB.mat", TeamVisualPalette.TeamBColor);
         Material teamAPlayerMaterial = GetOrCreateMaterial("Assets/Materials/Teams/MAT_TeamA_Player.mat", TeamVisualPalette.TeamAColor);
@@ -51,6 +52,7 @@ public static class SplatFightersGrayboxMapBuilder
         Transform coverRoot = CreateGroup(levelRoot.transform, "Cover");
         Transform platformRoot = CreateGroup(levelRoot.transform, "Platforms");
         Transform routeRoot = CreateGroup(levelRoot.transform, "PaintRoutes");
+        Transform objectiveRoot = CreateGroup(levelRoot.transform, "Objectives");
         Transform spawnRoot = CreateGroup(levelRoot.transform, "SpawnPoints");
         Transform aiRoot = CreateGroup(levelRoot.transform, "AI");
 
@@ -58,6 +60,7 @@ public static class SplatFightersGrayboxMapBuilder
         BuildContestObstacles(obstacleRoot, coverRoot, coverMaterial);
         BuildSidePlatforms(platformRoot, platformMaterial, rampMaterial);
         BuildPaintRoutes(routeRoot, platformMaterial, paintRouteMaterial);
+        BuildSplatZoneObjective(objectiveRoot, objectiveMaterial);
         BuildSpawnPoints(spawnRoot, teamAMaterial, teamBMaterial);
         BuildTeamBBot(aiRoot, teamBBotMaterial);
         ConfigurePaintableGroundForGrayboxMap();
@@ -132,6 +135,40 @@ public static class SplatFightersGrayboxMapBuilder
         route.Configure(Team.TeamA, routeProbe, Vector3.up, 4.2f);
         EditorUtility.SetDirty(routeSurface);
         EditorUtility.SetDirty(route);
+    }
+
+    private static void BuildSplatZoneObjective(Transform parent, Material material)
+    {
+        GameObject zoneObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        zoneObject.name = "CenterSplatZone";
+        zoneObject.transform.SetParent(parent, false);
+        zoneObject.transform.position = new Vector3(0f, 0.035f, 0f);
+        zoneObject.transform.localScale = new Vector3(5f, 0.05f, 3f);
+        AssignMaterial(zoneObject, material);
+
+        Collider collider = zoneObject.GetComponent<Collider>();
+
+        if (collider != null)
+        {
+            Object.DestroyImmediate(collider);
+        }
+
+        SplatZoneObjective zone = zoneObject.AddComponent<SplatZoneObjective>();
+        SerializedObject zoneSo = new SerializedObject(zone);
+        zoneSo.FindProperty("zoneSize").vector2Value = new Vector2(5f, 3f);
+        zoneSo.FindProperty("zoneHeight").floatValue = 0.5f;
+        zoneSo.FindProperty("controlThresholdPercent").floatValue = 55f;
+        zoneSo.FindProperty("minimumPaintedPercent").floatValue = 20f;
+        zoneSo.FindProperty("refreshInterval").floatValue = 0.15f;
+        zoneSo.FindProperty("zoneRenderer").objectReferenceValue = zoneObject.GetComponent<MeshRenderer>();
+        zoneSo.FindProperty("neutralColor").colorValue = new Color(1f, 1f, 1f, 0.28f);
+        zoneSo.FindProperty("contestedColor").colorValue = new Color(1f, 0.95f, 0.2f, 0.38f);
+        zoneSo.FindProperty("teamAColor").colorValue = TeamVisualPalette.TeamAOverlayColor;
+        zoneSo.FindProperty("teamBColor").colorValue = TeamVisualPalette.TeamBOverlayColor;
+        zoneSo.ApplyModifiedPropertiesWithoutUndo();
+
+        EditorUtility.SetDirty(zoneObject);
+        EditorUtility.SetDirty(zone);
     }
 
     private static void BuildSpawnPoints(Transform parent, Material teamAMaterial, Material teamBMaterial)
@@ -574,6 +611,7 @@ public static class SplatFightersGrayboxMapBuilder
         GameObject player = GameObject.Find("Player");
         BotController bot = Object.FindObjectOfType<BotController>();
         PaintManager paintManager = Object.FindObjectOfType<PaintManager>();
+        SplatZoneObjective centerZone = Object.FindObjectOfType<SplatZoneObjective>();
         SpawnPoint teamASpawn = FindDefaultSpawnPoint(Team.TeamA);
         SpawnPoint teamBSpawn = FindDefaultSpawnPoint(Team.TeamB);
 
@@ -588,6 +626,7 @@ public static class SplatFightersGrayboxMapBuilder
         managerSo.FindProperty("playerHealth").objectReferenceValue = player != null ? player.GetComponent<CharacterHealth>() : null;
         managerSo.FindProperty("playerWeapon").objectReferenceValue = player != null ? player.GetComponentInChildren<InkWeapon>() : null;
         managerSo.FindProperty("playerSpecialMeter").objectReferenceValue = player != null ? player.GetComponentInChildren<SpecialMeter>() : null;
+        managerSo.FindProperty("centerZoneObjective").objectReferenceValue = centerZone;
         managerSo.FindProperty("teamBBot").objectReferenceValue = bot;
         managerSo.FindProperty("teamBBotHealth").objectReferenceValue = bot != null ? bot.GetComponent<CharacterHealth>() : null;
         managerSo.FindProperty("teamASpawn").objectReferenceValue = teamASpawn;
