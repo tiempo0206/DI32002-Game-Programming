@@ -412,8 +412,6 @@ Acceptance criteria:
 - Runtime code and documentation no longer conflict.
 - Existing keyboard and mouse controls remain unchanged.
 
-### 15. Stretch Modes After Turf War Core
-
 ### 15. Splat Zones-Style Center Objective V1
 
 Goal:
@@ -436,7 +434,31 @@ Acceptance criteria:
 - HUD text communicates zone ownership.
 - Existing Turf War score and match flow remain stable.
 
-### 16. Stretch Modes After Turf War Core
+### 16. Tower Control-Style Moving Objective V1
+
+Goal:
+
+Demonstrate a small moving objective that reacts to paint control without replacing the stable Turf War loop.
+
+Status: Implemented in the current branch.
+
+Implemented work:
+
+- Added `TowerObjective` for a center tower that reads nearby paint ownership.
+- Added a short authored tower route through the graybox center lane.
+- Let TeamA or TeamB paint control push the tower toward the opposing side.
+- Added HUD tower text for neutral, contested, pushing, and route progress states.
+- Reset tower progress when the match restarts or paint is reset.
+
+Acceptance criteria:
+
+- A center moving tower objective exists in the MVP scene.
+- Tower control is calculated from local TeamA/TeamB paint coverage.
+- The tower moves along its route while one team controls the local paint area.
+- HUD text communicates tower control and progress.
+- Existing Turf War score, Splat Zone HUD, match flow, bot, ink, health, swim, and special systems remain stable.
+
+### 17. Stretch Modes After Turf War Core
 
 Goal:
 
@@ -444,8 +466,8 @@ Only expand modes after the local Turf War loop is fun and explainable.
 
 Suggested future modes:
 
-- Splat Zones-style center-area control using existing paint coverage logic.
-- Tower Control-style moving objective after bot movement is more reliable.
+- Rainmaker-style carry objective only after interaction and damage rules are more mature.
+- Clam Blitz-style collection should remain long-term stretch because it needs item spawning, carrying, scoring gates, and stronger bot behavior.
 - Salmon Run-style co-op should remain a long-term stretch because it requires wave spawning, PvE enemy roles, and team revive rules.
 
 Acceptance criteria:

@@ -35,6 +35,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private InkWeapon playerWeapon = null;
     [SerializeField] private SpecialMeter playerSpecialMeter = null;
     [SerializeField] private SplatZoneObjective centerZoneObjective = null;
+    [SerializeField] private TowerObjective centerTowerObjective = null;
     [SerializeField] private BotController teamBBot = null;
     [SerializeField] private CharacterHealth teamBBotHealth = null;
     [SerializeField] private SpawnPoint teamASpawn = null;
@@ -148,6 +149,8 @@ public class GameManager : MonoBehaviour
             DestroyActiveProjectiles();
         }
 
+        ResetObjectives();
+
         if (resetCharactersOnMatchStart)
         {
             ResetCharactersToSpawns();
@@ -189,6 +192,8 @@ public class GameManager : MonoBehaviour
         {
             DestroyActiveProjectiles();
         }
+
+        ResetObjectives();
 
         if (resetCharactersOnMatchStart)
         {
@@ -335,6 +340,11 @@ public class GameManager : MonoBehaviour
         if (centerZoneObjective == null)
         {
             centerZoneObjective = FindObjectOfType<SplatZoneObjective>();
+        }
+
+        if (centerTowerObjective == null)
+        {
+            centerTowerObjective = FindObjectOfType<TowerObjective>();
         }
 
         if (teamBBot == null)
@@ -506,6 +516,14 @@ public class GameManager : MonoBehaviour
             {
                 meter.ResetCharge();
             }
+        }
+    }
+
+    private void ResetObjectives()
+    {
+        if (centerTowerObjective != null)
+        {
+            centerTowerObjective.ResetObjective();
         }
     }
 
@@ -712,7 +730,13 @@ public class GameManager : MonoBehaviour
             centerZoneObjective != null ? centerZoneObjective.ControllingTeam : Team.None,
             centerZoneObjective != null && centerZoneObjective.IsContested,
             centerZoneObjective != null ? centerZoneObjective.TeamAPercent : -1f,
-            centerZoneObjective != null ? centerZoneObjective.TeamBPercent : -1f);
+            centerZoneObjective != null ? centerZoneObjective.TeamBPercent : -1f,
+            centerTowerObjective != null ? centerTowerObjective.ControllingTeam : Team.None,
+            centerTowerObjective != null && centerTowerObjective.IsContested,
+            centerTowerObjective != null ? centerTowerObjective.LeadingTeam : Team.None,
+            centerTowerObjective != null ? centerTowerObjective.RouteProgressPercent : -1f,
+            centerTowerObjective != null ? centerTowerObjective.TeamAPercent : -1f,
+            centerTowerObjective != null ? centerTowerObjective.TeamBPercent : -1f);
     }
 
     private void SetState(MatchState nextState)

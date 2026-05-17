@@ -76,6 +76,7 @@ jobs:
             'Splat Fighters/Assets/Scripts/Level/PaintBlocker.cs'
             'Splat Fighters/Assets/Scripts/Level/PaintRouteSurface.cs'
             'Splat Fighters/Assets/Scripts/Level/SplatZoneObjective.cs'
+            'Splat Fighters/Assets/Scripts/Level/TowerObjective.cs'
             'Splat Fighters/Assets/Scripts/Managers/GameManager.cs'
             'Splat Fighters/Assets/Scripts/Managers/MatchTimer.cs'
             'Splat Fighters/Assets/Scripts/UI/AimReticleUI.cs'
@@ -90,6 +91,7 @@ jobs:
             'Splat Fighters/Assets/Materials/Level/MAT_Level_PaintRoute.mat'
             'Splat Fighters/Assets/Materials/Level/MAT_Level_Ramp.mat'
             'Splat Fighters/Assets/Materials/Level/MAT_Level_SplatZone.mat'
+            'Splat Fighters/Assets/Materials/Level/MAT_Level_TowerObjective.mat'
             'Splat Fighters/Assets/Materials/Level/MAT_Level_Spawn_TeamA.mat'
             'Splat Fighters/Assets/Materials/Level/MAT_Level_Spawn_TeamB.mat'
             'Splat Fighters/Assets/Materials/Teams/MAT_TeamA_Player.mat'
@@ -369,6 +371,13 @@ jobs:
             'm_Name: WestPaintRouteSurface'
             'm_Name: WestPaintRouteProbe'
             'm_Name: CenterSplatZone'
+            'm_Name: CenterTowerRoute'
+            'm_Name: CenterTowerObjective'
+            'm_Name: CenterTowerPlatform'
+            'm_Name: CenterTowerMast'
+            'm_Name: CenterTower_TeamBGoal'
+            'm_Name: CenterTower_CenterPoint'
+            'm_Name: CenterTower_TeamAGoal'
             'm_Name: TeamASpawn'
             'm_Name: TeamBSpawn'
             'm_Name: TeamBBot'
@@ -408,6 +417,11 @@ jobs:
             'zoneSize: {x: 5, y: 3}'
             'controlThresholdPercent: 55'
             'minimumPaintedPercent: 20'
+            'centerTowerObjective: {fileID:'
+            'controlSize: {x: 3.2, y: 2.6}'
+            'moveSpeed: 0.22'
+            'controlThresholdPercent: 52'
+            'minimumPaintedPercent: 18'
             'respawnDelaySeconds: 2'
             'teamASpawn: {fileID:'
             'teamBSpawn: {fileID:'
@@ -510,6 +524,11 @@ jobs:
             exit 1
           }
 
+          grep -q 'TowerText' 'Splat Fighters/Assets/Scripts/UI/ScoreUI.cs' || {
+            echo "Expected ScoreUI Tower objective text support."
+            exit 1
+          }
+
           required_special_patterns=(
             'public class SpecialMeter'
             'ChargePercent'
@@ -570,6 +589,25 @@ jobs:
           for pattern in "${required_zone_patterns[@]}"; do
             grep -q "$pattern" 'Splat Fighters/Assets/Scripts/Level/SplatZoneObjective.cs' || {
               echo "Missing Splat Zone objective code pattern: $pattern"
+              exit 1
+            }
+          done
+
+          required_tower_patterns=(
+            'public class TowerObjective'
+            'ControllingTeam'
+            'IsContested'
+            'LeadingTeam'
+            'RouteProgressPercent'
+            'GetControlBounds'
+            'ResetObjective'
+            'controlThresholdPercent'
+            'minimumPaintedPercent'
+          )
+
+          for pattern in "${required_tower_patterns[@]}"; do
+            grep -q "$pattern" 'Splat Fighters/Assets/Scripts/Level/TowerObjective.cs' || {
+              echo "Missing Tower objective code pattern: $pattern"
               exit 1
             }
           done
