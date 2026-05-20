@@ -35,6 +35,11 @@ public class InkProjectile : MonoBehaviour
     [SerializeField, Min(0f)] private float impactMarkerSurfaceOffset = 0.03f;
     [SerializeField] private bool logPaintMisses = false;
 
+    [Header("Ink Splatter VFX")]
+    [SerializeField] private bool spawnInkSplatterVfx = true;
+    [SerializeField] private bool spawnSplatterOnNonPaintableHit = true;
+    [SerializeField, Min(0.1f)] private float splatterRadiusMultiplier = 1f;
+
     private Rigidbody rb;
     private Collider projectileCollider;
     private readonly List<Collider> ignoredColliders = new List<Collider>();
@@ -276,7 +281,7 @@ public class InkProjectile : MonoBehaviour
             return;
         }
 
-        SpawnImpactMarker(hitPoint, hitNormal, canPaintLayer);
+        SpawnImpactFeedback(hitPoint, hitNormal, canPaintLayer);
         LogPaintMissIfNeeded(canPaintLayer, changedCells, hitObject, paintPoint);
         Destroy(gameObject);
     }
@@ -319,6 +324,7 @@ public class InkProjectile : MonoBehaviour
             changedCells = PaintManager.Instance.PaintAtWorldPosition(intendedImpactPoint, paintRadius, team);
         }
 
+        SpawnImpactFeedback(intendedImpactPoint, Vector3.up, true);
         LogPaintMissIfNeeded(true, changedCells, gameObject, intendedImpactPoint);
         Destroy(gameObject);
     }
@@ -343,6 +349,12 @@ public class InkProjectile : MonoBehaviour
         }
 
         return physicsHitPoint;
+    }
+
+    private void SpawnImpactFeedback(Vector3 hitPoint, Vector3 hitNormal, bool canPaintLayer)
+    {
+        SpawnImpactMarker(hitPoint, hitNormal, canPaintLayer);
+        SpawnInkSplatter(hitPoint, hitNormal, canPaintLayer);
     }
 
     private void SpawnImpactMarker(Vector3 hitPoint, Vector3 hitNormal, bool canPaintLayer)
@@ -373,6 +385,16 @@ public class InkProjectile : MonoBehaviour
         }
 
         Destroy(marker, impactMarkerLifetime);
+    }
+
+    private void SpawnInkSplatter(Vector3 hitPoint, Vector3 hitNormal, bool canPaintLayer)
+    {
+        if (!spawnInkSplatterVfx || (!canPaintLayer && !spawnSplatterOnNonPaintableHit))
+        {
+            return;
+        }
+
+        InkSplatterVfx.Spawn(hitPoint, hitNormal, team, canPaintLayer, paintRadius * splatterRadiusMultiplier);
     }
 
     private void LogPaintMissIfNeeded(bool canPaintLayer, int changedCells, GameObject hitObject, Vector3 hitPoint)

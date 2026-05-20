@@ -167,3 +167,6 @@ MonoBehaviour:
   impactMarkerLifetime: 0.25
   impactMarkerSurfaceOffset: 0.03
   logPaintMisses: 0
+  spawnInkSplatterVfx: 1
+  spawnSplatterOnNonPaintableHit: 1
+  splatterRadiusMultiplier: 1
