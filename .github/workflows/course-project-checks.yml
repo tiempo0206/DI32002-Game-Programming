@@ -81,6 +81,7 @@ jobs:
             'Splat Fighters/Assets/Scripts/Level/TowerObjective.cs'
             'Splat Fighters/Assets/Scripts/Managers/GameManager.cs'
             'Splat Fighters/Assets/Scripts/Managers/MatchTimer.cs'
+            'Splat Fighters/Assets/Scripts/Managers/PerformanceProfile.cs'
             'Splat Fighters/Assets/Scripts/UI/AimReticleUI.cs'
             'Splat Fighters/Assets/Scripts/UI/ScoreUI.cs'
             'Splat Fighters/Assets/Editor/SplatFightersMvpSceneSetup.cs'
@@ -103,6 +104,7 @@ jobs:
             'Splat Fighters/Docs/Splat_Fighters_Project_Technical_Documentation.docx'
             'Splat Fighters/Docs/ADR-001-Input-System-Strategy.md'
             'Splat Fighters/Docs/Public_Asset_Usage.md'
+            'Splat Fighters/Docs/Performance_Notes.md'
             'class activity/2D-shooter/Packages/manifest.json'
             'class activity/2D-shooter/Packages/packages-lock.json'
             'class activity/2D-shooter/ProjectSettings/ProjectVersion.txt'
@@ -349,6 +351,9 @@ jobs:
             'm_Name: RollerTool'
             'm_Name: PaintManager'
             'm_Name: GameManager'
+            'targetFrameRate: 30'
+            'disableVSync: 1'
+            'fixedDeltaTime: 0.02'
             'm_Name: Main Camera'
             'm_Name: LevelRoot'
             'm_Name: BoundaryWalls'
@@ -417,9 +422,14 @@ jobs:
             'guid: 0297631b5333b42d5a5984b79ba419a4'
             'requirePaintPointNearAreaPlane: 1'
             'rebuildMaskFromPaintBlockersOnAwake: 1'
+            'gridWidth: 80'
+            'gridHeight: 90'
+            'drawGizmos: 0'
+            'drawPaintedCells: 0'
             'resetCharactersOnMatchStart: 1'
             'destroyProjectilesOnMatchStart: 1'
             'matchMode: 0'
+            'scoreRefreshInterval: 0.2'
             'playerRoot: {fileID:'
             'playerController: {fileID:'
             'teamBBot: {fileID:'
@@ -442,6 +452,7 @@ jobs:
             'zoneSize: {x: 7.5, y: 4.2}'
             'controlThresholdPercent: 55'
             'minimumPaintedPercent: 18'
+            'refreshInterval: 0.25'
             'centerTowerObjective: {fileID:'
             'controlSize: {x: 4.4, y: 3.2}'
             'moveSpeed: 0.18'
@@ -514,6 +525,7 @@ jobs:
 
           required_ink_splatter_patterns=(
             'public sealed class InkSplatterVfx'
+            'MaxActiveSplatterInstances'
             'ParticleSystem'
             'Spawn'
             'ConfigureParticles'
@@ -907,8 +919,8 @@ jobs:
           PY
           )"
 
-          if [ "$paintable_cell_count" -le 0 ] || [ "$paintable_cell_count" -gt 10368 ]; then
-            echo "Expected serialized paintable cell count to be between 1 and 10368, found $paintable_cell_count."
+          if [ "$paintable_cell_count" -le 0 ] || [ "$paintable_cell_count" -gt 7200 ]; then
+            echo "Expected serialized paintable cell count to be between 1 and 7200, found $paintable_cell_count."
             exit 1
           fi
 

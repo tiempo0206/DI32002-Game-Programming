@@ -16,8 +16,8 @@ public static class SplatFightersGrayboxMapBuilder
     private const float CharacterRootHeight = 1f;
     private const float MapWidth = 32f;
     private const float MapLength = 36f;
-    private const int PaintGridWidth = 96;
-    private const int PaintGridHeight = 108;
+    private const int PaintGridWidth = 80;
+    private const int PaintGridHeight = 90;
     private const float HalfMapWidth = MapWidth * 0.5f;
     private const float HalfMapLength = MapLength * 0.5f;
     private static readonly List<PaintBlocker> PaintBlockers = new List<PaintBlocker>();
@@ -213,7 +213,7 @@ public static class SplatFightersGrayboxMapBuilder
         zoneSo.FindProperty("zoneHeight").floatValue = 0.5f;
         zoneSo.FindProperty("controlThresholdPercent").floatValue = 55f;
         zoneSo.FindProperty("minimumPaintedPercent").floatValue = 18f;
-        zoneSo.FindProperty("refreshInterval").floatValue = 0.15f;
+        zoneSo.FindProperty("refreshInterval").floatValue = 0.25f;
         zoneSo.FindProperty("zoneRenderer").objectReferenceValue = zoneObject.GetComponent<MeshRenderer>();
         zoneSo.FindProperty("neutralColor").colorValue = new Color(1f, 1f, 1f, 0.28f);
         zoneSo.FindProperty("contestedColor").colorValue = new Color(1f, 0.95f, 0.2f, 0.38f);
@@ -275,7 +275,7 @@ public static class SplatFightersGrayboxMapBuilder
         towerSo.FindProperty("controlHeight").floatValue = 0.5f;
         towerSo.FindProperty("controlThresholdPercent").floatValue = 52f;
         towerSo.FindProperty("minimumPaintedPercent").floatValue = 18f;
-        towerSo.FindProperty("refreshInterval").floatValue = 0.15f;
+        towerSo.FindProperty("refreshInterval").floatValue = 0.25f;
         towerSo.FindProperty("towerRenderer").objectReferenceValue = platform.GetComponent<MeshRenderer>();
         towerSo.FindProperty("neutralColor").colorValue = Color.white;
         towerSo.FindProperty("contestedColor").colorValue = new Color(1f, 0.95f, 0.2f, 1f);
@@ -929,7 +929,12 @@ public static class SplatFightersGrayboxMapBuilder
         areaSo.FindProperty("maxPaintPointHeightOffset").floatValue = 0.16f;
         areaSo.FindProperty("rebuildMaskFromPaintBlockersOnAwake").boolValue = true;
         areaSo.FindProperty("clearMaskBeforeBaking").boolValue = true;
+        areaSo.FindProperty("drawGizmos").boolValue = false;
+        areaSo.FindProperty("drawOnlyWhenSelected").boolValue = true;
+        areaSo.FindProperty("drawPaintedCells").boolValue = false;
+        areaSo.FindProperty("drawUnpaintedCells").boolValue = false;
         areaSo.FindProperty("drawBlockedCells").boolValue = false;
+        areaSo.FindProperty("drawGridLines").boolValue = false;
         areaSo.ApplyModifiedPropertiesWithoutUndo();
 
         area.ResetPaintableMask(true);

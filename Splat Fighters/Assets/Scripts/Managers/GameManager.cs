@@ -55,7 +55,7 @@ public class GameManager : MonoBehaviour
     [SerializeField, Min(0f)] private float respawnDelaySeconds = 2f;
 
     [Header("Score Refresh")]
-    [SerializeField, Min(0.02f)] private float scoreRefreshInterval = 0.1f;
+    [SerializeField, Min(0.02f)] private float scoreRefreshInterval = 0.2f;
 
     [Header("Quick Controls")]
     [SerializeField] private bool enableKeyboardControls = true;

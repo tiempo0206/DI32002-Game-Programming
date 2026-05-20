@@ -6,12 +6,19 @@ using UnityEngine;
 public sealed class InkSplatterVfx : MonoBehaviour
 {
     private const float MinNormalMagnitude = 0.0001f;
+    private const int MaxActiveSplatterInstances = 14;
+    private static int activeSplatterInstances;
 
     [SerializeField] private ParticleSystem splatterParticles = null;
-    [SerializeField, Min(0.05f)] private float cleanupDelay = 1.25f;
+    [SerializeField, Min(0.05f)] private float cleanupDelay = 0.9f;
 
     public static InkSplatterVfx Spawn(Vector3 position, Vector3 normal, Team team, bool paintableImpact, float paintRadius)
     {
+        if (activeSplatterInstances >= MaxActiveSplatterInstances)
+        {
+            return null;
+        }
+
         GameObject root = new GameObject($"InkSplatterVfx_{TeamVisualPalette.GetLabel(team).Replace(" ", string.Empty)}");
         InkSplatterVfx splatter = root.AddComponent<InkSplatterVfx>();
         splatter.Configure(position, normal, team, paintableImpact, paintRadius);
@@ -23,11 +30,17 @@ public sealed class InkSplatterVfx : MonoBehaviour
         Vector3 safeNormal = normal.sqrMagnitude > MinNormalMagnitude ? normal.normalized : Vector3.up;
         transform.position = position + safeNormal * 0.04f;
         transform.rotation = CreateSurfaceRotation(safeNormal);
+        activeSplatterInstances++;
 
         splatterParticles = gameObject.AddComponent<ParticleSystem>();
         ConfigureParticles(splatterParticles, team, paintableImpact, paintRadius);
         splatterParticles.Play();
         Destroy(gameObject, cleanupDelay);
+    }
+
+    private void OnDestroy()
+    {
+        activeSplatterInstances = Mathf.Max(0, activeSplatterInstances - 1);
     }
 
     private void ConfigureParticles(ParticleSystem particles, Team team, bool paintableImpact, float paintRadius)
@@ -48,14 +61,14 @@ public sealed class InkSplatterVfx : MonoBehaviour
         main.startColor = new ParticleSystem.MinMaxGradient(baseColor, brightColor);
         main.gravityModifier = 0.18f;
         main.simulationSpace = ParticleSystemSimulationSpace.World;
-        main.maxParticles = 48;
+        main.maxParticles = 32;
         main.stopAction = ParticleSystemStopAction.Destroy;
 
         ParticleSystem.EmissionModule emission = particles.emission;
         emission.rateOverTime = 0f;
         emission.SetBursts(new[]
         {
-            new ParticleSystem.Burst(0f, (short)Mathf.Clamp(Mathf.RoundToInt(safeRadius * 12f), 14, 32))
+            new ParticleSystem.Burst(0f, (short)Mathf.Clamp(Mathf.RoundToInt(safeRadius * 8f), 8, 20))
         });
 
         ParticleSystem.ShapeModule shape = particles.shape;
