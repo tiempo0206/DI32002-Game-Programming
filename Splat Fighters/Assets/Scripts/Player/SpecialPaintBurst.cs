@@ -17,6 +17,10 @@ public class SpecialPaintBurst : MonoBehaviour
     [SerializeField] private KeyCode activationKey = KeyCode.Q;
     [SerializeField] private bool requireMatchPlaying = true;
 
+    [Header("Feedback")]
+    [SerializeField] private bool spawnInkSplatterVfx = true;
+    [SerializeField, Min(0.1f)] private float splatterRadiusMultiplier = 1.15f;
+
     [Header("Debug")]
     [SerializeField] private bool logActivation = false;
 
@@ -65,6 +69,7 @@ public class SpecialPaintBurst : MonoBehaviour
         }
 
         specialMeter.ConsumeReadyCharge();
+        SpawnFeedback(paintPoint);
 
         if (logActivation)
         {
@@ -111,5 +116,15 @@ public class SpecialPaintBurst : MonoBehaviour
         Vector3 fallback = transform.position + transform.forward * fallbackDistance;
         fallback.y = transform.position.y;
         return fallback;
+    }
+
+    private void SpawnFeedback(Vector3 paintPoint)
+    {
+        if (!spawnInkSplatterVfx)
+        {
+            return;
+        }
+
+        InkSplatterVfx.Spawn(paintPoint, Vector3.up, team, true, burstPaintRadius * splatterRadiusMultiplier);
     }
 }

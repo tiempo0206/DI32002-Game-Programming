@@ -10,6 +10,7 @@ The current prototype uses:
 
 - Unity primitive meshes for expanded graybox level geometry, player placeholders, bot placeholders, objectives, elevated routes, cover, and route markers.
 - Unity-generated materials created by editor setup scripts.
+- Procedural ink splatter particle effects generated at runtime from original C# scripts.
 - Original C# scripts written for this course project.
 - Runtime UI built from Unity UI text and image components.
 

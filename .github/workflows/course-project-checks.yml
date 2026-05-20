@@ -67,6 +67,7 @@ jobs:
             'Splat Fighters/Assets/Scripts/AI/BotController.cs'
             'Splat Fighters/Assets/Scripts/Visuals/TeamVisualPalette.cs'
             'Splat Fighters/Assets/Scripts/Visuals/TeamVisualBinder.cs'
+            'Splat Fighters/Assets/Scripts/Visuals/InkSplatterVfx.cs'
             'Splat Fighters/Assets/Scripts/Player/PlayerInputHandler.cs'
             'Splat Fighters/Assets/Scripts/Player/PlayerController.cs'
             'Splat Fighters/Assets/Scripts/Player/ThirdPersonCameraFollow.cs'
@@ -501,6 +502,38 @@ jobs:
             exit 1
           }
 
+          grep -q 'spawnInkSplatterVfx: 1' 'Splat Fighters/Assets/Prefabs/Weapons/InkProjectile.prefab' || {
+            echo "Expected InkProjectile prefab to enable ink splatter VFX."
+            exit 1
+          }
+
+          grep -q 'splatterRadiusMultiplier: 1' 'Splat Fighters/Assets/Prefabs/Weapons/InkProjectile.prefab' || {
+            echo "Expected InkProjectile prefab to serialize splatter radius tuning."
+            exit 1
+          }
+
+          required_ink_splatter_patterns=(
+            'public sealed class InkSplatterVfx'
+            'ParticleSystem'
+            'Spawn'
+            'ConfigureParticles'
+            'TeamVisualPalette.GetColor'
+            'ParticleSystemShapeType.Cone'
+            'ParticleSystemStopAction.Destroy'
+          )
+
+          for pattern in "${required_ink_splatter_patterns[@]}"; do
+            grep -q "$pattern" 'Splat Fighters/Assets/Scripts/Visuals/InkSplatterVfx.cs' || {
+              echo "Missing ink splatter VFX code pattern: $pattern"
+              exit 1
+            }
+          done
+
+          grep -q 'InkSplatterVfx.Spawn' 'Splat Fighters/Assets/Scripts/Weapons/InkProjectile.cs' || {
+            echo "Expected InkProjectile to spawn ink splatter feedback."
+            exit 1
+          }
+
           required_code_patterns=(
             'Paused'
             'RestartMatch'
@@ -595,6 +628,9 @@ jobs:
             'burstPaintRadius'
             'activationKey'
             'PaintAtWorldPosition'
+            'InkSplatterVfx.Spawn'
+            'spawnInkSplatterVfx'
+            'splatterRadiusMultiplier'
           )
 
           for pattern in "${required_special_burst_patterns[@]}"; do
