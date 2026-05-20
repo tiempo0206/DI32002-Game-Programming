@@ -14,6 +14,10 @@ public static class SplatFightersMvpSceneSetup
     private const string ProjectilePrefabPath = "Assets/Prefabs/Weapons/InkProjectile.prefab";
     private const string MaterialsFolder = "Assets/Materials";
     private const string PrefabsFolder = "Assets/Prefabs";
+    private const float PaintableGroundWidth = 32f;
+    private const float PaintableGroundLength = 36f;
+    private const int PaintGridWidth = 96;
+    private const int PaintGridHeight = 108;
 
     [MenuItem("Tools/Splat Fighters/Create MVP Shooting Test Scene")]
     public static void CreateMvpShootingTestScene()
@@ -197,9 +201,9 @@ public static class SplatFightersMvpSceneSetup
 
         PaintableArea area = groundRoot.AddComponent<PaintableArea>();
         SerializedObject areaSo = new SerializedObject(area);
-        areaSo.FindProperty("areaSize").vector2Value = new Vector2(20f, 20f);
-        areaSo.FindProperty("gridWidth").intValue = 60;
-        areaSo.FindProperty("gridHeight").intValue = 60;
+        areaSo.FindProperty("areaSize").vector2Value = new Vector2(PaintableGroundWidth, PaintableGroundLength);
+        areaSo.FindProperty("gridWidth").intValue = PaintGridWidth;
+        areaSo.FindProperty("gridHeight").intValue = PaintGridHeight;
         areaSo.FindProperty("resetOnAwake").boolValue = true;
         areaSo.FindProperty("requirePaintPointNearAreaPlane").boolValue = true;
         areaSo.FindProperty("maxPaintPointHeightOffset").floatValue = 0.16f;
@@ -217,7 +221,7 @@ public static class SplatFightersMvpSceneSetup
         visual.name = "GroundVisual";
         visual.transform.SetParent(groundRoot.transform);
         visual.transform.localPosition = new Vector3(0f, -0.05f, 0f);
-        visual.transform.localScale = new Vector3(20f, 0.1f, 20f);
+        visual.transform.localScale = new Vector3(PaintableGroundWidth, 0.1f, PaintableGroundLength);
 
         MeshRenderer renderer = visual.GetComponent<MeshRenderer>();
         renderer.sharedMaterial = groundMaterial;

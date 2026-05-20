@@ -363,15 +363,30 @@ jobs:
             'm_Name: CenterContestBlock'
             'm_Name: CenterLeftPillar'
             'm_Name: CenterRightPillar'
+            'm_Name: NorthCenterScreen'
+            'm_Name: SouthCenterScreen'
             'm_Name: TeamASpawnLeftCover'
             'm_Name: TeamBSpawnRightCover'
+            'm_Name: TeamAMidLeftCover'
+            'm_Name: TeamBMidRightCover'
+            'm_Name: LeftLaneBackCover'
+            'm_Name: RightLaneBackCover'
             'm_Name: WestPlatformCover'
             'm_Name: EastPlatformCover'
+            'm_Name: WestFlankPlatform'
+            'm_Name: EastFlankPlatform'
+            'm_Name: NorthPerchPlatform'
+            'm_Name: SouthPerchPlatform'
             'm_Name: WestPlatformRamp'
             'm_Name: EastPlatformRamp'
+            'm_Name: NorthPerchRamp'
+            'm_Name: SouthPerchRamp'
             'm_Name: WestPaintRouteUpperDeck'
             'm_Name: WestPaintRouteSurface'
             'm_Name: WestPaintRouteProbe'
+            'm_Name: EastPaintRouteUpperDeck'
+            'm_Name: EastPaintRouteSurface'
+            'm_Name: EastPaintRouteProbe'
             'm_Name: CenterSplatZone'
             'm_Name: CenterTowerRoute'
             'm_Name: CenterTowerObjective'
@@ -423,12 +438,12 @@ jobs:
             'shooterKey: 49'
             'rollerKey: 50'
             'centerZoneObjective: {fileID:'
-            'zoneSize: {x: 5, y: 3}'
+            'zoneSize: {x: 7.5, y: 4.2}'
             'controlThresholdPercent: 55'
-            'minimumPaintedPercent: 20'
+            'minimumPaintedPercent: 18'
             'centerTowerObjective: {fileID:'
-            'controlSize: {x: 3.2, y: 2.6}'
-            'moveSpeed: 0.22'
+            'controlSize: {x: 4.4, y: 3.2}'
+            'moveSpeed: 0.18'
             'controlThresholdPercent: 52'
             'minimumPaintedPercent: 18'
             'respawnDelaySeconds: 2'
@@ -856,8 +871,8 @@ jobs:
           PY
           )"
 
-          if [ "$paintable_cell_count" -le 0 ] || [ "$paintable_cell_count" -gt 3600 ]; then
-            echo "Expected serialized paintable cell count to be between 1 and 3600, found $paintable_cell_count."
+          if [ "$paintable_cell_count" -le 0 ] || [ "$paintable_cell_count" -gt 10368 ]; then
+            echo "Expected serialized paintable cell count to be between 1 and 10368, found $paintable_cell_count."
             exit 1
           fi
 

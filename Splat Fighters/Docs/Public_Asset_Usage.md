@@ -1,6 +1,6 @@
 # Public Asset Usage
 
-Last updated: 2026-05-17
+Last updated: 2026-05-20
 
 ## Current Status
 
@@ -8,7 +8,7 @@ Splat Fighters currently does not include imported third-party public assets.
 
 The current prototype uses:
 
-- Unity primitive meshes for graybox level geometry, player placeholders, bot placeholders, objectives, and route markers.
+- Unity primitive meshes for expanded graybox level geometry, player placeholders, bot placeholders, objectives, elevated routes, cover, and route markers.
 - Unity-generated materials created by editor setup scripts.
 - Original C# scripts written for this course project.
 - Runtime UI built from Unity UI text and image components.

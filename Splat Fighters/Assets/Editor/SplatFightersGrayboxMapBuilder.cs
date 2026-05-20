@@ -5,8 +5,8 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 /// <summary>
-/// Editor-only utility that builds the small graybox arena used by the MVP scene.
-/// The layout is intentionally compact so one player and one future bot can contest territory quickly.
+/// Editor-only utility that builds the graybox arena used by the MVP scene.
+/// The layout is a medium-size asymmetric arena with main, flank, and elevated contest routes.
 /// </summary>
 public static class SplatFightersGrayboxMapBuilder
 {
@@ -14,9 +14,15 @@ public static class SplatFightersGrayboxMapBuilder
     private const string LevelRootName = "LevelRoot";
     private const string ProjectilePrefabPath = "Assets/Prefabs/Weapons/InkProjectile.prefab";
     private const float CharacterRootHeight = 1f;
+    private const float MapWidth = 32f;
+    private const float MapLength = 36f;
+    private const int PaintGridWidth = 96;
+    private const int PaintGridHeight = 108;
+    private const float HalfMapWidth = MapWidth * 0.5f;
+    private const float HalfMapLength = MapLength * 0.5f;
     private static readonly List<PaintBlocker> PaintBlockers = new List<PaintBlocker>();
 
-    [MenuItem("Tools/Splat Fighters/Build Graybox Map V1")]
+    [MenuItem("Tools/Splat Fighters/Build Graybox Map V2")]
     public static void BuildIntoMvpScene()
     {
         Scene scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
@@ -75,55 +81,79 @@ public static class SplatFightersGrayboxMapBuilder
 
     private static void BuildBoundaryWalls(Transform parent, Material material)
     {
-        CreateSolidCube("NorthBoundaryRail", new Vector3(0f, 0.55f, 10.25f), new Vector3(20.8f, 1.1f, 0.5f), material, parent);
-        CreateSolidCube("SouthBoundaryRail", new Vector3(0f, 0.55f, -10.25f), new Vector3(20.8f, 1.1f, 0.5f), material, parent);
-        CreateSolidCube("EastBoundaryRail", new Vector3(10.25f, 0.55f, 0f), new Vector3(0.5f, 1.1f, 20.8f), material, parent);
-        CreateSolidCube("WestBoundaryRail", new Vector3(-10.25f, 0.55f, 0f), new Vector3(0.5f, 1.1f, 20.8f), material, parent);
+        CreateSolidCube("NorthBoundaryRail", new Vector3(0f, 0.55f, HalfMapLength + 0.25f), new Vector3(MapWidth + 0.8f, 1.1f, 0.5f), material, parent);
+        CreateSolidCube("SouthBoundaryRail", new Vector3(0f, 0.55f, -HalfMapLength - 0.25f), new Vector3(MapWidth + 0.8f, 1.1f, 0.5f), material, parent);
+        CreateSolidCube("EastBoundaryRail", new Vector3(HalfMapWidth + 0.25f, 0.55f, 0f), new Vector3(0.5f, 1.1f, MapLength + 0.8f), material, parent);
+        CreateSolidCube("WestBoundaryRail", new Vector3(-HalfMapWidth - 0.25f, 0.55f, 0f), new Vector3(0.5f, 1.1f, MapLength + 0.8f), material, parent);
 
-        CreateSolidCube("NorthEastCornerPost", new Vector3(10.25f, 0.8f, 10.25f), new Vector3(0.8f, 1.6f, 0.8f), material, parent);
-        CreateSolidCube("NorthWestCornerPost", new Vector3(-10.25f, 0.8f, 10.25f), new Vector3(0.8f, 1.6f, 0.8f), material, parent);
-        CreateSolidCube("SouthEastCornerPost", new Vector3(10.25f, 0.8f, -10.25f), new Vector3(0.8f, 1.6f, 0.8f), material, parent);
-        CreateSolidCube("SouthWestCornerPost", new Vector3(-10.25f, 0.8f, -10.25f), new Vector3(0.8f, 1.6f, 0.8f), material, parent);
+        CreateSolidCube("NorthEastCornerPost", new Vector3(HalfMapWidth + 0.25f, 0.8f, HalfMapLength + 0.25f), new Vector3(0.8f, 1.6f, 0.8f), material, parent);
+        CreateSolidCube("NorthWestCornerPost", new Vector3(-HalfMapWidth - 0.25f, 0.8f, HalfMapLength + 0.25f), new Vector3(0.8f, 1.6f, 0.8f), material, parent);
+        CreateSolidCube("SouthEastCornerPost", new Vector3(HalfMapWidth + 0.25f, 0.8f, -HalfMapLength - 0.25f), new Vector3(0.8f, 1.6f, 0.8f), material, parent);
+        CreateSolidCube("SouthWestCornerPost", new Vector3(-HalfMapWidth - 0.25f, 0.8f, -HalfMapLength - 0.25f), new Vector3(0.8f, 1.6f, 0.8f), material, parent);
+
+        CreateSolidCube("NorthBackstop", new Vector3(0f, 1.25f, HalfMapLength - 1.25f), new Vector3(7.5f, 1.4f, 0.55f), material, parent);
+        CreateSolidCube("SouthBackstop", new Vector3(0f, 1.25f, -HalfMapLength + 1.25f), new Vector3(7.5f, 1.4f, 0.55f), material, parent);
     }
 
     private static void BuildContestObstacles(Transform obstacleRoot, Transform coverRoot, Material material)
     {
-        CreateSolidCube("CenterContestBlock", new Vector3(0f, 0.5f, 0f), new Vector3(3.6f, 1f, 1.0f), material, obstacleRoot);
-        CreateSolidCube("CenterLeftPillar", new Vector3(-2.45f, 0.7f, 0f), new Vector3(0.8f, 1.4f, 0.8f), material, obstacleRoot);
-        CreateSolidCube("CenterRightPillar", new Vector3(2.45f, 0.7f, 0f), new Vector3(0.8f, 1.4f, 0.8f), material, obstacleRoot);
-        CreateSolidCube("LeftMidCover", new Vector3(-4.4f, 0.45f, -2.2f), new Vector3(1.1f, 0.9f, 3.0f), material, coverRoot);
-        CreateSolidCube("RightMidCover", new Vector3(4.4f, 0.45f, 2.2f), new Vector3(1.1f, 0.9f, 3.0f), material, coverRoot);
-        CreateSolidCube("TeamAForwardCover", new Vector3(2.6f, 0.4f, -4.6f), new Vector3(2.4f, 0.8f, 0.8f), material, coverRoot);
-        CreateSolidCube("TeamBForwardCover", new Vector3(-2.6f, 0.4f, 4.6f), new Vector3(2.4f, 0.8f, 0.8f), material, coverRoot);
-        CreateSolidCube("TeamASpawnLeftCover", new Vector3(-3.6f, 0.45f, -7.0f), new Vector3(1.6f, 0.9f, 0.8f), material, coverRoot);
-        CreateSolidCube("TeamASpawnRightCover", new Vector3(3.6f, 0.45f, -7.0f), new Vector3(1.6f, 0.9f, 0.8f), material, coverRoot);
-        CreateSolidCube("TeamBSpawnLeftCover", new Vector3(-3.6f, 0.45f, 7.0f), new Vector3(1.6f, 0.9f, 0.8f), material, coverRoot);
-        CreateSolidCube("TeamBSpawnRightCover", new Vector3(3.6f, 0.45f, 7.0f), new Vector3(1.6f, 0.9f, 0.8f), material, coverRoot);
-        CreateSolidCube("LeftLaneLowBlock", new Vector3(-7.2f, 0.35f, -5.4f), new Vector3(2.0f, 0.7f, 1.0f), material, coverRoot);
-        CreateSolidCube("RightLaneLowBlock", new Vector3(7.2f, 0.35f, 5.4f), new Vector3(2.0f, 0.7f, 1.0f), material, coverRoot);
+        CreateSolidCube("CenterContestBlock", new Vector3(0f, 0.55f, 0f), new Vector3(4.2f, 1.1f, 1.1f), material, obstacleRoot);
+        CreateSolidCube("CenterLeftPillar", new Vector3(-3.2f, 0.85f, -0.55f), new Vector3(0.95f, 1.7f, 0.95f), material, obstacleRoot);
+        CreateSolidCube("CenterRightPillar", new Vector3(3.2f, 0.85f, 0.55f), new Vector3(0.95f, 1.7f, 0.95f), material, obstacleRoot);
+        CreateSolidCube("NorthCenterScreen", new Vector3(0f, 0.5f, 4.45f), new Vector3(5.5f, 1f, 0.8f), material, obstacleRoot);
+        CreateSolidCube("SouthCenterScreen", new Vector3(0f, 0.5f, -4.45f), new Vector3(5.5f, 1f, 0.8f), material, obstacleRoot);
+
+        CreateSolidCube("LeftMidCover", new Vector3(-5.2f, 0.45f, -3.4f), new Vector3(1.25f, 0.9f, 3.4f), material, coverRoot);
+        CreateSolidCube("RightMidCover", new Vector3(5.2f, 0.45f, 3.4f), new Vector3(1.25f, 0.9f, 3.4f), material, coverRoot);
+        CreateSolidCube("LeftCenterCutCover", new Vector3(-6.35f, 0.45f, 1.25f), new Vector3(2.2f, 0.9f, 0.8f), material, coverRoot);
+        CreateSolidCube("RightCenterCutCover", new Vector3(6.35f, 0.45f, -1.25f), new Vector3(2.2f, 0.9f, 0.8f), material, coverRoot);
+
+        CreateSolidCube("TeamAForwardCover", new Vector3(2.9f, 0.4f, -8.2f), new Vector3(2.8f, 0.8f, 0.85f), material, coverRoot);
+        CreateSolidCube("TeamBForwardCover", new Vector3(-2.9f, 0.4f, 8.2f), new Vector3(2.8f, 0.8f, 0.85f), material, coverRoot);
+        CreateSolidCube("TeamAMidLeftCover", new Vector3(-6.4f, 0.4f, -9.8f), new Vector3(2.2f, 0.8f, 1.1f), material, coverRoot);
+        CreateSolidCube("TeamBMidRightCover", new Vector3(6.4f, 0.4f, 9.8f), new Vector3(2.2f, 0.8f, 1.1f), material, coverRoot);
+
+        CreateSolidCube("TeamASpawnLeftCover", new Vector3(-4.7f, 0.45f, -14.2f), new Vector3(2.0f, 0.9f, 0.85f), material, coverRoot);
+        CreateSolidCube("TeamASpawnRightCover", new Vector3(4.7f, 0.45f, -14.2f), new Vector3(2.0f, 0.9f, 0.85f), material, coverRoot);
+        CreateSolidCube("TeamBSpawnLeftCover", new Vector3(-4.7f, 0.45f, 14.2f), new Vector3(2.0f, 0.9f, 0.85f), material, coverRoot);
+        CreateSolidCube("TeamBSpawnRightCover", new Vector3(4.7f, 0.45f, 14.2f), new Vector3(2.0f, 0.9f, 0.85f), material, coverRoot);
+
+        CreateSolidCube("LeftLaneLowBlock", new Vector3(-11.3f, 0.35f, -7.2f), new Vector3(2.5f, 0.7f, 1.05f), material, coverRoot);
+        CreateSolidCube("RightLaneLowBlock", new Vector3(11.3f, 0.35f, 7.2f), new Vector3(2.5f, 0.7f, 1.05f), material, coverRoot);
+        CreateSolidCube("LeftLaneBackCover", new Vector3(-12.1f, 0.45f, 5.6f), new Vector3(1.0f, 0.9f, 3.1f), material, coverRoot);
+        CreateSolidCube("RightLaneBackCover", new Vector3(12.1f, 0.45f, -5.6f), new Vector3(1.0f, 0.9f, 3.1f), material, coverRoot);
     }
 
     private static void BuildSidePlatforms(Transform parent, Material platformMaterial, Material rampMaterial)
     {
-        CreateSolidCube("WestSidePlatform", new Vector3(-7.6f, 0.2f, 0f), new Vector3(2.6f, 0.4f, 4.4f), platformMaterial, parent);
-        CreateSolidCube("EastSidePlatform", new Vector3(7.6f, 0.2f, 0f), new Vector3(2.6f, 0.4f, 4.4f), platformMaterial, parent);
-        CreateSolidCube("WestPlatformCover", new Vector3(-7.6f, 0.75f, 1.45f), new Vector3(1.6f, 0.7f, 0.7f), platformMaterial, parent);
-        CreateSolidCube("EastPlatformCover", new Vector3(7.6f, 0.75f, -1.45f), new Vector3(1.6f, 0.7f, 0.7f), platformMaterial, parent);
+        CreateSolidCube("WestSidePlatform", new Vector3(-10.8f, 0.25f, -1.25f), new Vector3(3.2f, 0.5f, 7.2f), platformMaterial, parent);
+        CreateSolidCube("EastSidePlatform", new Vector3(10.8f, 0.25f, 1.25f), new Vector3(3.2f, 0.5f, 7.2f), platformMaterial, parent);
+        CreateSolidCube("WestFlankPlatform", new Vector3(-13.2f, 0.18f, 8.7f), new Vector3(2.5f, 0.36f, 5.4f), platformMaterial, parent);
+        CreateSolidCube("EastFlankPlatform", new Vector3(13.2f, 0.18f, -8.7f), new Vector3(2.5f, 0.36f, 5.4f), platformMaterial, parent);
+        CreateSolidCube("NorthPerchPlatform", new Vector3(4.8f, 0.22f, 12.1f), new Vector3(4.8f, 0.44f, 2.2f), platformMaterial, parent);
+        CreateSolidCube("SouthPerchPlatform", new Vector3(-4.8f, 0.22f, -12.1f), new Vector3(4.8f, 0.44f, 2.2f), platformMaterial, parent);
 
-        CreateRamp("WestPlatformRamp", new Vector3(-5.65f, 0.15f, 0f), new Vector3(2.2f, 0.22f, 3.0f), new Vector3(0f, 0f, -8f), rampMaterial, parent);
-        CreateRamp("EastPlatformRamp", new Vector3(5.65f, 0.15f, 0f), new Vector3(2.2f, 0.22f, 3.0f), new Vector3(0f, 0f, 8f), rampMaterial, parent);
+        CreateSolidCube("WestPlatformCover", new Vector3(-10.8f, 0.85f, 1.6f), new Vector3(1.8f, 0.7f, 0.8f), platformMaterial, parent);
+        CreateSolidCube("EastPlatformCover", new Vector3(10.8f, 0.85f, -1.6f), new Vector3(1.8f, 0.7f, 0.8f), platformMaterial, parent);
+        CreateSolidCube("NorthPerchCover", new Vector3(4.8f, 0.8f, 12.7f), new Vector3(2.2f, 0.72f, 0.7f), platformMaterial, parent);
+        CreateSolidCube("SouthPerchCover", new Vector3(-4.8f, 0.8f, -12.7f), new Vector3(2.2f, 0.72f, 0.7f), platformMaterial, parent);
+
+        CreateRamp("WestPlatformRamp", new Vector3(-8.35f, 0.18f, -1.4f), new Vector3(2.6f, 0.24f, 4.4f), new Vector3(0f, 0f, -8f), rampMaterial, parent);
+        CreateRamp("EastPlatformRamp", new Vector3(8.35f, 0.18f, 1.4f), new Vector3(2.6f, 0.24f, 4.4f), new Vector3(0f, 0f, 8f), rampMaterial, parent);
+        CreateRamp("NorthPerchRamp", new Vector3(2.6f, 0.16f, 10.4f), new Vector3(3.2f, 0.22f, 2.5f), new Vector3(7f, 0f, 0f), rampMaterial, parent);
+        CreateRamp("SouthPerchRamp", new Vector3(-2.6f, 0.16f, -10.4f), new Vector3(3.2f, 0.22f, 2.5f), new Vector3(-7f, 0f, 0f), rampMaterial, parent);
     }
 
     private static void BuildPaintRoutes(Transform parent, Material platformMaterial, Material routeMaterial)
     {
-        CreateSolidCube("WestPaintRouteUpperDeck", new Vector3(-8.35f, 1.55f, -1.8f), new Vector3(2.4f, 0.3f, 1.7f), platformMaterial, parent);
+        CreateSolidCube("WestPaintRouteUpperDeck", new Vector3(-11.35f, 1.55f, -2.2f), new Vector3(2.6f, 0.3f, 2.1f), platformMaterial, parent);
 
-        Transform routeProbe = CreateMarker("WestPaintRouteProbe", new Vector3(-6.65f, 0f, -1.8f), parent);
+        Transform routeProbe = CreateMarker("WestPaintRouteProbe", new Vector3(-9.55f, 0f, -2.2f), parent);
         GameObject routeSurface = GameObject.CreatePrimitive(PrimitiveType.Cube);
         routeSurface.name = "WestPaintRouteSurface";
         routeSurface.transform.SetParent(parent, false);
-        routeSurface.transform.position = new Vector3(-7.1f, 1.05f, -1.8f);
-        routeSurface.transform.localScale = new Vector3(0.35f, 2.2f, 1.2f);
+        routeSurface.transform.position = new Vector3(-10.05f, 1.05f, -2.2f);
+        routeSurface.transform.localScale = new Vector3(0.35f, 2.2f, 1.45f);
         AssignMaterial(routeSurface, routeMaterial);
 
         Collider routeCollider = routeSurface.GetComponent<Collider>();
@@ -137,6 +167,28 @@ public static class SplatFightersGrayboxMapBuilder
         route.Configure(Team.TeamA, routeProbe, Vector3.up, 4.2f);
         EditorUtility.SetDirty(routeSurface);
         EditorUtility.SetDirty(route);
+
+        CreateSolidCube("EastPaintRouteUpperDeck", new Vector3(11.35f, 1.55f, 2.2f), new Vector3(2.6f, 0.3f, 2.1f), platformMaterial, parent);
+
+        Transform eastProbe = CreateMarker("EastPaintRouteProbe", new Vector3(9.55f, 0f, 2.2f), parent);
+        GameObject eastRouteSurface = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        eastRouteSurface.name = "EastPaintRouteSurface";
+        eastRouteSurface.transform.SetParent(parent, false);
+        eastRouteSurface.transform.position = new Vector3(10.05f, 1.05f, 2.2f);
+        eastRouteSurface.transform.localScale = new Vector3(0.35f, 2.2f, 1.45f);
+        AssignMaterial(eastRouteSurface, routeMaterial);
+
+        Collider eastCollider = eastRouteSurface.GetComponent<Collider>();
+
+        if (eastCollider != null)
+        {
+            eastCollider.isTrigger = true;
+        }
+
+        PaintRouteSurface eastRoute = eastRouteSurface.AddComponent<PaintRouteSurface>();
+        eastRoute.Configure(Team.TeamA, eastProbe, Vector3.up, 4.2f);
+        EditorUtility.SetDirty(eastRouteSurface);
+        EditorUtility.SetDirty(eastRoute);
     }
 
     private static void BuildSplatZoneObjective(Transform parent, Material material)
@@ -145,7 +197,7 @@ public static class SplatFightersGrayboxMapBuilder
         zoneObject.name = "CenterSplatZone";
         zoneObject.transform.SetParent(parent, false);
         zoneObject.transform.position = new Vector3(0f, 0.035f, 0f);
-        zoneObject.transform.localScale = new Vector3(5f, 0.05f, 3f);
+        zoneObject.transform.localScale = new Vector3(7.5f, 0.05f, 4.2f);
         AssignMaterial(zoneObject, material);
 
         Collider collider = zoneObject.GetComponent<Collider>();
@@ -157,10 +209,10 @@ public static class SplatFightersGrayboxMapBuilder
 
         SplatZoneObjective zone = zoneObject.AddComponent<SplatZoneObjective>();
         SerializedObject zoneSo = new SerializedObject(zone);
-        zoneSo.FindProperty("zoneSize").vector2Value = new Vector2(5f, 3f);
+        zoneSo.FindProperty("zoneSize").vector2Value = new Vector2(7.5f, 4.2f);
         zoneSo.FindProperty("zoneHeight").floatValue = 0.5f;
         zoneSo.FindProperty("controlThresholdPercent").floatValue = 55f;
-        zoneSo.FindProperty("minimumPaintedPercent").floatValue = 20f;
+        zoneSo.FindProperty("minimumPaintedPercent").floatValue = 18f;
         zoneSo.FindProperty("refreshInterval").floatValue = 0.15f;
         zoneSo.FindProperty("zoneRenderer").objectReferenceValue = zoneObject.GetComponent<MeshRenderer>();
         zoneSo.FindProperty("neutralColor").colorValue = new Color(1f, 1f, 1f, 0.28f);
@@ -176,9 +228,9 @@ public static class SplatFightersGrayboxMapBuilder
     private static void BuildTowerObjective(Transform parent, Material material)
     {
         Transform routeRoot = CreateGroup(parent, "CenterTowerRoute");
-        Transform teamBGoal = CreateMarker("CenterTower_TeamBGoal", new Vector3(0f, 0f, -5.2f), routeRoot);
+        Transform teamBGoal = CreateMarker("CenterTower_TeamBGoal", new Vector3(0f, 0f, -10.8f), routeRoot);
         Transform centerPoint = CreateMarker("CenterTower_CenterPoint", new Vector3(0f, 0f, 0f), routeRoot);
-        Transform teamAGoal = CreateMarker("CenterTower_TeamAGoal", new Vector3(0f, 0f, 5.2f), routeRoot);
+        Transform teamAGoal = CreateMarker("CenterTower_TeamAGoal", new Vector3(0f, 0f, 10.8f), routeRoot);
 
         GameObject towerRoot = new GameObject("CenterTowerObjective");
         towerRoot.transform.SetParent(parent, false);
@@ -218,8 +270,8 @@ public static class SplatFightersGrayboxMapBuilder
         towerSo.FindProperty("centerPoint").objectReferenceValue = centerPoint;
         towerSo.FindProperty("teamAGoal").objectReferenceValue = teamAGoal;
         towerSo.FindProperty("routeProgress").floatValue = 0f;
-        towerSo.FindProperty("moveSpeed").floatValue = 0.22f;
-        towerSo.FindProperty("controlSize").vector2Value = new Vector2(3.2f, 2.6f);
+        towerSo.FindProperty("moveSpeed").floatValue = 0.18f;
+        towerSo.FindProperty("controlSize").vector2Value = new Vector2(4.4f, 3.2f);
         towerSo.FindProperty("controlHeight").floatValue = 0.5f;
         towerSo.FindProperty("controlThresholdPercent").floatValue = 52f;
         towerSo.FindProperty("minimumPaintedPercent").floatValue = 18f;
@@ -239,8 +291,8 @@ public static class SplatFightersGrayboxMapBuilder
 
     private static void BuildSpawnPoints(Transform parent, Material teamAMaterial, Material teamBMaterial)
     {
-        CreateSpawnPoint("TeamASpawn", Team.TeamA, new Vector3(0f, CharacterRootHeight, -7.25f), Vector3.forward, teamAMaterial, parent);
-        CreateSpawnPoint("TeamBSpawn", Team.TeamB, new Vector3(0f, CharacterRootHeight, 7.25f), Vector3.back, teamBMaterial, parent);
+        CreateSpawnPoint("TeamASpawn", Team.TeamA, new Vector3(0f, CharacterRootHeight, -15.2f), Vector3.forward, teamAMaterial, parent);
+        CreateSpawnPoint("TeamBSpawn", Team.TeamB, new Vector3(0f, CharacterRootHeight, 15.2f), Vector3.back, teamBMaterial, parent);
     }
 
     private static void BuildTeamBBot(Transform parent, Material teamBMaterial)
@@ -250,7 +302,7 @@ public static class SplatFightersGrayboxMapBuilder
         GameObject bot = GameObject.CreatePrimitive(PrimitiveType.Capsule);
         bot.name = "TeamBBot";
         bot.transform.SetParent(parent, false);
-        bot.transform.position = new Vector3(0f, CharacterRootHeight, 6.25f);
+        bot.transform.position = new Vector3(0f, CharacterRootHeight, 14.15f);
         bot.transform.rotation = Quaternion.LookRotation(Vector3.back, Vector3.up);
 
         CapsuleCollider capsuleCollider = bot.GetComponent<CapsuleCollider>();
@@ -281,19 +333,23 @@ public static class SplatFightersGrayboxMapBuilder
         Transform patrolRoot = CreateGroup(parent, "TeamBBotPatrolPoints");
         Transform[] waypoints =
         {
-            CreateMarker("TeamBBotPatrol_01", new Vector3(0f, 1f, 5.8f), patrolRoot),
-            CreateMarker("TeamBBotPatrol_02", new Vector3(-3.5f, 1f, 3.2f), patrolRoot),
-            CreateMarker("TeamBBotPatrol_03", new Vector3(0f, 1f, 1.4f), patrolRoot),
-            CreateMarker("TeamBBotPatrol_04", new Vector3(3.5f, 1f, 3.2f), patrolRoot)
+            CreateMarker("TeamBBotPatrol_01", new Vector3(0f, 1f, 14.15f), patrolRoot),
+            CreateMarker("TeamBBotPatrol_02", new Vector3(-6.2f, 1f, 10.2f), patrolRoot),
+            CreateMarker("TeamBBotPatrol_03", new Vector3(-2.3f, 1f, 5.7f), patrolRoot),
+            CreateMarker("TeamBBotPatrol_04", new Vector3(0.4f, 1f, 2.4f), patrolRoot),
+            CreateMarker("TeamBBotPatrol_05", new Vector3(5.8f, 1f, 6.7f), patrolRoot),
+            CreateMarker("TeamBBotPatrol_06", new Vector3(8.8f, 1f, 11.2f), patrolRoot)
         };
 
         Transform paintTargetRoot = CreateGroup(parent, "TeamBBotPaintTargets");
         Transform[] paintTargets =
         {
-            CreateMarker("TeamBBotPaintTarget_Center", new Vector3(0f, 0f, 1.8f), paintTargetRoot),
-            CreateMarker("TeamBBotPaintTarget_LeftLane", new Vector3(-4f, 0f, 0.8f), paintTargetRoot),
-            CreateMarker("TeamBBotPaintTarget_RightLane", new Vector3(4f, 0f, -0.8f), paintTargetRoot),
-            CreateMarker("TeamBBotPaintTarget_TeamASide", new Vector3(0f, 0f, -3.8f), paintTargetRoot)
+            CreateMarker("TeamBBotPaintTarget_Center", new Vector3(0f, 0f, 2.4f), paintTargetRoot),
+            CreateMarker("TeamBBotPaintTarget_LeftLane", new Vector3(-8.4f, 0f, -1.2f), paintTargetRoot),
+            CreateMarker("TeamBBotPaintTarget_RightLane", new Vector3(8.4f, 0f, -2.2f), paintTargetRoot),
+            CreateMarker("TeamBBotPaintTarget_TeamASide", new Vector3(0f, 0f, -8.5f), paintTargetRoot),
+            CreateMarker("TeamBBotPaintTarget_TeamAFlank", new Vector3(-10.4f, 0f, -10.2f), paintTargetRoot),
+            CreateMarker("TeamBBotPaintTarget_TeamAObjective", new Vector3(3.8f, 0f, -5.4f), paintTargetRoot)
         };
 
         InkWeapon weapon = bot.AddComponent<InkWeapon>();
@@ -337,7 +393,7 @@ public static class SplatFightersGrayboxMapBuilder
         botSo.FindProperty("waypointReachDistance").floatValue = 0.6f;
         botSo.FindProperty("useTerritoryAwareAim").boolValue = true;
         botSo.FindProperty("targetUnpaintedCellsAfterEnemyPaint").boolValue = true;
-        botSo.FindProperty("territorySearchRadius").floatValue = 16f;
+        botSo.FindProperty("territorySearchRadius").floatValue = 22f;
         botSo.FindProperty("fireInterval").floatValue = 0.65f;
         botSo.FindProperty("aimRefreshInterval").floatValue = 1.2f;
         botSo.FindProperty("retreatWhenPressured").boolValue = true;
@@ -863,9 +919,9 @@ public static class SplatFightersGrayboxMapBuilder
         }
 
         SerializedObject areaSo = new SerializedObject(area);
-        areaSo.FindProperty("areaSize").vector2Value = new Vector2(20f, 20f);
-        areaSo.FindProperty("gridWidth").intValue = 60;
-        areaSo.FindProperty("gridHeight").intValue = 60;
+        areaSo.FindProperty("areaSize").vector2Value = new Vector2(MapWidth, MapLength);
+        areaSo.FindProperty("gridWidth").intValue = PaintGridWidth;
+        areaSo.FindProperty("gridHeight").intValue = PaintGridHeight;
         areaSo.FindProperty("resetOnAwake").boolValue = true;
         areaSo.FindProperty("requirePaintPointNearAreaPlane").boolValue = true;
         areaSo.FindProperty("maxPaintPointHeightOffset").floatValue = 0.16f;
