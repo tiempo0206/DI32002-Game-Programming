@@ -19,7 +19,7 @@ public class TowerObjective : MonoBehaviour
     [SerializeField, Min(0.01f)] private float controlHeight = 0.5f;
     [SerializeField, Range(0f, 100f)] private float controlThresholdPercent = 52f;
     [SerializeField, Range(0f, 100f)] private float minimumPaintedPercent = 18f;
-    [SerializeField, Min(0.02f)] private float refreshInterval = 0.15f;
+    [SerializeField, Min(0.02f)] private float refreshInterval = 0.25f;
 
     [Header("Visuals")]
     [SerializeField] private Renderer towerRenderer = null;

@@ -16,8 +16,8 @@ public static class SplatFightersMvpSceneSetup
     private const string PrefabsFolder = "Assets/Prefabs";
     private const float PaintableGroundWidth = 32f;
     private const float PaintableGroundLength = 36f;
-    private const int PaintGridWidth = 96;
-    private const int PaintGridHeight = 108;
+    private const int PaintGridWidth = 80;
+    private const int PaintGridHeight = 90;
 
     [MenuItem("Tools/Splat Fighters/Create MVP Shooting Test Scene")]
     public static void CreateMvpShootingTestScene()
@@ -175,6 +175,7 @@ public static class SplatFightersMvpSceneSetup
     {
         GameObject managerObject = new GameObject("GameManager");
         GameManager gameManager = managerObject.AddComponent<GameManager>();
+        PerformanceProfile performanceProfile = managerObject.AddComponent<PerformanceProfile>();
 
         SerializedObject managerSo = new SerializedObject(gameManager);
         managerSo.FindProperty("startMatchOnAwake").boolValue = true;
@@ -186,7 +187,7 @@ public static class SplatFightersMvpSceneSetup
         managerSo.FindProperty("paintManager").objectReferenceValue = paintManager;
         managerSo.FindProperty("autoCreateScoreUI").boolValue = true;
         managerSo.FindProperty("respawnDelaySeconds").floatValue = 2f;
-        managerSo.FindProperty("scoreRefreshInterval").floatValue = 0.1f;
+        managerSo.FindProperty("scoreRefreshInterval").floatValue = 0.2f;
         managerSo.FindProperty("enableKeyboardControls").boolValue = true;
         managerSo.FindProperty("startKey").intValue = (int)KeyCode.Return;
         managerSo.FindProperty("restartKey").intValue = (int)KeyCode.R;
@@ -195,6 +196,13 @@ public static class SplatFightersMvpSceneSetup
         managerSo.FindProperty("cycleModeKey").intValue = (int)KeyCode.M;
         managerSo.FindProperty("pauseUsesTimeScale").boolValue = true;
         managerSo.ApplyModifiedPropertiesWithoutUndo();
+
+        SerializedObject performanceSo = new SerializedObject(performanceProfile);
+        performanceSo.FindProperty("targetFrameRate").intValue = 30;
+        performanceSo.FindProperty("disableVSync").boolValue = true;
+        performanceSo.FindProperty("fixedDeltaTime").floatValue = 0.02f;
+        performanceSo.FindProperty("applyOnAwake").boolValue = true;
+        performanceSo.ApplyModifiedPropertiesWithoutUndo();
     }
 
     private static void CreatePaintableGround(Material groundMaterial)
@@ -212,9 +220,9 @@ public static class SplatFightersMvpSceneSetup
         areaSo.FindProperty("maxPaintPointHeightOffset").floatValue = 0.16f;
         areaSo.FindProperty("rebuildMaskFromPaintBlockersOnAwake").boolValue = true;
         areaSo.FindProperty("clearMaskBeforeBaking").boolValue = true;
-        areaSo.FindProperty("drawGizmos").boolValue = true;
-        areaSo.FindProperty("drawOnlyWhenSelected").boolValue = false;
-        areaSo.FindProperty("drawPaintedCells").boolValue = true;
+        areaSo.FindProperty("drawGizmos").boolValue = false;
+        areaSo.FindProperty("drawOnlyWhenSelected").boolValue = true;
+        areaSo.FindProperty("drawPaintedCells").boolValue = false;
         areaSo.FindProperty("drawUnpaintedCells").boolValue = false;
         areaSo.FindProperty("drawBlockedCells").boolValue = false;
         areaSo.FindProperty("drawGridLines").boolValue = false;
