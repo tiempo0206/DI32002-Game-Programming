@@ -18,7 +18,7 @@ public class SpecialPaintBurst : MonoBehaviour
     [SerializeField] private bool requireMatchPlaying = true;
 
     [Header("Feedback")]
-    [SerializeField] private bool spawnInkSplatterVfx = true;
+    [SerializeField] private bool spawnInkSplatterVfx = false;
     [SerializeField, Min(0.1f)] private float splatterRadiusMultiplier = 1.15f;
 
     [Header("Debug")]

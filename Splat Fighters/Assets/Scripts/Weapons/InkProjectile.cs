@@ -36,8 +36,8 @@ public class InkProjectile : MonoBehaviour
     [SerializeField] private bool logPaintMisses = false;
 
     [Header("Ink Splatter VFX")]
-    [SerializeField] private bool spawnInkSplatterVfx = true;
-    [SerializeField] private bool spawnSplatterOnNonPaintableHit = true;
+    [SerializeField] private bool spawnInkSplatterVfx = false;
+    [SerializeField] private bool spawnSplatterOnNonPaintableHit = false;
     [SerializeField, Min(0.1f)] private float splatterRadiusMultiplier = 1f;
 
     private Rigidbody rb;
