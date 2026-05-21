@@ -513,8 +513,13 @@ jobs:
             exit 1
           }
 
-          grep -q 'spawnInkSplatterVfx: 1' 'Splat Fighters/Assets/Prefabs/Weapons/InkProjectile.prefab' || {
-            echo "Expected InkProjectile prefab to enable ink splatter VFX."
+          grep -q 'spawnInkSplatterVfx: 0' 'Splat Fighters/Assets/Prefabs/Weapons/InkProjectile.prefab' || {
+            echo "Expected InkProjectile prefab to keep ink splatter VFX disabled for performance."
+            exit 1
+          }
+
+          grep -q 'spawnSplatterOnNonPaintableHit: 0' 'Splat Fighters/Assets/Prefabs/Weapons/InkProjectile.prefab' || {
+            echo "Expected InkProjectile prefab to disable non-paintable splatter VFX."
             exit 1
           }
 

@@ -23,7 +23,8 @@ The current demo profile is tuned for classroom laptops, including MacBook Air h
 
 ## VFX Cost
 
-- Ink splatter feedback is still enabled.
+- Ink splatter feedback is disabled in the current demo profile.
+- The procedural splatter script remains in the project for a later polish pass.
 - The splatter burst has a lower particle count.
 - Runtime splatter objects are capped at 14 active instances.
 - Splatter cleanup is shortened to 0.9 seconds.
