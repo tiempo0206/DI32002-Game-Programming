@@ -517,6 +517,21 @@ jobs:
             }
           done
 
+          if grep -R -n 'm_Shader: {fileID: 46, guid: 0000000000000000f000000000000000, type: 0}\\|m_Shader: {fileID: 10755, guid: 0000000000000000f000000000000000, type: 0}' 'Splat Fighters/Assets/Hangar Building Modular/Materials'; then
+            echo "Hangar materials must use URP-compatible shaders, not legacy built-in shaders."
+            exit 1
+          fi
+
+          grep -R -q 'guid: 933532a4fcc9baf4fa0491de14d08ed7' 'Splat Fighters/Assets/Hangar Building Modular/Materials' || {
+            echo "Expected hangar materials to use the URP Lit shader."
+            exit 1
+          }
+
+          grep -R -q '_BaseMap' 'Splat Fighters/Assets/Hangar Building Modular/Materials' || {
+            echo "Expected hangar materials to serialize URP BaseMap texture bindings."
+            exit 1
+          }
+
           paint_blocker_count="$(grep -c 'guid: 6eae5c84c8a24551a6a1738913276ea9' "$scene")"
 
           if [ "$paint_blocker_count" -lt 20 ]; then

@@ -38,6 +38,7 @@ public static class SplatFightersGrayboxMapBuilder
     public static void BuildInCurrentScene()
     {
         EnsureMaterialFolders();
+        EnsureHangarMaterialsUseUrpLit();
         PaintBlockers.Clear();
 
         Material boundaryMaterial = GetOrCreateMaterial("Assets/Materials/Level/MAT_Level_Boundary.mat", new Color(0.18f, 0.2f, 0.22f));
@@ -311,6 +312,65 @@ public static class SplatFightersGrayboxMapBuilder
     {
         return AssetDatabase.LoadAssetAtPath<GameObject>(HangarPrefabRoot + "pref_floor.prefab") != null
             && AssetDatabase.LoadAssetAtPath<GameObject>(HangarPrefabRoot + "pref_wall.prefab") != null;
+    }
+
+    private static void EnsureHangarMaterialsUseUrpLit()
+    {
+        const string materialFolder = "Assets/Hangar Building Modular/Materials";
+
+        if (!AssetDatabase.IsValidFolder(materialFolder))
+        {
+            return;
+        }
+
+        Shader litShader = Shader.Find("Universal Render Pipeline/Lit");
+
+        if (litShader == null)
+        {
+            Debug.LogWarning("URP Lit shader was not found. Hangar materials may render pink until the URP package is available.");
+            return;
+        }
+
+        string[] materialGuids = AssetDatabase.FindAssets("t:Material", new[] { materialFolder });
+
+        for (int i = 0; i < materialGuids.Length; i++)
+        {
+            string materialPath = AssetDatabase.GUIDToAssetPath(materialGuids[i]);
+            Material material = AssetDatabase.LoadAssetAtPath<Material>(materialPath);
+
+            if (material == null)
+            {
+                continue;
+            }
+
+            Texture mainTexture = material.HasProperty("_MainTex") ? material.GetTexture("_MainTex") : null;
+            Color baseColor = material.HasProperty("_Color") ? material.GetColor("_Color") : Color.white;
+            material.shader = litShader;
+
+            if (mainTexture != null && material.HasProperty("_BaseMap"))
+            {
+                material.SetTexture("_BaseMap", mainTexture);
+            }
+
+            if (material.HasProperty("_BaseColor"))
+            {
+                material.SetColor("_BaseColor", baseColor);
+            }
+
+            if (material.HasProperty("_Surface"))
+            {
+                material.SetFloat("_Surface", 0f);
+            }
+
+            if (material.HasProperty("_Smoothness"))
+            {
+                material.SetFloat("_Smoothness", 0.35f);
+            }
+
+            EditorUtility.SetDirty(material);
+        }
+
+        AssetDatabase.SaveAssets();
     }
 
     private static void BuildHangarFloor(Transform parent)
