@@ -486,11 +486,33 @@ jobs:
             'team: 2'
             'enemyPaintDamagePerSecond: 35'
             'damageOnlyDuringMatch: 1'
+            'HangarAssetVisuals'
+            'HangarMainFloor'
+            'HangarNorthWall'
+            'HangarCenterGenerator'
+            'HangarLeftMidCrates'
           )
 
           for pattern in "${required_scene_patterns[@]}"; do
             grep -q "$pattern" "$scene" || {
-              echo "Missing Splat Fighters graybox scene pattern: $pattern"
+              echo "Missing Splat Fighters arena scene pattern: $pattern"
+              exit 1
+            }
+          done
+
+          required_hangar_assets=(
+            'Splat Fighters/Assets/Hangar Building Modular/Prefabs/pref_floor.prefab'
+            'Splat Fighters/Assets/Hangar Building Modular/Prefabs/pref_wall.prefab'
+            'Splat Fighters/Assets/Hangar Building Modular/Prefabs/pref_box_01.prefab'
+            'Splat Fighters/Assets/Hangar Building Modular/Prefabs/pref_scaffold_01.prefab'
+            'Splat Fighters/Assets/Hangar Building Modular/Prefabs/pref_generator.prefab'
+            'Splat Fighters/Assets/Hangar Building Modular/Materials/mat_floor.mat'
+            'Splat Fighters/Assets/Hangar Building Modular/Textures/tex_floor.tga'
+          )
+
+          for asset in "${required_hangar_assets[@]}"; do
+            test -f "$asset" || {
+              echo "Missing required hangar asset: $asset"
               exit 1
             }
           done
@@ -498,7 +520,7 @@ jobs:
           paint_blocker_count="$(grep -c 'guid: 6eae5c84c8a24551a6a1738913276ea9' "$scene")"
 
           if [ "$paint_blocker_count" -lt 20 ]; then
-            echo "Expected at least 20 PaintBlocker components in the graybox map, found $paint_blocker_count."
+            echo "Expected at least 20 PaintBlocker components in the arena map, found $paint_blocker_count."
             exit 1
           fi
 

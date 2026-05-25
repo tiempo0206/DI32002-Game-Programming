@@ -5,14 +5,15 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 /// <summary>
-/// Editor-only utility that builds the graybox arena used by the MVP scene.
-/// The layout is a medium-size asymmetric arena with main, flank, and elevated contest routes.
+/// Editor-only utility that builds the MVP arena scene.
+/// The gameplay layout keeps simple generated blockers, while imported hangar assets provide the visible environment.
 /// </summary>
 public static class SplatFightersGrayboxMapBuilder
 {
     private const string ScenePath = "Assets/Scenes/MVP_ShootingTest.unity";
     private const string LevelRootName = "LevelRoot";
     private const string ProjectilePrefabPath = "Assets/Prefabs/Weapons/InkProjectile.prefab";
+    private const string HangarPrefabRoot = "Assets/Hangar Building Modular/Prefabs/";
     private const float CharacterRootHeight = 1f;
     private const float MapWidth = 32f;
     private const float MapLength = 36f;
@@ -22,7 +23,7 @@ public static class SplatFightersGrayboxMapBuilder
     private const float HalfMapLength = MapLength * 0.5f;
     private static readonly List<PaintBlocker> PaintBlockers = new List<PaintBlocker>();
 
-    [MenuItem("Tools/Splat Fighters/Build Graybox Map V2")]
+    [MenuItem("Tools/Splat Fighters/Build Hangar Arena Map V1")]
     public static void BuildIntoMvpScene()
     {
         Scene scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
@@ -31,7 +32,7 @@ public static class SplatFightersGrayboxMapBuilder
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
 
-        Debug.Log("Built graybox map v1 into the MVP shooting test scene.");
+        Debug.Log("Built hangar arena map v1 into the MVP shooting test scene.");
     }
 
     public static void BuildInCurrentScene()
@@ -62,11 +63,13 @@ public static class SplatFightersGrayboxMapBuilder
         Transform objectiveRoot = CreateGroup(levelRoot.transform, "Objectives");
         Transform spawnRoot = CreateGroup(levelRoot.transform, "SpawnPoints");
         Transform aiRoot = CreateGroup(levelRoot.transform, "AI");
+        Transform hangarVisualRoot = CreateGroup(levelRoot.transform, "HangarAssetVisuals");
 
         BuildBoundaryWalls(boundaryRoot, boundaryMaterial);
         BuildContestObstacles(obstacleRoot, coverRoot, coverMaterial);
         BuildSidePlatforms(platformRoot, platformMaterial, rampMaterial);
         BuildPaintRoutes(routeRoot, platformMaterial, paintRouteMaterial);
+        BuildHangarAssetVisuals(hangarVisualRoot);
         BuildSplatZoneObjective(objectiveRoot, objectiveMaterial);
         BuildTowerObjective(objectiveRoot, towerMaterial);
         BuildSpawnPoints(spawnRoot, teamAMaterial, teamBMaterial);
@@ -287,6 +290,239 @@ public static class SplatFightersGrayboxMapBuilder
         EditorUtility.SetDirty(platform);
         EditorUtility.SetDirty(mast);
         EditorUtility.SetDirty(tower);
+    }
+
+    private static void BuildHangarAssetVisuals(Transform parent)
+    {
+        if (!HasHangarAssets())
+        {
+            Debug.LogWarning("Hangar Building Modular assets were not found. The MVP scene will keep gameplay blockers only.");
+            return;
+        }
+
+        BuildHangarFloor(parent);
+        BuildHangarShell(parent);
+        BuildHangarGameplayProps(parent);
+        BuildHangarPlatformVisuals(parent);
+        BuildHangarLightingProps(parent);
+    }
+
+    private static bool HasHangarAssets()
+    {
+        return AssetDatabase.LoadAssetAtPath<GameObject>(HangarPrefabRoot + "pref_floor.prefab") != null
+            && AssetDatabase.LoadAssetAtPath<GameObject>(HangarPrefabRoot + "pref_wall.prefab") != null;
+    }
+
+    private static void BuildHangarFloor(Transform parent)
+    {
+        CreateHangarVisual("HangarMainFloor", "pref_floor.prefab", new Vector3(0f, -0.075f, 0f), Vector3.zero, new Vector3(MapWidth, 0.12f, MapLength), parent);
+    }
+
+    private static void BuildHangarShell(Transform parent)
+    {
+        CreateHangarVisual("HangarNorthWall", "pref_wall.prefab", new Vector3(0f, 1.9f, HalfMapLength + 0.25f), Vector3.zero, new Vector3(MapWidth + 1.2f, 3.8f, 0.65f), parent);
+        CreateHangarVisual("HangarSouthWall", "pref_wall.prefab", new Vector3(0f, 1.9f, -HalfMapLength - 0.25f), new Vector3(0f, 180f, 0f), new Vector3(MapWidth + 1.2f, 3.8f, 0.65f), parent);
+        CreateHangarVisual("HangarEastWall", "pref_wall.prefab", new Vector3(HalfMapWidth + 0.25f, 1.9f, 0f), new Vector3(0f, 90f, 0f), new Vector3(MapLength + 1.2f, 3.8f, 0.65f), parent);
+        CreateHangarVisual("HangarWestWall", "pref_wall.prefab", new Vector3(-HalfMapWidth - 0.25f, 1.9f, 0f), new Vector3(0f, -90f, 0f), new Vector3(MapLength + 1.2f, 3.8f, 0.65f), parent);
+
+        CreateHangarVisual("HangarNorthRoofTrim", "pref_roof_01.prefab", new Vector3(0f, 4.25f, HalfMapLength - 1.2f), Vector3.zero, new Vector3(MapWidth * 0.72f, 1.0f, 2.6f), parent);
+        CreateHangarVisual("HangarSouthRoofTrim", "pref_roof_02.prefab", new Vector3(0f, 4.25f, -HalfMapLength + 1.2f), new Vector3(0f, 180f, 0f), new Vector3(MapWidth * 0.72f, 1.0f, 2.6f), parent);
+
+        float[] frameXPositions = { -HalfMapWidth + 2.2f, -5.4f, 5.4f, HalfMapWidth - 2.2f };
+
+        for (int i = 0; i < frameXPositions.Length; i++)
+        {
+            float x = frameXPositions[i];
+            CreateHangarVisual($"HangarNorthFrame_{i + 1}", "pref_frame.prefab", new Vector3(x, 2.35f, HalfMapLength - 0.35f), Vector3.zero, new Vector3(1.1f, 3.6f, 1.0f), parent);
+            CreateHangarVisual($"HangarSouthFrame_{i + 1}", "pref_frame.prefab", new Vector3(x, 2.35f, -HalfMapLength + 0.35f), new Vector3(0f, 180f, 0f), new Vector3(1.1f, 3.6f, 1.0f), parent);
+        }
+    }
+
+    private static void BuildHangarGameplayProps(Transform parent)
+    {
+        CreateHangarVisual("HangarCenterGenerator", "pref_generator.prefab", new Vector3(0f, 0.55f, 0f), Vector3.zero, new Vector3(4.2f, 1.15f, 1.45f), parent);
+        CreateHangarVisual("HangarCenterLeftScaffold", "pref_scaffold_01.prefab", new Vector3(-3.2f, 0.85f, -0.55f), new Vector3(0f, 20f, 0f), new Vector3(1.15f, 1.7f, 1.15f), parent);
+        CreateHangarVisual("HangarCenterRightScaffold", "pref_scaffold_01.prefab", new Vector3(3.2f, 0.85f, 0.55f), new Vector3(0f, -160f, 0f), new Vector3(1.15f, 1.7f, 1.15f), parent);
+        CreateHangarVisual("HangarNorthCenterBarrier", "pref_pallet.prefab", new Vector3(0f, 0.5f, 4.45f), new Vector3(0f, 90f, 0f), new Vector3(5.5f, 1f, 0.85f), parent);
+        CreateHangarVisual("HangarSouthCenterBarrier", "pref_pallet.prefab", new Vector3(0f, 0.5f, -4.45f), new Vector3(0f, 90f, 0f), new Vector3(5.5f, 1f, 0.85f), parent);
+
+        CreateHangarVisual("HangarLeftMidCrates", "pref_box_01.prefab", new Vector3(-5.2f, 0.45f, -3.4f), new Vector3(0f, 8f, 0f), new Vector3(1.3f, 0.9f, 3.4f), parent);
+        CreateHangarVisual("HangarRightMidCrates", "pref_box_01.prefab", new Vector3(5.2f, 0.45f, 3.4f), new Vector3(0f, 188f, 0f), new Vector3(1.3f, 0.9f, 3.4f), parent);
+        CreateHangarVisual("HangarLeftCenterToolboxes", "pref_toolbox.prefab", new Vector3(-6.35f, 0.45f, 1.25f), Vector3.zero, new Vector3(2.2f, 0.9f, 0.9f), parent);
+        CreateHangarVisual("HangarRightCenterToolboxes", "pref_toolbox.prefab", new Vector3(6.35f, 0.45f, -1.25f), new Vector3(0f, 180f, 0f), new Vector3(2.2f, 0.9f, 0.9f), parent);
+
+        CreateHangarVisual("HangarTeamAForwardCargo", "pref_box_02.prefab", new Vector3(2.9f, 0.4f, -8.2f), new Vector3(0f, 90f, 0f), new Vector3(2.8f, 0.8f, 0.9f), parent);
+        CreateHangarVisual("HangarTeamBForwardCargo", "pref_box_02.prefab", new Vector3(-2.9f, 0.4f, 8.2f), new Vector3(0f, -90f, 0f), new Vector3(2.8f, 0.8f, 0.9f), parent);
+        CreateHangarVisual("HangarTeamAMidPallets", "pref_pallet.prefab", new Vector3(-6.4f, 0.4f, -9.8f), new Vector3(0f, 90f, 0f), new Vector3(2.2f, 0.8f, 1.1f), parent);
+        CreateHangarVisual("HangarTeamBMidPallets", "pref_pallet.prefab", new Vector3(6.4f, 0.4f, 9.8f), new Vector3(0f, 90f, 0f), new Vector3(2.2f, 0.8f, 1.1f), parent);
+
+        CreateHangarVisual("HangarTeamASpawnLeftCargo", "pref_box_01.prefab", new Vector3(-4.7f, 0.45f, -14.2f), Vector3.zero, new Vector3(2f, 0.9f, 0.9f), parent);
+        CreateHangarVisual("HangarTeamASpawnRightCargo", "pref_box_01.prefab", new Vector3(4.7f, 0.45f, -14.2f), Vector3.zero, new Vector3(2f, 0.9f, 0.9f), parent);
+        CreateHangarVisual("HangarTeamBSpawnLeftCargo", "pref_box_01.prefab", new Vector3(-4.7f, 0.45f, 14.2f), Vector3.zero, new Vector3(2f, 0.9f, 0.9f), parent);
+        CreateHangarVisual("HangarTeamBSpawnRightCargo", "pref_box_01.prefab", new Vector3(4.7f, 0.45f, 14.2f), Vector3.zero, new Vector3(2f, 0.9f, 0.9f), parent);
+
+        CreateHangarVisual("HangarLeftLaneTrolley", "pref_trolley.prefab", new Vector3(-11.3f, 0.35f, -7.2f), new Vector3(0f, 90f, 0f), new Vector3(2.5f, 0.75f, 1.05f), parent);
+        CreateHangarVisual("HangarRightLaneTrolley", "pref_trolley.prefab", new Vector3(11.3f, 0.35f, 7.2f), new Vector3(0f, -90f, 0f), new Vector3(2.5f, 0.75f, 1.05f), parent);
+        CreateHangarVisual("HangarLeftLaneScaffold", "pref_scaffold_02.prefab", new Vector3(-12.1f, 0.6f, 5.6f), Vector3.zero, new Vector3(1f, 1.2f, 3.1f), parent);
+        CreateHangarVisual("HangarRightLaneScaffold", "pref_scaffold_02.prefab", new Vector3(12.1f, 0.6f, -5.6f), Vector3.zero, new Vector3(1f, 1.2f, 3.1f), parent);
+    }
+
+    private static void BuildHangarPlatformVisuals(Transform parent)
+    {
+        CreateHangarVisual("HangarWestSideDeck", "pref_scaffold_02.prefab", new Vector3(-10.8f, 0.25f, -1.25f), Vector3.zero, new Vector3(3.2f, 0.55f, 7.2f), parent);
+        CreateHangarVisual("HangarEastSideDeck", "pref_scaffold_02.prefab", new Vector3(10.8f, 0.25f, 1.25f), Vector3.zero, new Vector3(3.2f, 0.55f, 7.2f), parent);
+        CreateHangarVisual("HangarWestFlankDeck", "pref_floor.prefab", new Vector3(-13.2f, 0.18f, 8.7f), Vector3.zero, new Vector3(2.5f, 0.22f, 5.4f), parent);
+        CreateHangarVisual("HangarEastFlankDeck", "pref_floor.prefab", new Vector3(13.2f, 0.18f, -8.7f), Vector3.zero, new Vector3(2.5f, 0.22f, 5.4f), parent);
+        CreateHangarVisual("HangarNorthPerchDeck", "pref_floor.prefab", new Vector3(4.8f, 0.22f, 12.1f), Vector3.zero, new Vector3(4.8f, 0.25f, 2.2f), parent);
+        CreateHangarVisual("HangarSouthPerchDeck", "pref_floor.prefab", new Vector3(-4.8f, 0.22f, -12.1f), Vector3.zero, new Vector3(4.8f, 0.25f, 2.2f), parent);
+
+        CreateHangarVisual("HangarWestPlatformCrate", "pref_box_02.prefab", new Vector3(-10.8f, 0.85f, 1.6f), Vector3.zero, new Vector3(1.8f, 0.7f, 0.8f), parent);
+        CreateHangarVisual("HangarEastPlatformCrate", "pref_box_02.prefab", new Vector3(10.8f, 0.85f, -1.6f), Vector3.zero, new Vector3(1.8f, 0.7f, 0.8f), parent);
+        CreateHangarVisual("HangarNorthPerchCrate", "pref_box_02.prefab", new Vector3(4.8f, 0.8f, 12.7f), Vector3.zero, new Vector3(2.2f, 0.72f, 0.7f), parent);
+        CreateHangarVisual("HangarSouthPerchCrate", "pref_box_02.prefab", new Vector3(-4.8f, 0.8f, -12.7f), Vector3.zero, new Vector3(2.2f, 0.72f, 0.7f), parent);
+
+        CreateHangarVisual("HangarWestRampPanel", "pref_floor.prefab", new Vector3(-8.35f, 0.18f, -1.4f), new Vector3(0f, 0f, -8f), new Vector3(2.6f, 0.18f, 4.4f), parent);
+        CreateHangarVisual("HangarEastRampPanel", "pref_floor.prefab", new Vector3(8.35f, 0.18f, 1.4f), new Vector3(0f, 0f, 8f), new Vector3(2.6f, 0.18f, 4.4f), parent);
+        CreateHangarVisual("HangarNorthRampPanel", "pref_floor.prefab", new Vector3(2.6f, 0.16f, 10.4f), new Vector3(7f, 0f, 0f), new Vector3(3.2f, 0.18f, 2.5f), parent);
+        CreateHangarVisual("HangarSouthRampPanel", "pref_floor.prefab", new Vector3(-2.6f, 0.16f, -10.4f), new Vector3(-7f, 0f, 0f), new Vector3(3.2f, 0.18f, 2.5f), parent);
+    }
+
+    private static void BuildHangarLightingProps(Transform parent)
+    {
+        float[] xPositions = { -11.5f, -3.8f, 3.8f, 11.5f };
+
+        for (int i = 0; i < xPositions.Length; i++)
+        {
+            CreateHangarVisual($"HangarNorthLamp_{i + 1}", "pref_lamp.prefab", new Vector3(xPositions[i], 3.35f, HalfMapLength - 1.05f), new Vector3(0f, 180f, 0f), new Vector3(1.1f, 1.1f, 1.1f), parent);
+            CreateHangarVisual($"HangarSouthLamp_{i + 1}", "pref_lamp.prefab", new Vector3(xPositions[i], 3.35f, -HalfMapLength + 1.05f), Vector3.zero, new Vector3(1.1f, 1.1f, 1.1f), parent);
+        }
+    }
+
+    private static GameObject CreateHangarVisual(string name, string prefabFileName, Vector3 position, Vector3 eulerAngles, Vector3 targetWorldSize, Transform parent)
+    {
+        GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(HangarPrefabRoot + prefabFileName);
+
+        if (prefab == null)
+        {
+            Debug.LogWarning($"Missing hangar prefab: {prefabFileName}");
+            return null;
+        }
+
+        GameObject instance = PrefabUtility.InstantiatePrefab(prefab) as GameObject;
+
+        if (instance == null)
+        {
+            return null;
+        }
+
+        instance.name = name;
+        instance.transform.SetParent(parent, false);
+        instance.transform.position = position;
+        instance.transform.rotation = Quaternion.Euler(eulerAngles);
+        instance.transform.localScale = Vector3.one;
+
+        RemoveRuntimeCostFromVisual(instance);
+        FitVisualToTargetSize(instance, targetWorldSize, position);
+        MarkStaticRecursive(instance);
+        EditorUtility.SetDirty(instance);
+        return instance;
+    }
+
+    private static void RemoveRuntimeCostFromVisual(GameObject visual)
+    {
+        Collider[] colliders = visual.GetComponentsInChildren<Collider>(true);
+
+        for (int i = 0; i < colliders.Length; i++)
+        {
+            Object.DestroyImmediate(colliders[i]);
+        }
+
+        Rigidbody[] rigidbodies = visual.GetComponentsInChildren<Rigidbody>(true);
+
+        for (int i = 0; i < rigidbodies.Length; i++)
+        {
+            Object.DestroyImmediate(rigidbodies[i]);
+        }
+
+        Light[] lights = visual.GetComponentsInChildren<Light>(true);
+
+        for (int i = 0; i < lights.Length; i++)
+        {
+            Object.DestroyImmediate(lights[i]);
+        }
+    }
+
+    private static void FitVisualToTargetSize(GameObject visual, Vector3 targetWorldSize, Vector3 targetCenter)
+    {
+        if (!TryGetRendererBounds(visual, out Bounds bounds))
+        {
+            return;
+        }
+
+        Vector3 currentSize = bounds.size;
+        Vector3 scale = visual.transform.localScale;
+
+        if (targetWorldSize.x > 0.001f && currentSize.x > 0.001f)
+        {
+            scale.x *= targetWorldSize.x / currentSize.x;
+        }
+
+        if (targetWorldSize.y > 0.001f && currentSize.y > 0.001f)
+        {
+            scale.y *= targetWorldSize.y / currentSize.y;
+        }
+
+        if (targetWorldSize.z > 0.001f && currentSize.z > 0.001f)
+        {
+            scale.z *= targetWorldSize.z / currentSize.z;
+        }
+
+        visual.transform.localScale = scale;
+
+        if (TryGetRendererBounds(visual, out bounds))
+        {
+            visual.transform.position += targetCenter - bounds.center;
+        }
+    }
+
+    private static bool TryGetRendererBounds(GameObject visual, out Bounds bounds)
+    {
+        Renderer[] renderers = visual.GetComponentsInChildren<Renderer>(true);
+        bounds = new Bounds(visual.transform.position, Vector3.zero);
+        bool found = false;
+
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            Renderer renderer = renderers[i];
+
+            if (renderer == null)
+            {
+                continue;
+            }
+
+            if (!found)
+            {
+                bounds = renderer.bounds;
+                found = true;
+            }
+            else
+            {
+                bounds.Encapsulate(renderer.bounds);
+            }
+        }
+
+        return found;
+    }
+
+    private static void MarkStaticRecursive(GameObject root)
+    {
+        Transform[] transforms = root.GetComponentsInChildren<Transform>(true);
+
+        for (int i = 0; i < transforms.Length; i++)
+        {
+            GameObjectUtility.SetStaticEditorFlags(transforms[i].gameObject, StaticEditorFlags.BatchingStatic);
+            EditorUtility.SetDirty(transforms[i].gameObject);
+        }
     }
 
     private static void BuildSpawnPoints(Transform parent, Material teamAMaterial, Material teamBMaterial)
@@ -881,6 +1117,14 @@ public static class SplatFightersGrayboxMapBuilder
         cube.transform.rotation = Quaternion.identity;
         cube.transform.localScale = scale;
         AssignMaterial(cube, material);
+        MeshRenderer renderer = cube.GetComponent<MeshRenderer>();
+
+        if (renderer != null)
+        {
+            renderer.enabled = false;
+            EditorUtility.SetDirty(renderer);
+        }
+
         AddPaintBlocker(cube);
         return cube;
     }
