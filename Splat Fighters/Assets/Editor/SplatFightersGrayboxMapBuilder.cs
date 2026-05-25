@@ -15,7 +15,9 @@ public static class SplatFightersGrayboxMapBuilder
     private const string ProjectilePrefabPath = "Assets/Prefabs/Weapons/InkProjectile.prefab";
     private const string HangarPrefabRoot = "Assets/Hangar Building Modular/Prefabs/";
     private const string HangarMaterialRoot = "Assets/Hangar Building Modular/Materials/";
-    private const float CharacterRootHeight = 1f;
+    private const float CharacterRootHeight = 0.8f;
+    private const float CharacterControllerHeight = 1.6f;
+    private const float CharacterControllerRadius = 0.4f;
     private const float MapWidth = 32f;
     private const float MapLength = 36f;
     private const int PaintGridWidth = 80;
@@ -389,13 +391,13 @@ public static class SplatFightersGrayboxMapBuilder
         Material roofFrameMaterial = LoadHangarMaterial("mat_roof_frame.mat");
 
         CreateTexturedSurface("HangarPaintableFloorSurface", new Vector3(0f, -0.052f, 0f), new Vector3(MapWidth, 0.025f, MapLength), floorMaterial, parent);
-        CreateTexturedSurface("HangarNorthWallSurface", new Vector3(0f, 2.25f, HalfMapLength + 0.42f), new Vector3(MapWidth + 1.2f, 4.5f, 0.12f), wallMaterial, parent);
-        CreateTexturedSurface("HangarSouthWallSurface", new Vector3(0f, 2.25f, -HalfMapLength - 0.42f), new Vector3(MapWidth + 1.2f, 4.5f, 0.12f), wallMaterial, parent);
-        CreateTexturedSurface("HangarEastWallSurface", new Vector3(HalfMapWidth + 0.42f, 2.25f, 0f), new Vector3(0.12f, 4.5f, MapLength + 1.2f), wallFrameMaterial != null ? wallFrameMaterial : wallMaterial, parent);
-        CreateTexturedSurface("HangarWestWallSurface", new Vector3(-HalfMapWidth - 0.42f, 2.25f, 0f), new Vector3(0.12f, 4.5f, MapLength + 1.2f), wallFrameMaterial != null ? wallFrameMaterial : wallMaterial, parent);
-        CreateTexturedSurface("HangarCeilingSurface", new Vector3(0f, 4.7f, 0f), new Vector3(MapWidth + 1.4f, 0.14f, MapLength + 1.4f), roofMaterial, parent);
-        CreateTexturedSurface("HangarCeilingFrameSurface", new Vector3(0f, 4.62f, 0f), new Vector3(MapWidth + 0.8f, 0.1f, 1.2f), roofFrameMaterial, parent);
-        CreateTexturedSurface("HangarCeilingCrossFrameSurface", new Vector3(0f, 4.61f, 0f), new Vector3(1.2f, 0.1f, MapLength + 0.8f), roofFrameMaterial, parent);
+        CreateTexturedSurface("HangarNorthWallSurface", new Vector3(0f, 3.1f, HalfMapLength + 0.42f), new Vector3(MapWidth + 1.2f, 6.2f, 0.12f), wallMaterial, parent);
+        CreateTexturedSurface("HangarSouthWallSurface", new Vector3(0f, 3.1f, -HalfMapLength - 0.42f), new Vector3(MapWidth + 1.2f, 6.2f, 0.12f), wallMaterial, parent);
+        CreateTexturedSurface("HangarEastWallSurface", new Vector3(HalfMapWidth + 0.42f, 3.1f, 0f), new Vector3(0.12f, 6.2f, MapLength + 1.2f), wallFrameMaterial != null ? wallFrameMaterial : wallMaterial, parent);
+        CreateTexturedSurface("HangarWestWallSurface", new Vector3(-HalfMapWidth - 0.42f, 3.1f, 0f), new Vector3(0.12f, 6.2f, MapLength + 1.2f), wallFrameMaterial != null ? wallFrameMaterial : wallMaterial, parent);
+        CreateTexturedSurface("HangarCeilingSurface", new Vector3(0f, 8.4f, 0f), new Vector3(MapWidth + 1.4f, 0.14f, MapLength + 1.4f), roofMaterial, parent);
+        CreateTexturedSurface("HangarCeilingFrameSurface", new Vector3(0f, 8.28f, 0f), new Vector3(MapWidth + 0.8f, 0.1f, 1.2f), roofFrameMaterial, parent);
+        CreateTexturedSurface("HangarCeilingCrossFrameSurface", new Vector3(0f, 8.27f, 0f), new Vector3(1.2f, 0.1f, MapLength + 0.8f), roofFrameMaterial, parent);
     }
 
     private static void BuildHangarShell(Transform parent)
@@ -405,16 +407,16 @@ public static class SplatFightersGrayboxMapBuilder
         CreateHangarVisual("HangarEastWall", "pref_wall.prefab", new Vector3(HalfMapWidth + 0.25f, 1.9f, 0f), new Vector3(0f, 90f, 0f), new Vector3(MapLength + 1.2f, 3.8f, 0.65f), parent);
         CreateHangarVisual("HangarWestWall", "pref_wall.prefab", new Vector3(-HalfMapWidth - 0.25f, 1.9f, 0f), new Vector3(0f, -90f, 0f), new Vector3(MapLength + 1.2f, 3.8f, 0.65f), parent);
 
-        CreateHangarVisual("HangarNorthRoofTrim", "pref_roof_01.prefab", new Vector3(0f, 4.25f, HalfMapLength - 1.2f), Vector3.zero, new Vector3(MapWidth * 0.72f, 1.0f, 2.6f), parent);
-        CreateHangarVisual("HangarSouthRoofTrim", "pref_roof_02.prefab", new Vector3(0f, 4.25f, -HalfMapLength + 1.2f), new Vector3(0f, 180f, 0f), new Vector3(MapWidth * 0.72f, 1.0f, 2.6f), parent);
+        CreateHangarVisual("HangarNorthRoofTrim", "pref_roof_01.prefab", new Vector3(0f, 7.2f, HalfMapLength - 1.2f), Vector3.zero, new Vector3(MapWidth * 0.72f, 1.0f, 2.6f), parent);
+        CreateHangarVisual("HangarSouthRoofTrim", "pref_roof_02.prefab", new Vector3(0f, 7.2f, -HalfMapLength + 1.2f), new Vector3(0f, 180f, 0f), new Vector3(MapWidth * 0.72f, 1.0f, 2.6f), parent);
 
         float[] frameXPositions = { -HalfMapWidth + 2.2f, -5.4f, 5.4f, HalfMapWidth - 2.2f };
 
         for (int i = 0; i < frameXPositions.Length; i++)
         {
             float x = frameXPositions[i];
-            CreateHangarVisual($"HangarNorthFrame_{i + 1}", "pref_frame.prefab", new Vector3(x, 2.35f, HalfMapLength - 0.35f), Vector3.zero, new Vector3(1.1f, 3.6f, 1.0f), parent);
-            CreateHangarVisual($"HangarSouthFrame_{i + 1}", "pref_frame.prefab", new Vector3(x, 2.35f, -HalfMapLength + 0.35f), new Vector3(0f, 180f, 0f), new Vector3(1.1f, 3.6f, 1.0f), parent);
+            CreateHangarVisual($"HangarNorthFrame_{i + 1}", "pref_frame.prefab", new Vector3(x, 3.2f, HalfMapLength - 0.35f), Vector3.zero, new Vector3(1.1f, 5.4f, 1.0f), parent);
+            CreateHangarVisual($"HangarSouthFrame_{i + 1}", "pref_frame.prefab", new Vector3(x, 3.2f, -HalfMapLength + 0.35f), new Vector3(0f, 180f, 0f), new Vector3(1.1f, 5.4f, 1.0f), parent);
         }
     }
 
@@ -473,8 +475,8 @@ public static class SplatFightersGrayboxMapBuilder
 
         for (int i = 0; i < xPositions.Length; i++)
         {
-            CreateHangarVisual($"HangarNorthLamp_{i + 1}", "pref_lamp.prefab", new Vector3(xPositions[i], 3.35f, HalfMapLength - 1.05f), new Vector3(0f, 180f, 0f), new Vector3(1.1f, 1.1f, 1.1f), parent);
-            CreateHangarVisual($"HangarSouthLamp_{i + 1}", "pref_lamp.prefab", new Vector3(xPositions[i], 3.35f, -HalfMapLength + 1.05f), Vector3.zero, new Vector3(1.1f, 1.1f, 1.1f), parent);
+            CreateHangarVisual($"HangarNorthLamp_{i + 1}", "pref_lamp.prefab", new Vector3(xPositions[i], 5.6f, HalfMapLength - 1.05f), new Vector3(0f, 180f, 0f), new Vector3(1.1f, 1.1f, 1.1f), parent);
+            CreateHangarVisual($"HangarSouthLamp_{i + 1}", "pref_lamp.prefab", new Vector3(xPositions[i], 5.6f, -HalfMapLength + 1.05f), Vector3.zero, new Vector3(1.1f, 1.1f, 1.1f), parent);
         }
     }
 
@@ -661,11 +663,11 @@ public static class SplatFightersGrayboxMapBuilder
         }
 
         CharacterController characterController = bot.AddComponent<CharacterController>();
-        characterController.height = 2f;
-        characterController.radius = 0.5f;
+        characterController.height = CharacterControllerHeight;
+        characterController.radius = CharacterControllerRadius;
         characterController.center = Vector3.zero;
         characterController.slopeLimit = 45f;
-        characterController.stepOffset = 0.3f;
+        characterController.stepOffset = 0.24f;
 
         AssignMaterial(bot, teamBMaterial);
         TeamVisualBinder visualBinder = bot.AddComponent<TeamVisualBinder>();
@@ -794,6 +796,7 @@ public static class SplatFightersGrayboxMapBuilder
         }
 
         player.transform.SetPositionAndRotation(spawn.transform.position, spawn.transform.rotation);
+        ConfigureCharacterController(player);
         AssignMaterial(player, teamAMaterial);
         TeamVisualBinder visualBinder = player.GetComponent<TeamVisualBinder>();
 
@@ -1088,6 +1091,22 @@ public static class SplatFightersGrayboxMapBuilder
         }
 
         return health;
+    }
+
+    private static void ConfigureCharacterController(GameObject character)
+    {
+        CharacterController characterController = character != null ? character.GetComponent<CharacterController>() : null;
+
+        if (characterController == null)
+        {
+            return;
+        }
+
+        characterController.height = CharacterControllerHeight;
+        characterController.radius = CharacterControllerRadius;
+        characterController.center = Vector3.zero;
+        characterController.stepOffset = 0.24f;
+        EditorUtility.SetDirty(characterController);
     }
 
     private static void ConfigureCharacterHealth(CharacterHealth health, Team team, Transform groundProbe)

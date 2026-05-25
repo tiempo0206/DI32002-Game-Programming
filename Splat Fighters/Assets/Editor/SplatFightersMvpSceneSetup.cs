@@ -18,6 +18,9 @@ public static class SplatFightersMvpSceneSetup
     private const float PaintableGroundLength = 36f;
     private const int PaintGridWidth = 80;
     private const int PaintGridHeight = 90;
+    private const float CharacterRootHeight = 0.8f;
+    private const float CharacterControllerHeight = 1.6f;
+    private const float CharacterControllerRadius = 0.4f;
 
     [MenuItem("Tools/Splat Fighters/Create MVP Shooting Test Scene")]
     public static void CreateMvpShootingTestScene()
@@ -242,17 +245,17 @@ public static class SplatFightersMvpSceneSetup
     {
         GameObject player = GameObject.CreatePrimitive(PrimitiveType.Capsule);
         player.name = "Player";
-        player.transform.position = new Vector3(0f, 1f, -7f);
+        player.transform.position = new Vector3(0f, CharacterRootHeight, -7f);
 
         CapsuleCollider capsuleCollider = player.GetComponent<CapsuleCollider>();
         Object.DestroyImmediate(capsuleCollider);
 
         CharacterController characterController = player.AddComponent<CharacterController>();
-        characterController.height = 2f;
-        characterController.radius = 0.5f;
+        characterController.height = CharacterControllerHeight;
+        characterController.radius = CharacterControllerRadius;
         characterController.center = Vector3.zero;
         characterController.slopeLimit = 45f;
-        characterController.stepOffset = 0.3f;
+        characterController.stepOffset = 0.24f;
 
         MeshRenderer renderer = player.GetComponent<MeshRenderer>();
         renderer.sharedMaterial = shooterMaterial;
@@ -261,7 +264,7 @@ public static class SplatFightersMvpSceneSetup
 
         GameObject firePoint = new GameObject("FirePoint");
         firePoint.transform.SetParent(player.transform);
-        firePoint.transform.position = new Vector3(0f, 1.35f, -6.3f);
+        firePoint.transform.position = new Vector3(0f, 1.1f, -6.3f);
         firePoint.transform.rotation = Quaternion.LookRotation(new Vector3(0f, 0.05f, 0f) - firePoint.transform.position, Vector3.up);
 
         GameObject rollerTool = GameObject.CreatePrimitive(PrimitiveType.Cube);

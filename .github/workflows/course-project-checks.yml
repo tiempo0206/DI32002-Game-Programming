@@ -407,6 +407,9 @@ jobs:
             'm_Name: TeamBBotFirePoint'
             'm_Name: TeamBBotPatrolPoints'
             'm_Name: TeamBBotPaintTargets'
+            'm_Height: 1.6'
+            'm_Radius: 0.4'
+            'm_StepOffset: 0.24'
             'guid: 3b1f6fa4a44a34fd2b8d3115d8b234c5'
             'guid: 523848afdbb78428f9909a6a36dedc79'
             'guid: 6eae5c84c8a24551a6a1738913276ea9'
@@ -492,6 +495,8 @@ jobs:
             'HangarNorthWall'
             'HangarNorthWallSurface'
             'HangarCeilingSurface'
+            'HangarCeilingFrameSurface'
+            'HangarCeilingCrossFrameSurface'
             'HangarCenterGenerator'
             'HangarLeftMidCrates'
           )
@@ -978,6 +983,12 @@ jobs:
           paint_target_count="$(grep -c 'm_Name: TeamBBotPaintTarget_' "$scene")"
           if [ "$paint_target_count" -lt 4 ]; then
             echo "Expected at least 4 TeamB bot paint targets, found $paint_target_count."
+            exit 1
+          fi
+
+          compact_controller_count="$(grep -c 'm_Height: 1.6' "$scene")"
+          if [ "$compact_controller_count" -lt 2 ]; then
+            echo "Expected compact CharacterController settings for player and TeamB bot, found $compact_controller_count."
             exit 1
           fi
 
