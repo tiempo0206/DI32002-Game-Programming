@@ -14,6 +14,7 @@ public static class SplatFightersGrayboxMapBuilder
     private const string LevelRootName = "LevelRoot";
     private const string ProjectilePrefabPath = "Assets/Prefabs/Weapons/InkProjectile.prefab";
     private const string HangarPrefabRoot = "Assets/Hangar Building Modular/Prefabs/";
+    private const string HangarMaterialRoot = "Assets/Hangar Building Modular/Materials/";
     private const float CharacterRootHeight = 1f;
     private const float MapWidth = 32f;
     private const float MapLength = 36f;
@@ -301,6 +302,7 @@ public static class SplatFightersGrayboxMapBuilder
             return;
         }
 
+        BuildHangarLargeSurfaces(parent);
         BuildHangarFloor(parent);
         BuildHangarShell(parent);
         BuildHangarGameplayProps(parent);
@@ -376,6 +378,24 @@ public static class SplatFightersGrayboxMapBuilder
     private static void BuildHangarFloor(Transform parent)
     {
         CreateHangarVisual("HangarMainFloor", "pref_floor.prefab", new Vector3(0f, -0.075f, 0f), Vector3.zero, new Vector3(MapWidth, 0.12f, MapLength), parent);
+    }
+
+    private static void BuildHangarLargeSurfaces(Transform parent)
+    {
+        Material floorMaterial = LoadHangarMaterial("mat_floor.mat");
+        Material wallMaterial = LoadHangarMaterial("mat_wall.mat");
+        Material wallFrameMaterial = LoadHangarMaterial("mat_wall_frame.mat");
+        Material roofMaterial = LoadHangarMaterial("mat_roof.mat");
+        Material roofFrameMaterial = LoadHangarMaterial("mat_roof_frame.mat");
+
+        CreateTexturedSurface("HangarPaintableFloorSurface", new Vector3(0f, -0.052f, 0f), new Vector3(MapWidth, 0.025f, MapLength), floorMaterial, parent);
+        CreateTexturedSurface("HangarNorthWallSurface", new Vector3(0f, 2.25f, HalfMapLength + 0.42f), new Vector3(MapWidth + 1.2f, 4.5f, 0.12f), wallMaterial, parent);
+        CreateTexturedSurface("HangarSouthWallSurface", new Vector3(0f, 2.25f, -HalfMapLength - 0.42f), new Vector3(MapWidth + 1.2f, 4.5f, 0.12f), wallMaterial, parent);
+        CreateTexturedSurface("HangarEastWallSurface", new Vector3(HalfMapWidth + 0.42f, 2.25f, 0f), new Vector3(0.12f, 4.5f, MapLength + 1.2f), wallFrameMaterial != null ? wallFrameMaterial : wallMaterial, parent);
+        CreateTexturedSurface("HangarWestWallSurface", new Vector3(-HalfMapWidth - 0.42f, 2.25f, 0f), new Vector3(0.12f, 4.5f, MapLength + 1.2f), wallFrameMaterial != null ? wallFrameMaterial : wallMaterial, parent);
+        CreateTexturedSurface("HangarCeilingSurface", new Vector3(0f, 4.7f, 0f), new Vector3(MapWidth + 1.4f, 0.14f, MapLength + 1.4f), roofMaterial, parent);
+        CreateTexturedSurface("HangarCeilingFrameSurface", new Vector3(0f, 4.62f, 0f), new Vector3(MapWidth + 0.8f, 0.1f, 1.2f), roofFrameMaterial, parent);
+        CreateTexturedSurface("HangarCeilingCrossFrameSurface", new Vector3(0f, 4.61f, 0f), new Vector3(1.2f, 0.1f, MapLength + 0.8f), roofFrameMaterial, parent);
     }
 
     private static void BuildHangarShell(Transform parent)
@@ -510,6 +530,38 @@ public static class SplatFightersGrayboxMapBuilder
         {
             Object.DestroyImmediate(lights[i]);
         }
+    }
+
+    private static GameObject CreateTexturedSurface(string name, Vector3 position, Vector3 scale, Material material, Transform parent)
+    {
+        if (material == null)
+        {
+            return null;
+        }
+
+        GameObject surface = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        surface.name = name;
+        surface.transform.SetParent(parent, false);
+        surface.transform.position = position;
+        surface.transform.rotation = Quaternion.identity;
+        surface.transform.localScale = scale;
+        AssignMaterial(surface, material);
+
+        Collider collider = surface.GetComponent<Collider>();
+
+        if (collider != null)
+        {
+            Object.DestroyImmediate(collider);
+        }
+
+        MarkStaticRecursive(surface);
+        EditorUtility.SetDirty(surface);
+        return surface;
+    }
+
+    private static Material LoadHangarMaterial(string materialFileName)
+    {
+        return AssetDatabase.LoadAssetAtPath<Material>(HangarMaterialRoot + materialFileName);
     }
 
     private static void FitVisualToTargetSize(GameObject visual, Vector3 targetWorldSize, Vector3 targetCenter)
@@ -1256,7 +1308,34 @@ public static class SplatFightersGrayboxMapBuilder
         }
 
         area.ClearPaint();
+        ApplyHangarFloorMaterialToPaintableGround(paintableGround);
         EditorUtility.SetDirty(area);
+    }
+
+    private static void ApplyHangarFloorMaterialToPaintableGround(GameObject paintableGround)
+    {
+        if (paintableGround == null)
+        {
+            return;
+        }
+
+        Material floorMaterial = LoadHangarMaterial("mat_floor.mat");
+
+        if (floorMaterial == null)
+        {
+            return;
+        }
+
+        Transform groundVisual = paintableGround.transform.Find("GroundVisual");
+        MeshRenderer renderer = groundVisual != null ? groundVisual.GetComponent<MeshRenderer>() : paintableGround.GetComponentInChildren<MeshRenderer>();
+
+        if (renderer == null)
+        {
+            return;
+        }
+
+        renderer.sharedMaterial = floorMaterial;
+        EditorUtility.SetDirty(renderer);
     }
 
     private static void AssignMaterial(GameObject target, Material material)

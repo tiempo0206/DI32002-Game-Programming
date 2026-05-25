@@ -488,7 +488,10 @@ jobs:
             'damageOnlyDuringMatch: 1'
             'HangarAssetVisuals'
             'HangarMainFloor'
+            'HangarPaintableFloorSurface'
             'HangarNorthWall'
+            'HangarNorthWallSurface'
+            'HangarCeilingSurface'
             'HangarCenterGenerator'
             'HangarLeftMidCrates'
           )
