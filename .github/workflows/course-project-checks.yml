@@ -407,6 +407,9 @@ jobs:
             'm_Name: TeamBBotFirePoint'
             'm_Name: TeamBBotPatrolPoints'
             'm_Name: TeamBBotPaintTargets'
+            'm_Height: 1.6'
+            'm_Radius: 0.4'
+            'm_StepOffset: 0.24'
             'guid: 3b1f6fa4a44a34fd2b8d3115d8b234c5'
             'guid: 523848afdbb78428f9909a6a36dedc79'
             'guid: 6eae5c84c8a24551a6a1738913276ea9'
@@ -486,19 +489,61 @@ jobs:
             'team: 2'
             'enemyPaintDamagePerSecond: 35'
             'damageOnlyDuringMatch: 1'
+            'HangarAssetVisuals'
+            'HangarMainFloor'
+            'HangarPaintableFloorSurface'
+            'HangarNorthWall'
+            'HangarNorthWallSurface'
+            'HangarCeilingSurface'
+            'HangarCeilingFrameSurface'
+            'HangarCeilingCrossFrameSurface'
+            'HangarCenterGenerator'
+            'HangarLeftMidCrates'
           )
 
           for pattern in "${required_scene_patterns[@]}"; do
             grep -q "$pattern" "$scene" || {
-              echo "Missing Splat Fighters graybox scene pattern: $pattern"
+              echo "Missing Splat Fighters arena scene pattern: $pattern"
               exit 1
             }
           done
 
+          required_hangar_assets=(
+            'Splat Fighters/Assets/Hangar Building Modular/Prefabs/pref_floor.prefab'
+            'Splat Fighters/Assets/Hangar Building Modular/Prefabs/pref_wall.prefab'
+            'Splat Fighters/Assets/Hangar Building Modular/Prefabs/pref_box_01.prefab'
+            'Splat Fighters/Assets/Hangar Building Modular/Prefabs/pref_scaffold_01.prefab'
+            'Splat Fighters/Assets/Hangar Building Modular/Prefabs/pref_generator.prefab'
+            'Splat Fighters/Assets/Hangar Building Modular/Materials/mat_floor.mat'
+            'Splat Fighters/Assets/Hangar Building Modular/Textures/tex_floor.tga'
+          )
+
+          for asset in "${required_hangar_assets[@]}"; do
+            test -f "$asset" || {
+              echo "Missing required hangar asset: $asset"
+              exit 1
+            }
+          done
+
+          if grep -R -n 'm_Shader: {fileID: 46, guid: 0000000000000000f000000000000000, type: 0}\\|m_Shader: {fileID: 10755, guid: 0000000000000000f000000000000000, type: 0}' 'Splat Fighters/Assets/Hangar Building Modular/Materials'; then
+            echo "Hangar materials must use URP-compatible shaders, not legacy built-in shaders."
+            exit 1
+          fi
+
+          grep -R -q 'guid: 933532a4fcc9baf4fa0491de14d08ed7' 'Splat Fighters/Assets/Hangar Building Modular/Materials' || {
+            echo "Expected hangar materials to use the URP Lit shader."
+            exit 1
+          }
+
+          grep -R -q '_BaseMap' 'Splat Fighters/Assets/Hangar Building Modular/Materials' || {
+            echo "Expected hangar materials to serialize URP BaseMap texture bindings."
+            exit 1
+          }
+
           paint_blocker_count="$(grep -c 'guid: 6eae5c84c8a24551a6a1738913276ea9' "$scene")"
 
           if [ "$paint_blocker_count" -lt 20 ]; then
-            echo "Expected at least 20 PaintBlocker components in the graybox map, found $paint_blocker_count."
+            echo "Expected at least 20 PaintBlocker components in the arena map, found $paint_blocker_count."
             exit 1
           fi
 
@@ -938,6 +983,12 @@ jobs:
           paint_target_count="$(grep -c 'm_Name: TeamBBotPaintTarget_' "$scene")"
           if [ "$paint_target_count" -lt 4 ]; then
             echo "Expected at least 4 TeamB bot paint targets, found $paint_target_count."
+            exit 1
+          fi
+
+          compact_controller_count="$(grep -c 'm_Height: 1.6' "$scene")"
+          if [ "$compact_controller_count" -lt 2 ]; then
+            echo "Expected compact CharacterController settings for player and TeamB bot, found $compact_controller_count."
             exit 1
           fi
 

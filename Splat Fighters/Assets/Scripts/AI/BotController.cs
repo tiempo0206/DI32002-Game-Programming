@@ -61,6 +61,8 @@ public class BotController : MonoBehaviour
     private Vector3 currentAimTarget;
     private bool isRetreating;
 
+    public Team BotTeam => botTeam;
+
     private void Awake()
     {
         ResolveReferences();

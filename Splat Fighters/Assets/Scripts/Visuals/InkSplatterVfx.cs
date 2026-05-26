@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Rendering;
 
 /// <summary>
 /// Runtime-only ink impact feedback that creates a short particle burst without imported art assets.
@@ -6,11 +7,13 @@ using UnityEngine;
 public sealed class InkSplatterVfx : MonoBehaviour
 {
     private const float MinNormalMagnitude = 0.0001f;
-    private const int MaxActiveSplatterInstances = 14;
+    private const int MaxActiveSplatterInstances = 20;
     private static int activeSplatterInstances;
+    private static Material sharedParticleMaterial;
 
     [SerializeField] private ParticleSystem splatterParticles = null;
-    [SerializeField, Min(0.05f)] private float cleanupDelay = 0.9f;
+    [SerializeField] private ParticleSystem dropletParticles = null;
+    [SerializeField, Min(0.05f)] private float cleanupDelay = 1.1f;
 
     public static InkSplatterVfx Spawn(Vector3 position, Vector3 normal, Team team, bool paintableImpact, float paintRadius)
     {
@@ -34,7 +37,13 @@ public sealed class InkSplatterVfx : MonoBehaviour
 
         splatterParticles = gameObject.AddComponent<ParticleSystem>();
         ConfigureParticles(splatterParticles, team, paintableImpact, paintRadius);
+
+        dropletParticles = CreateChildParticleSystem("LiquidDroplets");
+        ConfigureDropletParticles(dropletParticles, team, paintableImpact, paintRadius);
+
         splatterParticles.Play();
+        dropletParticles.Play();
+        LiquidInkPuddle.Spawn(position, safeNormal, team, paintableImpact, paintRadius);
         Destroy(gameObject, cleanupDelay);
     }
 
@@ -108,9 +117,115 @@ public sealed class InkSplatterVfx : MonoBehaviour
 
         if (renderer != null)
         {
-            renderer.renderMode = ParticleSystemRenderMode.Billboard;
+            renderer.renderMode = ParticleSystemRenderMode.Stretch;
+            renderer.lengthScale = 1.35f;
+            renderer.velocityScale = 0.12f;
+            renderer.material = GetParticleMaterial();
+            renderer.shadowCastingMode = ShadowCastingMode.Off;
+            renderer.receiveShadows = false;
             renderer.sortingFudge = 0.1f;
         }
+    }
+
+    private ParticleSystem CreateChildParticleSystem(string childName)
+    {
+        GameObject child = new GameObject(childName);
+        child.transform.SetParent(transform, false);
+        return child.AddComponent<ParticleSystem>();
+    }
+
+    private void ConfigureDropletParticles(ParticleSystem particles, Team team, bool paintableImpact, float paintRadius)
+    {
+        float safeRadius = Mathf.Max(0.25f, paintRadius);
+        Color baseColor = paintableImpact
+            ? TeamVisualPalette.GetColor(team, 0.92f)
+            : new Color(0.82f, 0.86f, 0.9f, 0.35f);
+        Color brightColor = Color.Lerp(baseColor, Color.white, paintableImpact ? 0.28f : 0.55f);
+        brightColor.a = baseColor.a;
+
+        ParticleSystem.MainModule main = particles.main;
+        main.duration = 0.18f;
+        main.loop = false;
+        main.startLifetime = new ParticleSystem.MinMaxCurve(0.32f, 0.82f);
+        main.startSpeed = new ParticleSystem.MinMaxCurve(safeRadius * 0.95f, safeRadius * 2.65f);
+        main.startSize = new ParticleSystem.MinMaxCurve(safeRadius * 0.035f, safeRadius * 0.11f);
+        main.startColor = new ParticleSystem.MinMaxGradient(baseColor, brightColor);
+        main.gravityModifier = 0.58f;
+        main.simulationSpace = ParticleSystemSimulationSpace.World;
+        main.maxParticles = 24;
+        main.stopAction = ParticleSystemStopAction.Destroy;
+
+        ParticleSystem.EmissionModule emission = particles.emission;
+        emission.rateOverTime = 0f;
+        emission.SetBursts(new[]
+        {
+            new ParticleSystem.Burst(0f, (short)Mathf.Clamp(Mathf.RoundToInt(safeRadius * 5f), 5, 16))
+        });
+
+        ParticleSystem.ShapeModule shape = particles.shape;
+        shape.enabled = true;
+        shape.shapeType = ParticleSystemShapeType.Cone;
+        shape.angle = 38f;
+        shape.radius = Mathf.Clamp(safeRadius * 0.07f, 0.035f, 0.16f);
+        shape.rotation = Vector3.zero;
+
+        ParticleSystem.SizeOverLifetimeModule sizeOverLifetime = particles.sizeOverLifetime;
+        sizeOverLifetime.enabled = true;
+        AnimationCurve sizeCurve = new AnimationCurve(
+            new Keyframe(0f, 1f),
+            new Keyframe(0.7f, 0.72f),
+            new Keyframe(1f, 0.2f));
+        sizeOverLifetime.size = new ParticleSystem.MinMaxCurve(1f, sizeCurve);
+
+        ParticleSystem.ColorOverLifetimeModule colorOverLifetime = particles.colorOverLifetime;
+        colorOverLifetime.enabled = true;
+        Gradient gradient = new Gradient();
+        gradient.SetKeys(
+            new[]
+            {
+                new GradientColorKey(brightColor, 0f),
+                new GradientColorKey(baseColor, 0.35f),
+                new GradientColorKey(baseColor, 1f)
+            },
+            new[]
+            {
+                new GradientAlphaKey(baseColor.a, 0f),
+                new GradientAlphaKey(baseColor.a * 0.72f, 0.7f),
+                new GradientAlphaKey(0f, 1f)
+            });
+        colorOverLifetime.color = new ParticleSystem.MinMaxGradient(gradient);
+
+        ParticleSystemRenderer renderer = particles.GetComponent<ParticleSystemRenderer>();
+
+        if (renderer != null)
+        {
+            renderer.renderMode = ParticleSystemRenderMode.Stretch;
+            renderer.lengthScale = 2.1f;
+            renderer.velocityScale = 0.18f;
+            renderer.material = GetParticleMaterial();
+            renderer.shadowCastingMode = ShadowCastingMode.Off;
+            renderer.receiveShadows = false;
+            renderer.sortingFudge = 0.15f;
+        }
+    }
+
+    private static Material GetParticleMaterial()
+    {
+        if (sharedParticleMaterial != null)
+        {
+            return sharedParticleMaterial;
+        }
+
+        Shader shader = Shader.Find("Universal Render Pipeline/Particles/Unlit");
+
+        if (shader == null)
+        {
+            shader = Shader.Find("Sprites/Default");
+        }
+
+        sharedParticleMaterial = new Material(shader);
+        sharedParticleMaterial.name = "MAT_LiquidInkParticles_Runtime";
+        return sharedParticleMaterial;
     }
 
     private static Quaternion CreateSurfaceRotation(Vector3 normal)

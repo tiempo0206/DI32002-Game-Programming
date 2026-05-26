@@ -18,6 +18,9 @@ public static class SplatFightersMvpSceneSetup
     private const float PaintableGroundLength = 36f;
     private const int PaintGridWidth = 80;
     private const int PaintGridHeight = 90;
+    private const float CharacterRootHeight = 0.8f;
+    private const float CharacterControllerHeight = 1.6f;
+    private const float CharacterControllerRadius = 0.4f;
 
     [MenuItem("Tools/Splat Fighters/Create MVP Shooting Test Scene")]
     public static void CreateMvpShootingTestScene()
@@ -133,9 +136,9 @@ public static class SplatFightersMvpSceneSetup
         projectileSo.FindProperty("impactMarkerLifetime").floatValue = 0.25f;
         projectileSo.FindProperty("impactMarkerSurfaceOffset").floatValue = 0.03f;
         projectileSo.FindProperty("logPaintMisses").boolValue = false;
-        projectileSo.FindProperty("spawnInkSplatterVfx").boolValue = false;
-        projectileSo.FindProperty("spawnSplatterOnNonPaintableHit").boolValue = false;
-        projectileSo.FindProperty("splatterRadiusMultiplier").floatValue = 1f;
+        projectileSo.FindProperty("spawnInkSplatterVfx").boolValue = true;
+        projectileSo.FindProperty("spawnSplatterOnNonPaintableHit").boolValue = true;
+        projectileSo.FindProperty("splatterRadiusMultiplier").floatValue = 1.1f;
         projectileSo.ApplyModifiedPropertiesWithoutUndo();
 
         GameObject prefab = PrefabUtility.SaveAsPrefabAsset(projectileObject, ProjectilePrefabPath);
@@ -198,7 +201,7 @@ public static class SplatFightersMvpSceneSetup
         managerSo.ApplyModifiedPropertiesWithoutUndo();
 
         SerializedObject performanceSo = new SerializedObject(performanceProfile);
-        performanceSo.FindProperty("targetFrameRate").intValue = 30;
+        performanceSo.FindProperty("targetFrameRate").intValue = 60;
         performanceSo.FindProperty("disableVSync").boolValue = true;
         performanceSo.FindProperty("fixedDeltaTime").floatValue = 0.02f;
         performanceSo.FindProperty("applyOnAwake").boolValue = true;
@@ -242,17 +245,17 @@ public static class SplatFightersMvpSceneSetup
     {
         GameObject player = GameObject.CreatePrimitive(PrimitiveType.Capsule);
         player.name = "Player";
-        player.transform.position = new Vector3(0f, 1f, -7f);
+        player.transform.position = new Vector3(0f, CharacterRootHeight, -7f);
 
         CapsuleCollider capsuleCollider = player.GetComponent<CapsuleCollider>();
         Object.DestroyImmediate(capsuleCollider);
 
         CharacterController characterController = player.AddComponent<CharacterController>();
-        characterController.height = 2f;
-        characterController.radius = 0.5f;
+        characterController.height = CharacterControllerHeight;
+        characterController.radius = CharacterControllerRadius;
         characterController.center = Vector3.zero;
         characterController.slopeLimit = 45f;
-        characterController.stepOffset = 0.3f;
+        characterController.stepOffset = 0.24f;
 
         MeshRenderer renderer = player.GetComponent<MeshRenderer>();
         renderer.sharedMaterial = shooterMaterial;
@@ -261,7 +264,7 @@ public static class SplatFightersMvpSceneSetup
 
         GameObject firePoint = new GameObject("FirePoint");
         firePoint.transform.SetParent(player.transform);
-        firePoint.transform.position = new Vector3(0f, 1.35f, -6.3f);
+        firePoint.transform.position = new Vector3(0f, 1.1f, -6.3f);
         firePoint.transform.rotation = Quaternion.LookRotation(new Vector3(0f, 0.05f, 0f) - firePoint.transform.position, Vector3.up);
 
         GameObject rollerTool = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -363,7 +366,7 @@ public static class SplatFightersMvpSceneSetup
         burstSo.FindProperty("fallbackDistance").floatValue = 4.5f;
         burstSo.FindProperty("activationKey").intValue = (int)KeyCode.Q;
         burstSo.FindProperty("requireMatchPlaying").boolValue = true;
-        burstSo.FindProperty("spawnInkSplatterVfx").boolValue = false;
+        burstSo.FindProperty("spawnInkSplatterVfx").boolValue = true;
         burstSo.FindProperty("splatterRadiusMultiplier").floatValue = 1.15f;
         burstSo.FindProperty("logActivation").boolValue = false;
         burstSo.ApplyModifiedPropertiesWithoutUndo();

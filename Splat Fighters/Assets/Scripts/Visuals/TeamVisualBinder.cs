@@ -6,6 +6,12 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public class TeamVisualBinder : MonoBehaviour
 {
+    private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
+    private static readonly int ColorId = Shader.PropertyToID("_Color");
+    private static readonly int Color01Id = Shader.PropertyToID("_Color01");
+    private static readonly int Color02Id = Shader.PropertyToID("_Color02");
+    private static readonly int Color03Id = Shader.PropertyToID("_Color03");
+
     [Header("Team")]
     [SerializeField] private Team team = Team.None;
 
@@ -116,8 +122,11 @@ public class TeamVisualBinder : MonoBehaviour
         }
 
         targetRenderer.GetPropertyBlock(propertyBlock);
-        propertyBlock.SetColor("_BaseColor", color);
-        propertyBlock.SetColor("_Color", color);
+        propertyBlock.SetColor(BaseColorId, color);
+        propertyBlock.SetColor(ColorId, color);
+        propertyBlock.SetColor(Color01Id, color);
+        propertyBlock.SetColor(Color02Id, Color.Lerp(color, Color.white, 0.24f));
+        propertyBlock.SetColor(Color03Id, Color.Lerp(color, Color.black, 0.35f));
         targetRenderer.SetPropertyBlock(propertyBlock);
     }
 }

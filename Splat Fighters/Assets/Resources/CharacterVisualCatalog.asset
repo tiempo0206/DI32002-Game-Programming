@@ -1,0 +1,135 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 685df19ee5ad6df42a340cb9cb23ad4f, type: 3}
+  m_Name: CharacterVisualCatalog
+  m_EditorClassIdentifier: 
+  options:
+  - displayName: Bat
+    prefab: {fileID: 1084026556650854, guid: b97c205a111279943ac20347be85b32a, type: 3}
+    idleState: IdleNormal
+    moveState: FlyFWD
+    swimState: SenseSomethingST
+    attackState: Attack01
+    targetHeight: 1.25
+    maxFootprint: 1.25
+    swimHeightMultiplier: 0.28
+    swimWidthMultiplier: 1.35
+    swimLengthMultiplier: 1.5
+    localEulerOffset: {x: 0, y: 0, z: 0}
+  - displayName: Dragon
+    prefab: {fileID: 1355366978745300, guid: d5a2c78723409a647af519d34980ed50, type: 3}
+    idleState: IdleNormal
+    moveState: FlyFWD
+    swimState: SenseSomethingST
+    attackState: Attack01
+    targetHeight: 1.45
+    maxFootprint: 1.25
+    swimHeightMultiplier: 0.3
+    swimWidthMultiplier: 1.35
+    swimLengthMultiplier: 1.5
+    localEulerOffset: {x: 0, y: 0, z: 0}
+  - displayName: Evil Mage
+    prefab: {fileID: 1020621230016016, guid: 811751be1d786084b9873353df4d23ab, type: 3}
+    idleState: IdleNormal
+    moveState: RunFWD
+    swimState: SenseSomethingST
+    attackState: Attack01
+    targetHeight: 1.45
+    maxFootprint: 1.05
+    swimHeightMultiplier: 0.34
+    swimWidthMultiplier: 1.2
+    swimLengthMultiplier: 1.35
+    localEulerOffset: {x: 0, y: 0, z: 0}
+  - displayName: Golem
+    prefab: {fileID: 1522012193435230, guid: f3b95817c755ea344acaaf3a7159ef49, type: 3}
+    idleState: IdleNormal
+    moveState: RunFWD
+    swimState: SenseSomethingST
+    attackState: Attack01
+    targetHeight: 1.48
+    maxFootprint: 1.2
+    swimHeightMultiplier: 0.34
+    swimWidthMultiplier: 1.22
+    swimLengthMultiplier: 1.4
+    localEulerOffset: {x: 0, y: 0, z: 0}
+  - displayName: Monster Plant
+    prefab: {fileID: 1830712763959034, guid: cada986a27525df4fa3dd09e9c14d334, type: 3}
+    idleState: IdleNormal
+    moveState: RunFWD
+    swimState: SenseSomethingST
+    attackState: Attack01
+    targetHeight: 1.38
+    maxFootprint: 1.15
+    swimHeightMultiplier: 0.32
+    swimWidthMultiplier: 1.3
+    swimLengthMultiplier: 1.45
+    localEulerOffset: {x: 0, y: 0, z: 0}
+  - displayName: Orc
+    prefab: {fileID: 1951009016852862, guid: c282d043ab483824dbc609990acb217d, type: 3}
+    idleState: IdleNormal
+    moveState: RunFWD
+    swimState: SenseSomethingST
+    attackState: Attack01
+    targetHeight: 1.45
+    maxFootprint: 1.1
+    swimHeightMultiplier: 0.34
+    swimWidthMultiplier: 1.22
+    swimLengthMultiplier: 1.4
+    localEulerOffset: {x: 0, y: 0, z: 0}
+  - displayName: Skeleton
+    prefab: {fileID: 1660913145580450, guid: b8aaf128368760b4ca2a7b855dc1cbcc, type: 3}
+    idleState: IdleNormal
+    moveState: RunFWD
+    swimState: SenseSomethingST
+    attackState: Attack01
+    targetHeight: 1.45
+    maxFootprint: 1.05
+    swimHeightMultiplier: 0.34
+    swimWidthMultiplier: 1.22
+    swimLengthMultiplier: 1.38
+    localEulerOffset: {x: 0, y: 0, z: 0}
+  - displayName: Slime
+    prefab: {fileID: 1591548031869842, guid: 1cf605c698d5fec4cafabfe0b22d1e66, type: 3}
+    idleState: IdleNormal
+    moveState: RunFWD
+    swimState: SenseSomethingST
+    attackState: Attack01
+    targetHeight: 1.05
+    maxFootprint: 1.05
+    swimHeightMultiplier: 0.28
+    swimWidthMultiplier: 1.35
+    swimLengthMultiplier: 1.5
+    localEulerOffset: {x: 0, y: 0, z: 0}
+  - displayName: Spider
+    prefab: {fileID: 1245321620635218, guid: 369d4450a0bdf8e41b4109360c35876a, type: 3}
+    idleState: IdleNormal
+    moveState: RunFWD
+    swimState: SenseSomethingST
+    attackState: Attack01
+    targetHeight: 1.1
+    maxFootprint: 1.25
+    swimHeightMultiplier: 0.28
+    swimWidthMultiplier: 1.4
+    swimLengthMultiplier: 1.55
+    localEulerOffset: {x: 0, y: 0, z: 0}
+  - displayName: Turtle Shell
+    prefab: {fileID: 1098350002316864, guid: 7c9bfb8ed9be04a4d8d6dab7bcb6e886, type: 3}
+    idleState: IdleNormal
+    moveState: RunFWD
+    swimState: SenseSomethingST
+    attackState: Attack01
+    targetHeight: 1.25
+    maxFootprint: 1.15
+    swimHeightMultiplier: 0.3
+    swimWidthMultiplier: 1.35
+    swimLengthMultiplier: 1.45
+    localEulerOffset: {x: 0, y: 0, z: 0}

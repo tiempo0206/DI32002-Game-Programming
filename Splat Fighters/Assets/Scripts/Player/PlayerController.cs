@@ -58,12 +58,14 @@ public class PlayerController : MonoBehaviour
     private bool isUsingPaintRoute;
     private PaintRouteSurface activePaintRoute;
     private readonly Collider[] paintRouteHits = new Collider[12];
+    private CharacterVisualController characterVisualController;
 
     public bool IsOnOwnPaint => isOnOwnPaint;
     public bool IsOnEnemyPaint => isOnEnemyPaint;
     public bool IsSwimming => isSwimming;
     public bool IsUsingPaintRoute => isUsingPaintRoute;
     public bool WantsToSwim => input != null && input.SwimHeld;
+    public Team PlayerTeam => playerTeam;
 
     private void Awake()
     {
@@ -350,6 +352,11 @@ public class PlayerController : MonoBehaviour
 
     private void ApplySwimVisualState(bool swimming)
     {
+        if (characterVisualController == null)
+        {
+            TryGetComponent(out characterVisualController);
+        }
+
         for (int i = 0; i < humanoidRenderers.Length; i++)
         {
             Renderer humanoidRenderer = humanoidRenderers[i];
@@ -358,6 +365,18 @@ public class PlayerController : MonoBehaviour
             {
                 humanoidRenderer.enabled = !swimming;
             }
+        }
+
+        if (characterVisualController != null && characterVisualController.HasActiveVisual)
+        {
+            characterVisualController.SetSwimming(swimming);
+
+            if (swimFormVisual != null && swimFormVisual.activeSelf)
+            {
+                swimFormVisual.SetActive(false);
+            }
+
+            return;
         }
 
         if (swimFormVisual != null && swimFormVisual.activeSelf != swimming)
