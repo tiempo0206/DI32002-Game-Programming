@@ -865,7 +865,7 @@ public static class SplatFightersGrayboxMapBuilder
         burstSo.FindProperty("fallbackDistance").floatValue = 4.5f;
         burstSo.FindProperty("activationKey").intValue = (int)KeyCode.Q;
         burstSo.FindProperty("requireMatchPlaying").boolValue = true;
-        burstSo.FindProperty("spawnInkSplatterVfx").boolValue = false;
+        burstSo.FindProperty("spawnInkSplatterVfx").boolValue = true;
         burstSo.FindProperty("splatterRadiusMultiplier").floatValue = 1.15f;
         burstSo.FindProperty("logActivation").boolValue = false;
         burstSo.ApplyModifiedPropertiesWithoutUndo();

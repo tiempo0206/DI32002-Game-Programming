@@ -11,6 +11,7 @@ public class InkProjectile : MonoBehaviour
     [Header("Default Settings")]
     [SerializeField] private float defaultSpeed = 18f;
     [SerializeField] private float lifetime = 4f;
+    [SerializeField, Min(0.05f)] private float visualOnlyLifetime = 0.35f;
     [SerializeField] private float paintRadius = 1.5f;
     [SerializeField] private Team team = Team.TeamA;
 
@@ -36,9 +37,9 @@ public class InkProjectile : MonoBehaviour
     [SerializeField] private bool logPaintMisses = false;
 
     [Header("Ink Splatter VFX")]
-    [SerializeField] private bool spawnInkSplatterVfx = false;
-    [SerializeField] private bool spawnSplatterOnNonPaintableHit = false;
-    [SerializeField, Min(0.1f)] private float splatterRadiusMultiplier = 1f;
+    [SerializeField] private bool spawnInkSplatterVfx = true;
+    [SerializeField] private bool spawnSplatterOnNonPaintableHit = true;
+    [SerializeField, Min(0.1f)] private float splatterRadiusMultiplier = 1.1f;
 
     private Rigidbody rb;
     private Collider projectileCollider;
@@ -164,6 +165,7 @@ public class InkProjectile : MonoBehaviour
         intendedImpactPoint = targetPoint;
         hasIntendedImpactPoint = hasTargetPoint;
         canPaintOnImpact = canPaint;
+        ApplyLiquidProjectileVisual();
 
         Vector3 safeDirection = direction.sqrMagnitude > 0.0001f ? direction.normalized : transform.forward;
         float safeSpeed = Mathf.Max(0f, speed);
@@ -187,7 +189,7 @@ public class InkProjectile : MonoBehaviour
         transform.forward = safeDirection;
         previousPosition = rb.position;
 
-        Destroy(gameObject, lifetime);
+        Destroy(gameObject, canPaintOnImpact ? lifetime : visualOnlyLifetime);
     }
 
     /// <summary>
@@ -395,6 +397,18 @@ public class InkProjectile : MonoBehaviour
         }
 
         InkSplatterVfx.Spawn(hitPoint, hitNormal, team, canPaintLayer, paintRadius * splatterRadiusMultiplier);
+    }
+
+    private void ApplyLiquidProjectileVisual()
+    {
+        LiquidInkProjectileVisual liquidVisual = GetComponent<LiquidInkProjectileVisual>();
+
+        if (liquidVisual == null)
+        {
+            liquidVisual = gameObject.AddComponent<LiquidInkProjectileVisual>();
+        }
+
+        liquidVisual.Configure(team, paintRadius);
     }
 
     private void LogPaintMissIfNeeded(bool canPaintLayer, int changedCells, GameObject hitObject, Vector3 hitPoint)

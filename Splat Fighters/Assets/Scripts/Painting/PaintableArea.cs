@@ -39,11 +39,17 @@ public class PaintableArea : MonoBehaviour
 
     [Header("Runtime Overlay")]
     [SerializeField] private bool showRuntimeOverlay = true;
+    [SerializeField, Min(0f)] private float runtimeOverlayRefreshInterval = 0.05f;
     [SerializeField] private float runtimeOverlayYOffset = 0.02f;
     [SerializeField] private Color teamAOverlayColor = TeamVisualPalette.TeamAOverlayColor;
     [SerializeField] private Color teamBOverlayColor = TeamVisualPalette.TeamBOverlayColor;
     [SerializeField] private Color unpaintedOverlayColor = new Color(0f, 0f, 0f, 0f);
     [SerializeField] private Color blockedOverlayColor = new Color(0f, 0f, 0f, 0f);
+    [SerializeField] private bool useLiquidRuntimeOverlay = true;
+    [SerializeField, Range(0.2f, 1f)] private float runtimeOverlayLiquidAlpha = 0.96f;
+    [SerializeField, Range(0f, 1f)] private float runtimeOverlayGlossStrength = 0.32f;
+    [SerializeField, Min(0f)] private float runtimeOverlayFlowSpeed = 0.42f;
+    [SerializeField, Min(1f)] private float runtimeOverlayRippleScale = 42f;
 
     [Header("Context Menu Test")]
     [SerializeField, Min(0.1f)] private float debugPaintRadius = 2f;
@@ -65,17 +71,31 @@ public class PaintableArea : MonoBehaviour
     private float CellHeight => areaSize.y / gridHeight;
 
     private const string RuntimeOverlayName = "RuntimePaintOverlay";
+    private const string LiquidOverlayShaderName = "Splat Fighters/Ink Liquid Overlay";
+
+    private static readonly int MainTexId = Shader.PropertyToID("_MainTex");
+    private static readonly int ColorId = Shader.PropertyToID("_Color");
+    private static readonly int LiquidAlphaId = Shader.PropertyToID("_LiquidAlpha");
+    private static readonly int GlossStrengthId = Shader.PropertyToID("_GlossStrength");
+    private static readonly int FlowSpeedId = Shader.PropertyToID("_FlowSpeed");
+    private static readonly int RippleScaleId = Shader.PropertyToID("_RippleScale");
+    private static readonly int CullId = Shader.PropertyToID("_Cull");
 
     private Texture2D runtimeOverlayTexture;
+    private Color32[] runtimeOverlayPixels;
     private Material runtimeOverlayMaterial;
     private MeshRenderer runtimeOverlayRenderer;
     private Transform runtimeOverlayTransform;
     private static Mesh runtimeOverlayMesh;
     private bool runtimeOverlayReady;
+    private bool runtimeOverlayRefreshQueued;
+    private float nextRuntimeOverlayRefreshTime;
 
     private void Awake()
     {
         EnsureGrid();
+        RecalculateCounts();
+        RestoreLegacyPaintableMaskIfNeeded();
 
         if (rebuildMaskFromPaintBlockersOnAwake)
         {
@@ -96,7 +116,22 @@ public class PaintableArea : MonoBehaviour
     {
         SetupRuntimeOverlay();
         runtimeOverlayReady = runtimeOverlayRenderer != null;
-        RefreshRuntimeOverlay();
+        RefreshRuntimeOverlay(true);
+    }
+
+    private void LateUpdate()
+    {
+        if (!runtimeOverlayRefreshQueued)
+        {
+            return;
+        }
+
+        if (Time.unscaledTime < nextRuntimeOverlayRefreshTime)
+        {
+            return;
+        }
+
+        RefreshRuntimeOverlay(true);
     }
 
     private void OnValidate()
@@ -104,11 +139,12 @@ public class PaintableArea : MonoBehaviour
         ClampSettings();
         EnsureGrid();
         RecalculateCounts();
+        RestoreLegacyPaintableMaskIfNeeded();
 
         if (Application.isPlaying && runtimeOverlayReady)
         {
             UpdateOverlayTransform();
-            RefreshRuntimeOverlay();
+            RefreshRuntimeOverlay(true);
         }
     }
 
@@ -124,6 +160,7 @@ public class PaintableArea : MonoBehaviour
             Destroy(runtimeOverlayMaterial);
         }
 
+        runtimeOverlayPixels = null;
         runtimeOverlayReady = false;
     }
 
@@ -569,10 +606,12 @@ public class PaintableArea : MonoBehaviour
     {
         ClampSettings();
         int expectedCellCount = RawCellCount;
+        bool gridChanged = false;
 
         if (cells == null || cells.Length != expectedCellCount)
         {
             cells = new PaintGridCell[expectedCellCount];
+            gridChanged = true;
         }
 
         for (int i = 0; i < cells.Length; i++)
@@ -580,11 +619,19 @@ public class PaintableArea : MonoBehaviour
             if (cells[i] == null)
             {
                 cells[i] = new PaintGridCell();
+                gridChanged = true;
             }
         }
 
-        RecalculateCounts();
+        if (gridChanged)
+        {
+            RecalculateCounts();
+            RestoreLegacyPaintableMaskIfNeeded();
+        }
+    }
 
+    private void RestoreLegacyPaintableMaskIfNeeded()
+    {
         // Older scene data may not contain the isPaintable field yet. Keep the MVP usable by treating that data as fully paintable.
         if (paintableCellCount == 0 && cells.Length > 0)
         {
@@ -705,7 +752,12 @@ public class PaintableArea : MonoBehaviour
 
         if (runtimeOverlayMaterial == null)
         {
-            Shader shader = Shader.Find("Sprites/Default");
+            Shader shader = useLiquidRuntimeOverlay ? Shader.Find(LiquidOverlayShaderName) : null;
+
+            if (shader == null)
+            {
+                shader = Shader.Find("Sprites/Default");
+            }
 
             if (shader == null)
             {
@@ -714,15 +766,50 @@ public class PaintableArea : MonoBehaviour
 
             runtimeOverlayMaterial = new Material(shader);
             runtimeOverlayMaterial.name = "MAT_RuntimePaintOverlay_Instance";
-
-            if (runtimeOverlayMaterial.HasProperty("_Cull"))
-            {
-                runtimeOverlayMaterial.SetFloat("_Cull", (float)CullMode.Off);
-            }
         }
+
+        ConfigureRuntimeOverlayMaterial();
 
         runtimeOverlayRenderer.sharedMaterial = runtimeOverlayMaterial;
         runtimeOverlayRenderer.enabled = showRuntimeOverlay;
+    }
+
+    private void ConfigureRuntimeOverlayMaterial()
+    {
+        if (runtimeOverlayMaterial == null)
+        {
+            return;
+        }
+
+        if (runtimeOverlayMaterial.HasProperty(CullId))
+        {
+            runtimeOverlayMaterial.SetFloat(CullId, (float)CullMode.Off);
+        }
+
+        if (runtimeOverlayMaterial.HasProperty(LiquidAlphaId))
+        {
+            runtimeOverlayMaterial.SetFloat(LiquidAlphaId, runtimeOverlayLiquidAlpha);
+        }
+
+        if (runtimeOverlayMaterial.HasProperty(GlossStrengthId))
+        {
+            runtimeOverlayMaterial.SetFloat(GlossStrengthId, runtimeOverlayGlossStrength);
+        }
+
+        if (runtimeOverlayMaterial.HasProperty(FlowSpeedId))
+        {
+            runtimeOverlayMaterial.SetFloat(FlowSpeedId, runtimeOverlayFlowSpeed);
+        }
+
+        if (runtimeOverlayMaterial.HasProperty(RippleScaleId))
+        {
+            runtimeOverlayMaterial.SetFloat(RippleScaleId, runtimeOverlayRippleScale);
+        }
+
+        if (runtimeOverlayMaterial.HasProperty(ColorId))
+        {
+            runtimeOverlayMaterial.SetColor(ColorId, Color.white);
+        }
     }
 
     private void UpdateOverlayTransform()
@@ -737,7 +824,7 @@ public class PaintableArea : MonoBehaviour
         runtimeOverlayTransform.localScale = new Vector3(areaSize.x, areaSize.y, 1f);
     }
 
-    private void RefreshRuntimeOverlay()
+    private void RefreshRuntimeOverlay(bool force = false)
     {
         if (!Application.isPlaying)
         {
@@ -749,6 +836,19 @@ public class PaintableArea : MonoBehaviour
             return;
         }
 
+        if (!force && runtimeOverlayRefreshInterval > 0f && Time.unscaledTime < nextRuntimeOverlayRefreshTime)
+        {
+            runtimeOverlayRefreshQueued = true;
+            return;
+        }
+
+        RefreshRuntimeOverlayNow();
+        nextRuntimeOverlayRefreshTime = Time.unscaledTime + runtimeOverlayRefreshInterval;
+        runtimeOverlayRefreshQueued = false;
+    }
+
+    private void RefreshRuntimeOverlayNow()
+    {
         if (!showRuntimeOverlay)
         {
             if (runtimeOverlayRenderer != null)
@@ -771,11 +871,18 @@ public class PaintableArea : MonoBehaviour
 
             runtimeOverlayTexture = new Texture2D(gridWidth, gridHeight, TextureFormat.RGBA32, false);
             runtimeOverlayTexture.name = "RuntimePaintOverlayTexture";
-            runtimeOverlayTexture.filterMode = FilterMode.Point;
+            runtimeOverlayTexture.filterMode = useLiquidRuntimeOverlay ? FilterMode.Bilinear : FilterMode.Point;
             runtimeOverlayTexture.wrapMode = TextureWrapMode.Clamp;
         }
+        else
+        {
+            runtimeOverlayTexture.filterMode = useLiquidRuntimeOverlay ? FilterMode.Bilinear : FilterMode.Point;
+        }
 
-        Color32[] pixels = new Color32[RawCellCount];
+        if (runtimeOverlayPixels == null || runtimeOverlayPixels.Length != RawCellCount)
+        {
+            runtimeOverlayPixels = new Color32[RawCellCount];
+        }
 
         for (int y = 0; y < gridHeight; y++)
         {
@@ -784,16 +891,16 @@ public class PaintableArea : MonoBehaviour
                 PaintGridCell cell = cells[ToIndex(x, y)];
                 // The overlay quad is rotated onto the XZ plane, so texture V is opposite to local +Z.
                 int textureY = gridHeight - 1 - y;
-                pixels[textureY * gridWidth + x] = cell.IsPaintable
+                runtimeOverlayPixels[textureY * gridWidth + x] = cell.IsPaintable
                     ? GetOverlayColor(cell.Owner)
                     : blockedOverlayColor;
             }
         }
 
-        runtimeOverlayTexture.SetPixels32(pixels);
+        runtimeOverlayTexture.SetPixels32(runtimeOverlayPixels);
         runtimeOverlayTexture.Apply(false, false);
-        runtimeOverlayMaterial.mainTexture = runtimeOverlayTexture;
-        runtimeOverlayMaterial.color = Color.white;
+        runtimeOverlayMaterial.SetTexture(MainTexId, runtimeOverlayTexture);
+        ConfigureRuntimeOverlayMaterial();
     }
 
     private static Mesh GetOrCreateRuntimeOverlayMesh()

@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 /// <summary>
@@ -52,6 +53,10 @@ public class InkWeapon : MonoBehaviour
     private Vector3 externalAimDirection = Vector3.forward;
     private bool hasExternalAimTarget;
     private Vector3 externalAimTarget;
+    private Collider[] cachedIgnoredColliders;
+    private MaterialPropertyBlock projectileColorBlock;
+    private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
+    private static readonly int ColorId = Shader.PropertyToID("_Color");
 
     public Transform FirePoint => firePoint != null ? firePoint : transform;
     public Team Team => team;
@@ -62,6 +67,7 @@ public class InkWeapon : MonoBehaviour
     public bool IsReceivingOwnPaintRecovery => isReceivingOwnPaintRecovery;
     public float ExternalRecoveryMultiplier => externalRecoveryMultiplier;
     public bool IsExternalFireBlocked => externalFireBlocked;
+    public event Action Fired;
 
     private void Awake()
     {
@@ -113,7 +119,7 @@ public class InkWeapon : MonoBehaviour
 
         InkProjectile projectile = Instantiate(projectilePrefab, spawnPoint.position, rotation);
         ApplyProjectileTeamColor(projectile);
-        projectile.IgnoreColliders(GetComponentsInChildren<Collider>());
+        projectile.IgnoreColliders(GetIgnoredColliders());
         projectile.Launch(
             fireDirection,
             projectileSpeed,
@@ -124,6 +130,7 @@ public class InkWeapon : MonoBehaviour
             projectileCanPaint);
 
         nextFireTime = Time.time + fireCooldown;
+        Fired?.Invoke();
         return true;
     }
 
@@ -172,6 +179,11 @@ public class InkWeapon : MonoBehaviour
     {
         hasExternalAimDirection = false;
         hasExternalAimTarget = false;
+    }
+
+    public void RefreshIgnoredColliderCache()
+    {
+        cachedIgnoredColliders = GetComponentsInChildren<Collider>();
     }
 
     /// <summary>
@@ -316,7 +328,15 @@ public class InkWeapon : MonoBehaviour
         }
 
         Renderer[] renderers = projectile.GetComponentsInChildren<Renderer>();
+        if (projectileColorBlock == null)
+        {
+            projectileColorBlock = new MaterialPropertyBlock();
+        }
+
         Color color = team == Team.TeamB ? teamBProjectileColor : teamAProjectileColor;
+        projectileColorBlock.Clear();
+        projectileColorBlock.SetColor(BaseColorId, color);
+        projectileColorBlock.SetColor(ColorId, color);
 
         for (int i = 0; i < renderers.Length; i++)
         {
@@ -327,7 +347,17 @@ public class InkWeapon : MonoBehaviour
                 continue;
             }
 
-            projectileRenderer.material.color = color;
+            projectileRenderer.SetPropertyBlock(projectileColorBlock);
         }
+    }
+
+    private Collider[] GetIgnoredColliders()
+    {
+        if (cachedIgnoredColliders == null || cachedIgnoredColliders.Length == 0)
+        {
+            RefreshIgnoredColliderCache();
+        }
+
+        return cachedIgnoredColliders;
     }
 }
