@@ -6,7 +6,7 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public sealed class PerformanceProfile : MonoBehaviour
 {
-    [SerializeField, Min(15)] private int targetFrameRate = 60;
+    [SerializeField, Min(15)] private int targetFrameRate = 30;
     [SerializeField] private bool disableVSync = true;
     [SerializeField, Min(0.01f)] private float fixedDeltaTime = 0.02f;
     [SerializeField] private bool applyOnAwake = true;
