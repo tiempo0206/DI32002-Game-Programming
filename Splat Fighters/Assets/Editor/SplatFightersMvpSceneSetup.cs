@@ -201,7 +201,7 @@ public static class SplatFightersMvpSceneSetup
         managerSo.ApplyModifiedPropertiesWithoutUndo();
 
         SerializedObject performanceSo = new SerializedObject(performanceProfile);
-        performanceSo.FindProperty("targetFrameRate").intValue = 60;
+        performanceSo.FindProperty("targetFrameRate").intValue = 30;
         performanceSo.FindProperty("disableVSync").boolValue = true;
         performanceSo.FindProperty("fixedDeltaTime").floatValue = 0.02f;
         performanceSo.FindProperty("applyOnAwake").boolValue = true;
