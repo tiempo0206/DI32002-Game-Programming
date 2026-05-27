@@ -192,7 +192,7 @@ public sealed class MainMenuController : MonoBehaviour
         quitButton = CreateButton(menuPanel.transform, "QuitButton", "Quit", new Vector2(36f, -538f), new Vector2(310f, 48f), HandleQuitAction);
 
         CreateText(settingsPanel.transform, "SettingsTitleText", "Settings", new Vector2(32f, -40f), 32, FontStyle.Bold, new Vector2(260f, 56f), TextAnchor.UpperLeft);
-        settingsSummaryText = CreateText(settingsPanel.transform, "SettingsSummaryText", "Preset: Balanced | Fullscreen: Off", new Vector2(32f, -92f), 18, FontStyle.Normal, new Vector2(300f, 72f), TextAnchor.UpperLeft);
+        settingsSummaryText = CreateText(settingsPanel.transform, "SettingsSummaryText", "Preset: Performant | Fullscreen: Off", new Vector2(32f, -92f), 18, FontStyle.Normal, new Vector2(300f, 72f), TextAnchor.UpperLeft);
         CreateText(settingsPanel.transform, "GraphicsTitleText", "Graphics Preset", new Vector2(32f, -184f), 22, FontStyle.Bold, new Vector2(260f, 36f), TextAnchor.UpperLeft);
 
         performantButton = CreateButton(settingsPanel.transform, "PerformantButton", "Performant", new Vector2(32f, -232f), new Vector2(260f, 46f), () => SelectPreset(GraphicsPreset.Performant));
@@ -359,10 +359,10 @@ public sealed class MainMenuController : MonoBehaviour
         switch (selectedPreset)
         {
             case GraphicsPreset.Performant:
-                performanceProfile.ApplySettings(45, true, 0.025f);
+                performanceProfile.ApplySettings(30, true, 0.03f);
                 break;
             case GraphicsPreset.Balanced:
-                performanceProfile.ApplySettings(60, true, 0.02f);
+                performanceProfile.ApplySettings(45, true, 0.02f);
                 break;
             case GraphicsPreset.HighFidelity:
                 performanceProfile.ApplySettings(60, false, 0.0166667f);
@@ -544,11 +544,11 @@ public sealed class MainMenuController : MonoBehaviour
 
     private GraphicsPreset LoadGraphicsPreset()
     {
-        int rawPreset = PlayerPrefs.GetInt(GraphicsPresetPrefKey, (int)GraphicsPreset.Balanced);
+        int rawPreset = PlayerPrefs.GetInt(GraphicsPresetPrefKey, (int)GraphicsPreset.Performant);
 
         if (rawPreset < (int)GraphicsPreset.Performant || rawPreset > (int)GraphicsPreset.HighFidelity)
         {
-            return GraphicsPreset.Balanced;
+            return GraphicsPreset.Performant;
         }
 
         return (GraphicsPreset)rawPreset;
