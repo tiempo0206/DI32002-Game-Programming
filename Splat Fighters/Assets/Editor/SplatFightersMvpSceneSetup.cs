@@ -137,7 +137,7 @@ public static class SplatFightersMvpSceneSetup
         projectileSo.FindProperty("impactMarkerSurfaceOffset").floatValue = 0.03f;
         projectileSo.FindProperty("logPaintMisses").boolValue = false;
         projectileSo.FindProperty("spawnInkSplatterVfx").boolValue = false;
-        projectileSo.FindProperty("spawnSplatterOnNonPaintableHit").boolValue = true;
+        projectileSo.FindProperty("spawnSplatterOnNonPaintableHit").boolValue = false;
         projectileSo.FindProperty("splatterRadiusMultiplier").floatValue = 1.1f;
         projectileSo.ApplyModifiedPropertiesWithoutUndo();
 
