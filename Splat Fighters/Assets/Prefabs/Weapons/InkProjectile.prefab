@@ -168,5 +168,5 @@ MonoBehaviour:
   impactMarkerSurfaceOffset: 0.03
   logPaintMisses: 0
   spawnInkSplatterVfx: 0
-  spawnSplatterOnNonPaintableHit: 1
+  spawnSplatterOnNonPaintableHit: 0
   splatterRadiusMultiplier: 1.1
