@@ -268,6 +268,12 @@ public class GameManager : MonoBehaviour
         UpdateScoreUI();
     }
 
+    public void SetMatchMode(MatchMode newMode)
+    {
+        matchMode = newMode;
+        UpdateScoreUI();
+    }
+
     public float GetCoveragePercent(Team team)
     {
         switch (team)

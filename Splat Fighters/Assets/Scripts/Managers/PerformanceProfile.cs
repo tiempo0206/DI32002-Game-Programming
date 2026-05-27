@@ -18,6 +18,8 @@ public sealed class PerformanceProfile : MonoBehaviour
 
     public int TargetFrameRate => targetFrameRate;
     public bool DisableVSync => disableVSync;
+    public float FixedDeltaTime => fixedDeltaTime;
+    public bool IsApplied => applied;
 
     private void Awake()
     {
@@ -51,6 +53,15 @@ public sealed class PerformanceProfile : MonoBehaviour
         Application.targetFrameRate = targetFrameRate;
         Time.fixedDeltaTime = fixedDeltaTime;
         applied = true;
+    }
+
+    public void ApplySettings(int newTargetFrameRate, bool newDisableVSync, float newFixedDeltaTime)
+    {
+        Restore();
+        targetFrameRate = Mathf.Max(15, newTargetFrameRate);
+        disableVSync = newDisableVSync;
+        fixedDeltaTime = Mathf.Max(0.01f, newFixedDeltaTime);
+        Apply();
     }
 
     public void Restore()

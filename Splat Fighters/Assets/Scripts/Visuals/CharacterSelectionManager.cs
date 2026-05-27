@@ -189,12 +189,12 @@ public sealed class CharacterSelectionManager : MonoBehaviour
 
         if (catalog == null || catalog.Count == 0 || playerVisual == null)
         {
-            selectionText.text = "角色素材目录生成中...";
+            selectionText.text = "Character catalog is loading...";
             selectionText.color = new Color(1f, 0.78f, 0.28f, 1f);
             return;
         }
 
         selectionText.color = TeamVisualPalette.GetColor(Team.TeamA);
-        selectionText.text = $"角色: {playerVisual.CurrentDisplayName}   C/V 切换";
+        selectionText.text = $"Character: {playerVisual.CurrentDisplayName}   C/V to cycle";
     }
 }

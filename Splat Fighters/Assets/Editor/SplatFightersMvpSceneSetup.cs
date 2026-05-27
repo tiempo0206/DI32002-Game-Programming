@@ -181,7 +181,7 @@ public static class SplatFightersMvpSceneSetup
         PerformanceProfile performanceProfile = managerObject.AddComponent<PerformanceProfile>();
 
         SerializedObject managerSo = new SerializedObject(gameManager);
-        managerSo.FindProperty("startMatchOnAwake").boolValue = true;
+        managerSo.FindProperty("startMatchOnAwake").boolValue = false;
         managerSo.FindProperty("clearPaintOnMatchStart").boolValue = true;
         managerSo.FindProperty("resetCharactersOnMatchStart").boolValue = true;
         managerSo.FindProperty("destroyProjectilesOnMatchStart").boolValue = true;
