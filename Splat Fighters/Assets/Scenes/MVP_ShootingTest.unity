@@ -1227,7 +1227,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7eb2decfa5f841bd8910e15039e0a4c6, type: 3}
   m_Name:
   m_EditorClassIdentifier:
-  startMatchOnAwake: 0
+  startMatchOnAwake: 1
   clearPaintOnMatchStart: 1
   resetCharactersOnMatchStart: 1
   destroyProjectilesOnMatchStart: 1
