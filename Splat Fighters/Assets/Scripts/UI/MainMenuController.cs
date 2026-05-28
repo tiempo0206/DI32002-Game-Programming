@@ -22,10 +22,13 @@ public sealed class MainMenuController : MonoBehaviour
     [SerializeField] private GameManager gameManager = null;
     [SerializeField] private PerformanceProfile performanceProfile = null;
     [SerializeField] private ScoreUI scoreUI = null;
-    [SerializeField] private bool hideHudWhileMenuOpen = true;
+    [SerializeField] private bool hideHudWhileMenuOpen = false;
     [SerializeField] private bool applySavedSettingsOnAwake = true;
 
     private Canvas canvas;
+    private GameObject backdropObject;
+    private GameObject menuPanelObject;
+    private GameObject settingsPanelObject;
     private CanvasGroup menuGroup;
     private CanvasGroup settingsGroup;
     private Text titleText;
@@ -171,35 +174,36 @@ public sealed class MainMenuController : MonoBehaviour
 
         canvasObject.AddComponent<GraphicRaycaster>();
 
-        GameObject backdrop = CreatePanel(canvasObject.transform, "Backdrop", new Vector2(0f, 0f), new Vector2(1f, 1f), new Vector2(0f, 0f), new Color(0.02f, 0.03f, 0.04f, 0.72f));
-        backdrop.transform.SetAsFirstSibling();
+        backdropObject = CreatePanel(canvasObject.transform, "Backdrop", new Vector2(0f, 0f), new Vector2(1f, 1f), Vector2.zero, new Color(0.02f, 0.03f, 0.04f, 0.35f));
+        backdropObject.transform.SetAsFirstSibling();
+        backdropObject.SetActive(false);
 
-        GameObject menuPanel = CreatePanel(canvasObject.transform, "MenuPanel", new Vector2(0.08f, 0.12f), new Vector2(0.48f, 0.88f), Vector2.zero, new Color(0.08f, 0.1f, 0.12f, 0.9f));
-        menuGroup = menuPanel.AddComponent<CanvasGroup>();
+        menuPanelObject = CreatePanel(canvasObject.transform, "MenuPanel", new Vector2(0.62f, 0.08f), new Vector2(0.94f, 0.58f), Vector2.zero, new Color(0.06f, 0.075f, 0.09f, 0.84f));
+        menuGroup = menuPanelObject.AddComponent<CanvasGroup>();
 
-        GameObject settingsPanel = CreatePanel(canvasObject.transform, "SettingsPanel", new Vector2(0.56f, 0.18f), new Vector2(0.92f, 0.84f), Vector2.zero, new Color(0.08f, 0.1f, 0.12f, 0.94f));
-        settingsGroup = settingsPanel.AddComponent<CanvasGroup>();
+        settingsPanelObject = CreatePanel(canvasObject.transform, "SettingsPanel", new Vector2(0.62f, 0.08f), new Vector2(0.94f, 0.66f), Vector2.zero, new Color(0.06f, 0.075f, 0.09f, 0.9f));
+        settingsGroup = settingsPanelObject.AddComponent<CanvasGroup>();
 
-        titleText = CreateText(menuPanel.transform, "TitleText", "Splat Fighters", new Vector2(36f, -40f), 36, FontStyle.Bold, new Vector2(420f, 72f), TextAnchor.UpperLeft);
-        statusText = CreateText(menuPanel.transform, "StatusText", "Ready to start.", new Vector2(36f, -118f), 22, FontStyle.Bold, new Vector2(420f, 42f), TextAnchor.UpperLeft);
-        modeText = CreateText(menuPanel.transform, "ModeText", "Mode: Turf War", new Vector2(36f, -166f), 20, FontStyle.Normal, new Vector2(420f, 36f), TextAnchor.UpperLeft);
-        hintText = CreateText(menuPanel.transform, "HintText", "Enter starts the match. Esc pauses in play.", new Vector2(36f, -214f), 18, FontStyle.Normal, new Vector2(420f, 60f), TextAnchor.UpperLeft);
+        titleText = CreateText(menuPanelObject.transform, "TitleText", "Splat Fighters", new Vector2(28f, -28f), 30, FontStyle.Bold, new Vector2(350f, 58f), TextAnchor.UpperLeft);
+        statusText = CreateText(menuPanelObject.transform, "StatusText", "Ready to start.", new Vector2(28f, -86f), 20, FontStyle.Bold, new Vector2(350f, 34f), TextAnchor.UpperLeft);
+        modeText = CreateText(menuPanelObject.transform, "ModeText", "Mode: Turf War", new Vector2(28f, -126f), 18, FontStyle.Normal, new Vector2(350f, 30f), TextAnchor.UpperLeft);
+        hintText = CreateText(menuPanelObject.transform, "HintText", "Enter starts the match. Esc pauses in play.", new Vector2(28f, -164f), 16, FontStyle.Normal, new Vector2(350f, 48f), TextAnchor.UpperLeft);
 
-        primaryButton = CreateButton(menuPanel.transform, "PrimaryButton", "Start Match", new Vector2(36f, -306f), new Vector2(310f, 56f), HandlePrimaryAction);
-        secondaryButton = CreateButton(menuPanel.transform, "SecondaryButton", "Cycle Mode", new Vector2(36f, -370f), new Vector2(310f, 48f), HandleSecondaryAction);
-        modeButton = CreateButton(menuPanel.transform, "ModeButton", "Mode: Turf War", new Vector2(36f, -426f), new Vector2(310f, 48f), HandleModeAction);
-        settingsButton = CreateButton(menuPanel.transform, "SettingsButton", "Settings", new Vector2(36f, -482f), new Vector2(310f, 48f), () => ShowSettings(true));
-        quitButton = CreateButton(menuPanel.transform, "QuitButton", "Quit", new Vector2(36f, -538f), new Vector2(310f, 48f), HandleQuitAction);
+        primaryButton = CreateButton(menuPanelObject.transform, "PrimaryButton", "Start Match", new Vector2(28f, -236f), new Vector2(280f, 50f), HandlePrimaryAction);
+        secondaryButton = CreateButton(menuPanelObject.transform, "SecondaryButton", "Cycle Mode", new Vector2(28f, -292f), new Vector2(280f, 44f), HandleSecondaryAction);
+        modeButton = CreateButton(menuPanelObject.transform, "ModeButton", "Mode: Turf War", new Vector2(28f, -344f), new Vector2(280f, 44f), HandleModeAction);
+        settingsButton = CreateButton(menuPanelObject.transform, "SettingsButton", "Settings", new Vector2(28f, -396f), new Vector2(280f, 44f), () => ShowSettings(true));
+        quitButton = CreateButton(menuPanelObject.transform, "QuitButton", "Quit", new Vector2(28f, -448f), new Vector2(280f, 44f), HandleQuitAction);
 
-        CreateText(settingsPanel.transform, "SettingsTitleText", "Settings", new Vector2(32f, -40f), 32, FontStyle.Bold, new Vector2(260f, 56f), TextAnchor.UpperLeft);
-        settingsSummaryText = CreateText(settingsPanel.transform, "SettingsSummaryText", "Preset: Performant | Fullscreen: Off", new Vector2(32f, -92f), 18, FontStyle.Normal, new Vector2(300f, 72f), TextAnchor.UpperLeft);
-        CreateText(settingsPanel.transform, "GraphicsTitleText", "Graphics Preset", new Vector2(32f, -184f), 22, FontStyle.Bold, new Vector2(260f, 36f), TextAnchor.UpperLeft);
+        CreateText(settingsPanelObject.transform, "SettingsTitleText", "Settings", new Vector2(28f, -28f), 30, FontStyle.Bold, new Vector2(300f, 50f), TextAnchor.UpperLeft);
+        settingsSummaryText = CreateText(settingsPanelObject.transform, "SettingsSummaryText", "Preset: Performant | Fullscreen: Off", new Vector2(28f, -84f), 17, FontStyle.Normal, new Vector2(310f, 62f), TextAnchor.UpperLeft);
+        CreateText(settingsPanelObject.transform, "GraphicsTitleText", "Graphics Preset", new Vector2(28f, -160f), 21, FontStyle.Bold, new Vector2(280f, 34f), TextAnchor.UpperLeft);
 
-        performantButton = CreateButton(settingsPanel.transform, "PerformantButton", "Performant", new Vector2(32f, -232f), new Vector2(260f, 46f), () => SelectPreset(GraphicsPreset.Performant));
-        balancedButton = CreateButton(settingsPanel.transform, "BalancedButton", "Balanced", new Vector2(32f, -286f), new Vector2(260f, 46f), () => SelectPreset(GraphicsPreset.Balanced));
-        highFidelityButton = CreateButton(settingsPanel.transform, "HighFidelityButton", "High Fidelity", new Vector2(32f, -340f), new Vector2(260f, 46f), () => SelectPreset(GraphicsPreset.HighFidelity));
-        fullscreenButton = CreateButton(settingsPanel.transform, "FullscreenButton", "Fullscreen", new Vector2(32f, -418f), new Vector2(260f, 46f), ToggleFullscreen);
-        CreateButton(settingsPanel.transform, "BackButton", "Back", new Vector2(32f, -474f), new Vector2(260f, 46f), () => ShowSettings(false));
+        performantButton = CreateButton(settingsPanelObject.transform, "PerformantButton", "Performant", new Vector2(28f, -208f), new Vector2(280f, 44f), () => SelectPreset(GraphicsPreset.Performant));
+        balancedButton = CreateButton(settingsPanelObject.transform, "BalancedButton", "Balanced", new Vector2(28f, -260f), new Vector2(280f, 44f), () => SelectPreset(GraphicsPreset.Balanced));
+        highFidelityButton = CreateButton(settingsPanelObject.transform, "HighFidelityButton", "High Fidelity", new Vector2(28f, -312f), new Vector2(280f, 44f), () => SelectPreset(GraphicsPreset.HighFidelity));
+        fullscreenButton = CreateButton(settingsPanelObject.transform, "FullscreenButton", "Fullscreen", new Vector2(28f, -386f), new Vector2(280f, 44f), ToggleFullscreen);
+        CreateButton(settingsPanelObject.transform, "BackButton", "Back", new Vector2(28f, -438f), new Vector2(280f, 44f), () => ShowSettings(false));
 
         UpdatePresetVisuals();
         ShowSettings(false);
@@ -230,8 +234,9 @@ public sealed class MainMenuController : MonoBehaviour
             settingsVisible = false;
         }
 
-        SetVisible(menuGroup, showMenu);
+        SetVisible(menuGroup, showMenu && !settingsVisible);
         SetVisible(settingsGroup, showMenu && settingsVisible);
+        SetBackdropVisible(showMenu && settingsVisible);
         SetButtonVisible(modeButton, currentState == GameManager.MatchState.WaitingToStart);
         SetButtonVisible(secondaryButton, currentState == GameManager.MatchState.Paused || currentState == GameManager.MatchState.Finished);
 
@@ -252,8 +257,9 @@ public sealed class MainMenuController : MonoBehaviour
             settingsVisible = false;
         }
 
-        SetVisible(menuGroup, showMenu);
+        SetVisible(menuGroup, showMenu && !settingsVisible);
         SetVisible(settingsGroup, showMenu && settingsVisible);
+        SetBackdropVisible(showMenu && settingsVisible);
         SetButtonVisible(modeButton, state == GameManager.MatchState.WaitingToStart);
         SetButtonVisible(secondaryButton, state == GameManager.MatchState.Paused || state == GameManager.MatchState.Finished);
 
@@ -325,7 +331,10 @@ public sealed class MainMenuController : MonoBehaviour
     private void ShowSettings(bool visible)
     {
         settingsVisible = visible;
-        SetVisible(settingsGroup, visible && gameManager != null && gameManager.CurrentState != GameManager.MatchState.Playing);
+        bool showMenu = gameManager != null && gameManager.CurrentState != GameManager.MatchState.Playing;
+        SetVisible(menuGroup, showMenu && !settingsVisible);
+        SetVisible(settingsGroup, showMenu && settingsVisible);
+        SetBackdropVisible(showMenu && settingsVisible);
         UpdateButtonLabels();
     }
 
@@ -684,9 +693,18 @@ public sealed class MainMenuController : MonoBehaviour
             return;
         }
 
+        group.gameObject.SetActive(visible);
         group.alpha = visible ? 1f : 0f;
         group.blocksRaycasts = visible;
         group.interactable = visible;
+    }
+
+    private void SetBackdropVisible(bool visible)
+    {
+        if (backdropObject != null)
+        {
+            backdropObject.SetActive(visible);
+        }
     }
 
     private static void SetButtonVisible(Button button, bool visible)
