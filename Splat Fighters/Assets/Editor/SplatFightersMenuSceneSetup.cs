@@ -19,6 +19,8 @@ public static class SplatFightersMenuSceneSetup
         Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
         scene.name = "MainMenu";
 
+        CreateMenuCamera();
+
         GameObject controllerObject = new GameObject("MainMenuController");
         controllerObject.AddComponent<MainMenuController>();
 
@@ -34,6 +36,23 @@ public static class SplatFightersMenuSceneSetup
         AssetDatabase.Refresh();
 
         Debug.Log($"Created standalone main menu scene at {MenuScenePath} and updated build settings.");
+    }
+
+    private static void CreateMenuCamera()
+    {
+        GameObject cameraObject = new GameObject("Main Camera");
+        cameraObject.tag = "MainCamera";
+        cameraObject.transform.position = new Vector3(0f, 0f, -10f);
+
+        Camera camera = cameraObject.AddComponent<Camera>();
+        camera.orthographic = true;
+        camera.orthographicSize = 5f;
+        camera.clearFlags = CameraClearFlags.SolidColor;
+        camera.backgroundColor = new Color(0.08f, 0.09f, 0.11f, 1f);
+        camera.nearClipPlane = 0.1f;
+        camera.farClipPlane = 100f;
+
+        cameraObject.AddComponent<AudioListener>();
     }
 
     private static void EnsureFolders()
