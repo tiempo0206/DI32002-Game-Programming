@@ -18,13 +18,18 @@ public sealed class LiquidInkProjectileVisual : MonoBehaviour
     private static Material sharedCoreMaterial;
     private static Material sharedTrailMaterial;
 
-    private readonly MaterialPropertyBlock propertyBlock = new MaterialPropertyBlock();
+    private MaterialPropertyBlock propertyBlock;
     private TrailRenderer trailRenderer;
     private Renderer[] renderers;
     private Color teamColor;
     private float baseTrailWidth;
     private float pulseSeed;
     private bool configured;
+
+    private void Awake()
+    {
+        EnsurePropertyBlock();
+    }
 
     public void Configure(Team team, float paintRadius)
     {
@@ -55,6 +60,7 @@ public sealed class LiquidInkProjectileVisual : MonoBehaviour
         }
 
         Color rimColor = Color.Lerp(teamColor, Color.white, 0.35f);
+        EnsurePropertyBlock();
 
         for (int i = 0; i < renderers.Length; i++)
         {
@@ -158,5 +164,13 @@ public sealed class LiquidInkProjectileVisual : MonoBehaviour
         sharedTrailMaterial = new Material(shader);
         sharedTrailMaterial.name = TrailMaterialName;
         return sharedTrailMaterial;
+    }
+
+    private void EnsurePropertyBlock()
+    {
+        if (propertyBlock == null)
+        {
+            propertyBlock = new MaterialPropertyBlock();
+        }
     }
 }
