@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 /// <summary>
@@ -18,6 +19,8 @@ public sealed class MainMenuController : MonoBehaviour
 
     private const string GraphicsPresetPrefKey = "SplatFighters.Menu.GraphicsPreset";
     private const string FullscreenPrefKey = "SplatFighters.Menu.Fullscreen";
+    private const string MatchModePrefKey = "SplatFighters.Menu.MatchMode";
+    private const string GameplaySceneName = "MVP_ShootingTest";
 
     [SerializeField] private GameManager gameManager = null;
     [SerializeField] private PerformanceProfile performanceProfile = null;
@@ -48,13 +51,14 @@ public sealed class MainMenuController : MonoBehaviour
     private bool settingsVisible;
     private bool fullscreenEnabled;
     private GraphicsPreset selectedPreset;
+    private GameManager.MatchMode selectedMatchMode;
     private GameManager.MatchState lastKnownState = GameManager.MatchState.WaitingToStart;
     private GameManager boundGameManager;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void Bootstrap()
     {
-        if (FindObjectOfType<MainMenuController>() != null)
+        if (FindObjectOfType<MainMenuController>() != null || FindObjectOfType<GameManager>() != null)
         {
             return;
         }
@@ -67,6 +71,7 @@ public sealed class MainMenuController : MonoBehaviour
     {
         selectedPreset = LoadGraphicsPreset();
         fullscreenEnabled = PlayerPrefs.GetInt(FullscreenPrefKey, 0) == 1;
+        selectedMatchMode = LoadMatchMode();
         ApplyFullscreenMode();
     }
 
@@ -88,14 +93,9 @@ public sealed class MainMenuController : MonoBehaviour
     {
         EnsureBindings();
 
-        if (gameManager == null)
-        {
-            return;
-        }
-
         RefreshFromGameState(false);
 
-        if (settingsVisible && gameManager.CurrentState != GameManager.MatchState.Playing && Input.GetKeyDown(KeyCode.Escape))
+        if (settingsVisible && Input.GetKeyDown(KeyCode.Escape))
         {
             ShowSettings(false);
         }
@@ -174,14 +174,14 @@ public sealed class MainMenuController : MonoBehaviour
 
         canvasObject.AddComponent<GraphicRaycaster>();
 
-        backdropObject = CreatePanel(canvasObject.transform, "Backdrop", new Vector2(0f, 0f), new Vector2(1f, 1f), Vector2.zero, new Color(0.02f, 0.03f, 0.04f, 0.28f));
+        backdropObject = CreateBackdrop(canvasObject.transform, "Backdrop", new Color(0.02f, 0.03f, 0.04f, 0.28f));
         backdropObject.transform.SetAsFirstSibling();
         backdropObject.SetActive(false);
 
-        menuPanelObject = CreatePanel(canvasObject.transform, "MenuPanel", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(560f, 540f), new Color(0.06f, 0.075f, 0.09f, 0.9f));
+        menuPanelObject = CreateContainer(canvasObject.transform, "MenuPanel", new Vector2(0.5f, 0.5f), new Vector2(560f, 540f));
         menuGroup = menuPanelObject.AddComponent<CanvasGroup>();
 
-        settingsPanelObject = CreatePanel(canvasObject.transform, "SettingsPanel", new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), new Vector2(580f, 560f), new Color(0.06f, 0.075f, 0.09f, 0.94f));
+        settingsPanelObject = CreateContainer(canvasObject.transform, "SettingsPanel", new Vector2(0.5f, 0.5f), new Vector2(580f, 560f));
         settingsGroup = settingsPanelObject.AddComponent<CanvasGroup>();
 
         titleText = CreateText(menuPanelObject.transform, "TitleText", "Splat Fighters", new Vector2(0f, -30f), 34, FontStyle.Bold, new Vector2(500f, 56f), TextAnchor.UpperCenter);
@@ -189,7 +189,7 @@ public sealed class MainMenuController : MonoBehaviour
         modeText = CreateText(menuPanelObject.transform, "ModeText", "Mode: Turf War", new Vector2(0f, -128f), 19, FontStyle.Normal, new Vector2(500f, 30f), TextAnchor.UpperCenter);
         hintText = CreateText(menuPanelObject.transform, "HintText", "Press Enter or Start Match to begin. Esc opens settings while paused.", new Vector2(0f, -172f), 17, FontStyle.Normal, new Vector2(500f, 56f), TextAnchor.UpperCenter);
 
-        primaryButton = CreateButton(menuPanelObject.transform, "PrimaryButton", "Start Match", new Vector2(0f, -254f), new Vector2(330f, 50f), HandlePrimaryAction);
+        primaryButton = CreateButton(menuPanelObject.transform, "PrimaryButton", "Start Game", new Vector2(0f, -254f), new Vector2(330f, 50f), HandlePrimaryAction);
         secondaryButton = CreateButton(menuPanelObject.transform, "SecondaryButton", "Cycle Mode", new Vector2(0f, -312f), new Vector2(330f, 44f), HandleSecondaryAction);
         modeButton = CreateButton(menuPanelObject.transform, "ModeButton", "Mode: Turf War", new Vector2(0f, -364f), new Vector2(330f, 44f), HandleModeAction);
         settingsButton = CreateButton(menuPanelObject.transform, "SettingsButton", "Settings", new Vector2(0f, -416f), new Vector2(330f, 44f), () => ShowSettings(true));
@@ -213,6 +213,16 @@ public sealed class MainMenuController : MonoBehaviour
     {
         if (gameManager == null)
         {
+            UpdateMenuText();
+            SetVisible(menuGroup, !settingsVisible);
+            SetVisible(settingsGroup, settingsVisible);
+            SetBackdropVisible(settingsVisible);
+            SetButtonVisible(modeButton, false);
+            SetButtonVisible(secondaryButton, true);
+            if (hideHudWhileMenuOpen && scoreUI != null)
+            {
+                scoreUI.gameObject.SetActive(false);
+            }
             return;
         }
 
@@ -273,6 +283,7 @@ public sealed class MainMenuController : MonoBehaviour
     {
         if (gameManager == null)
         {
+            SceneManager.LoadScene(GameplaySceneName, LoadSceneMode.Single);
             return;
         }
 
@@ -294,6 +305,7 @@ public sealed class MainMenuController : MonoBehaviour
     {
         if (gameManager == null)
         {
+            CycleMenuMatchMode();
             return;
         }
 
@@ -313,6 +325,7 @@ public sealed class MainMenuController : MonoBehaviour
     {
         if (gameManager == null)
         {
+            CycleMenuMatchMode();
             return;
         }
 
@@ -331,10 +344,10 @@ public sealed class MainMenuController : MonoBehaviour
     private void ShowSettings(bool visible)
     {
         settingsVisible = visible;
-        bool showMenu = gameManager != null && gameManager.CurrentState != GameManager.MatchState.Playing;
+        bool showMenu = gameManager == null || gameManager.CurrentState != GameManager.MatchState.Playing;
         SetVisible(menuGroup, showMenu && !settingsVisible);
         SetVisible(settingsGroup, showMenu && settingsVisible);
-        SetBackdropVisible(showMenu);
+        SetBackdropVisible(showMenu && settingsVisible);
         UpdateButtonLabels();
     }
 
@@ -386,59 +399,77 @@ public sealed class MainMenuController : MonoBehaviour
 
     private void UpdateMenuText()
     {
-        if (gameManager == null)
-        {
-            return;
-        }
-
         if (titleText != null)
         {
-            switch (gameManager.CurrentState)
+            if (gameManager == null)
             {
-                case GameManager.MatchState.WaitingToStart:
-                    titleText.text = "Splat Fighters";
-                    break;
-                case GameManager.MatchState.Playing:
-                    titleText.text = "Match Live";
-                    break;
-                case GameManager.MatchState.Paused:
-                    titleText.text = "Paused";
-                    break;
-                case GameManager.MatchState.Finished:
-                    titleText.text = "Match Complete";
-                    break;
+                titleText.text = "Splat Fighters";
+            }
+            else
+            {
+                switch (gameManager.CurrentState)
+                {
+                    case GameManager.MatchState.WaitingToStart:
+                        titleText.text = "Splat Fighters";
+                        break;
+                    case GameManager.MatchState.Playing:
+                        titleText.text = "Match Live";
+                        break;
+                    case GameManager.MatchState.Paused:
+                        titleText.text = "Paused";
+                        break;
+                    case GameManager.MatchState.Finished:
+                        titleText.text = "Match Complete";
+                        break;
+                }
             }
         }
 
         if (statusText != null)
         {
-            switch (gameManager.CurrentState)
+            if (gameManager == null)
             {
-                case GameManager.MatchState.WaitingToStart:
-                    statusText.text = "Ready to start.";
-                    break;
-                case GameManager.MatchState.Playing:
-                    statusText.text = "The match is live.";
-                    break;
-                case GameManager.MatchState.Paused:
-                    statusText.text = "Paused. Resume or restart from here.";
-                    break;
-                case GameManager.MatchState.Finished:
-                    statusText.text = BuildFinishText();
-                    break;
+                statusText.text = "Choose a mode, then start the game.";
+            }
+            else
+            {
+                switch (gameManager.CurrentState)
+                {
+                    case GameManager.MatchState.WaitingToStart:
+                        statusText.text = "Ready to start.";
+                        break;
+                    case GameManager.MatchState.Playing:
+                        statusText.text = "The match is live.";
+                        break;
+                    case GameManager.MatchState.Paused:
+                        statusText.text = "Paused. Resume or restart from here.";
+                        break;
+                    case GameManager.MatchState.Finished:
+                        statusText.text = BuildFinishText();
+                        break;
+                }
             }
         }
 
         if (modeText != null)
         {
-            modeText.text = $"Mode: {GetMatchModeLabel(gameManager.CurrentMatchMode)}";
+            modeText.text = $"Mode: {GetMatchModeLabel(GetCurrentMatchMode())}";
         }
 
         if (hintText != null)
         {
-            hintText.text = gameManager.CurrentState == GameManager.MatchState.WaitingToStart
-                ? "Enter starts the match. Use the mode button if you want a different ruleset."
-                : "Esc pauses during play. Use the settings screen for performance tuning.";
+            if (gameManager == null)
+            {
+                hintText.text = settingsVisible
+                    ? "Settings are saved for the next game launch."
+                    : "Press Start Game to enter the arena scene.";
+            }
+            else
+            {
+                hintText.text = gameManager.CurrentState == GameManager.MatchState.WaitingToStart
+                    ? "Enter starts the match. Use the mode button if you want a different ruleset."
+                    : "Esc pauses during play. Use the settings screen for performance tuning.";
+            }
         }
 
         UpdateButtonLabels();
@@ -459,11 +490,6 @@ public sealed class MainMenuController : MonoBehaviour
 
     private void UpdateButtonLabels()
     {
-        if (gameManager == null)
-        {
-            return;
-        }
-
         if (primaryButton != null)
         {
             SetButtonText(primaryButton, GetPrimaryLabel());
@@ -476,7 +502,7 @@ public sealed class MainMenuController : MonoBehaviour
 
         if (modeButton != null)
         {
-            SetButtonText(modeButton, $"Mode: {GetMatchModeLabel(gameManager.CurrentMatchMode)}");
+            SetButtonText(modeButton, $"Mode: {GetMatchModeLabel(GetCurrentMatchMode())}");
         }
 
         if (settingsButton != null)
@@ -487,6 +513,11 @@ public sealed class MainMenuController : MonoBehaviour
 
     private string GetPrimaryLabel()
     {
+        if (gameManager == null)
+        {
+            return "Start Game";
+        }
+
         switch (gameManager.CurrentState)
         {
             case GameManager.MatchState.WaitingToStart:
@@ -502,6 +533,11 @@ public sealed class MainMenuController : MonoBehaviour
 
     private string GetSecondaryLabel()
     {
+        if (gameManager == null)
+        {
+            return "Cycle Mode";
+        }
+
         switch (gameManager.CurrentState)
         {
             case GameManager.MatchState.WaitingToStart:
@@ -551,6 +587,22 @@ public sealed class MainMenuController : MonoBehaviour
         settingsSummaryText.text = $"Preset: {selectedPreset} | Fullscreen: {(fullscreenEnabled ? "On" : "Off")}";
     }
 
+    private void CycleMenuMatchMode()
+    {
+        selectedMatchMode = selectedMatchMode == GameManager.MatchMode.TowerControl
+            ? GameManager.MatchMode.TurfWar
+            : (GameManager.MatchMode)((int)selectedMatchMode + 1);
+        PlayerPrefs.SetInt(MatchModePrefKey, (int)selectedMatchMode);
+        PlayerPrefs.Save();
+        UpdateMenuText();
+        UpdateButtonLabels();
+    }
+
+    private GameManager.MatchMode GetCurrentMatchMode()
+    {
+        return gameManager != null ? gameManager.CurrentMatchMode : selectedMatchMode;
+    }
+
     private GraphicsPreset LoadGraphicsPreset()
     {
         int rawPreset = PlayerPrefs.GetInt(GraphicsPresetPrefKey, (int)GraphicsPreset.Performant);
@@ -563,23 +615,50 @@ public sealed class MainMenuController : MonoBehaviour
         return (GraphicsPreset)rawPreset;
     }
 
-    private static GameObject CreatePanel(Transform parent, string name, Vector2 anchorMin, Vector2 anchorMax, Vector2 sizeDelta, Color color)
+    private GameManager.MatchMode LoadMatchMode()
     {
-        GameObject panelObject = new GameObject(name);
-        panelObject.transform.SetParent(parent, false);
+        int rawMode = PlayerPrefs.GetInt(MatchModePrefKey, (int)GameManager.MatchMode.TurfWar);
 
-        RectTransform rect = panelObject.AddComponent<RectTransform>();
-        rect.anchorMin = anchorMin;
-        rect.anchorMax = anchorMax;
+        if (rawMode < (int)GameManager.MatchMode.TurfWar || rawMode > (int)GameManager.MatchMode.TowerControl)
+        {
+            return GameManager.MatchMode.TurfWar;
+        }
+
+        return (GameManager.MatchMode)rawMode;
+    }
+
+    private static GameObject CreateBackdrop(Transform parent, string name, Color color)
+    {
+        GameObject backdropObject = new GameObject(name);
+        backdropObject.transform.SetParent(parent, false);
+
+        RectTransform rect = backdropObject.AddComponent<RectTransform>();
+        rect.anchorMin = Vector2.zero;
+        rect.anchorMax = Vector2.one;
+        rect.pivot = new Vector2(0.5f, 0.5f);
+        rect.anchoredPosition = Vector2.zero;
+        rect.sizeDelta = Vector2.zero;
+
+        Image image = backdropObject.AddComponent<Image>();
+        image.color = color;
+        image.raycastTarget = false;
+
+        return backdropObject;
+    }
+
+    private static GameObject CreateContainer(Transform parent, string name, Vector2 anchorPoint, Vector2 sizeDelta)
+    {
+        GameObject containerObject = new GameObject(name);
+        containerObject.transform.SetParent(parent, false);
+
+        RectTransform rect = containerObject.AddComponent<RectTransform>();
+        rect.anchorMin = anchorPoint;
+        rect.anchorMax = anchorPoint;
         rect.pivot = new Vector2(0.5f, 0.5f);
         rect.anchoredPosition = Vector2.zero;
         rect.sizeDelta = sizeDelta;
 
-        Image image = panelObject.AddComponent<Image>();
-        image.color = color;
-        image.raycastTarget = false;
-
-        return panelObject;
+        return containerObject;
     }
 
     private static Text CreateText(Transform parent, string name, string text, Vector2 anchoredPosition, int fontSize, FontStyle fontStyle, Vector2 sizeDelta, TextAnchor alignment)
