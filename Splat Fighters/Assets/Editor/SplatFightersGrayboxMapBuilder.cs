@@ -1164,7 +1164,7 @@ public static class SplatFightersGrayboxMapBuilder
         SpawnPoint teamBSpawn = FindDefaultSpawnPoint(Team.TeamB);
 
         SerializedObject managerSo = new SerializedObject(gameManager);
-        managerSo.FindProperty("startMatchOnAwake").boolValue = false;
+        managerSo.FindProperty("startMatchOnAwake").boolValue = true;
         managerSo.FindProperty("clearPaintOnMatchStart").boolValue = true;
         managerSo.FindProperty("resetCharactersOnMatchStart").boolValue = true;
         managerSo.FindProperty("destroyProjectilesOnMatchStart").boolValue = true;
