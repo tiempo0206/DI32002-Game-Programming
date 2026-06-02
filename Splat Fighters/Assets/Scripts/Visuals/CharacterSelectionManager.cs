@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 /// <summary>
@@ -8,7 +9,11 @@ using UnityEngine.UI;
 [DefaultExecutionOrder(160)]
 public sealed class CharacterSelectionManager : MonoBehaviour
 {
-    private const string PlayerPrefsKey = "SplatFighters.SelectedCharacter";
+    public const string PlayerCharacterPrefsKey = "SplatFighters.SelectedPlayerCharacter";
+    public const string OpponentCharacterPrefsKey = "SplatFighters.SelectedOpponentCharacter";
+
+    private const string LegacyCharacterPrefsKey = "SplatFighters.SelectedCharacter";
+    private const string GameplaySceneName = "MVP_ShootingTest";
 
     [SerializeField] private KeyCode nextCharacterKey = KeyCode.C;
     [SerializeField] private KeyCode previousCharacterKey = KeyCode.V;
@@ -20,11 +25,12 @@ public sealed class CharacterSelectionManager : MonoBehaviour
     private BotController botController;
     private Text selectionText;
     private int selectedIndex;
+    private int opponentSelectedIndex;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void Bootstrap()
     {
-        if (FindObjectOfType<CharacterSelectionManager>() != null)
+        if (SceneManager.GetActiveScene().name != GameplaySceneName || FindObjectOfType<CharacterSelectionManager>() != null)
         {
             return;
         }
@@ -40,7 +46,9 @@ public sealed class CharacterSelectionManager : MonoBehaviour
             catalog = CharacterVisualCatalog.LoadDefault();
         }
 
-        selectedIndex = PlayerPrefs.GetInt(PlayerPrefsKey, 5);
+        int legacyIndex = PlayerPrefs.GetInt(LegacyCharacterPrefsKey, 5);
+        selectedIndex = PlayerPrefs.GetInt(PlayerCharacterPrefsKey, legacyIndex);
+        opponentSelectedIndex = PlayerPrefs.GetInt(OpponentCharacterPrefsKey, selectedIndex + 1);
     }
 
     private void Start()
@@ -85,7 +93,8 @@ public sealed class CharacterSelectionManager : MonoBehaviour
         }
 
         selectedIndex = catalog.NormalizeIndex(index);
-        PlayerPrefs.SetInt(PlayerPrefsKey, selectedIndex);
+        PlayerPrefs.SetInt(PlayerCharacterPrefsKey, selectedIndex);
+        PlayerPrefs.Save();
 
         if (playerVisual != null)
         {
@@ -127,7 +136,7 @@ public sealed class CharacterSelectionManager : MonoBehaviour
 
         if (botController != null && botVisual == null)
         {
-            botVisual = AttachVisualController(botController.gameObject, botController.BotTeam, selectedIndex + 1);
+            botVisual = AttachVisualController(botController.gameObject, botController.BotTeam, opponentSelectedIndex);
         }
     }
 

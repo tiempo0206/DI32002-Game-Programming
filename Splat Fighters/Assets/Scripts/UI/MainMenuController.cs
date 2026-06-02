@@ -33,14 +33,19 @@ public sealed class MainMenuController : MonoBehaviour
     private GameObject menuPanelObject;
     private GameObject settingsPanelObject;
     private GameObject instructionsPanelObject;
+    private GameObject characterSelectionPanelObject;
+    private GameObject characterSelectionPreviewStage;
     private CanvasGroup menuGroup;
     private CanvasGroup settingsGroup;
     private CanvasGroup instructionsGroup;
+    private CanvasGroup characterSelectionGroup;
     private Text titleText;
     private Text statusText;
     private Text modeText;
     private Text hintText;
     private Text settingsSummaryText;
+    private Text playerCharacterText;
+    private Text opponentCharacterText;
     private Button primaryButton;
     private Button secondaryButton;
     private Button modeButton;
@@ -53,11 +58,17 @@ public sealed class MainMenuController : MonoBehaviour
     private Button quitButton;
     private bool settingsVisible;
     private bool instructionsVisible;
+    private bool characterSelectionVisible;
     private bool fullscreenEnabled;
     private GraphicsPreset selectedPreset;
     private GameManager.MatchMode selectedMatchMode;
     private GameManager.MatchState lastKnownState = GameManager.MatchState.WaitingToStart;
     private GameManager boundGameManager;
+    private CharacterVisualCatalog characterCatalog;
+    private CharacterPreviewPresenter playerPreview;
+    private CharacterPreviewPresenter opponentPreview;
+    private int selectedPlayerCharacterIndex;
+    private int selectedOpponentCharacterIndex;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void Bootstrap()
@@ -76,6 +87,8 @@ public sealed class MainMenuController : MonoBehaviour
         selectedPreset = LoadGraphicsPreset();
         fullscreenEnabled = PlayerPrefs.GetInt(FullscreenPrefKey, 0) == 1;
         selectedMatchMode = LoadMatchMode();
+        characterCatalog = CharacterVisualCatalog.LoadDefault();
+        LoadCharacterSelections();
         ApplyFullscreenMode();
     }
 
@@ -99,12 +112,16 @@ public sealed class MainMenuController : MonoBehaviour
 
         RefreshFromGameState(false);
 
-        if ((settingsVisible || instructionsVisible) && Input.GetKeyDown(KeyCode.Escape))
+        if ((settingsVisible || instructionsVisible || characterSelectionVisible) && Input.GetKeyDown(KeyCode.Escape))
         {
             ShowMainMenu();
         }
 
-        if (gameManager == null && !settingsVisible && !instructionsVisible && Input.GetKeyDown(KeyCode.Return))
+        if (gameManager == null && characterSelectionVisible)
+        {
+            HandleCharacterSelectionInput();
+        }
+        else if (gameManager == null && !settingsVisible && !instructionsVisible && Input.GetKeyDown(KeyCode.Return))
         {
             HandlePrimaryAction();
         }
@@ -196,6 +213,9 @@ public sealed class MainMenuController : MonoBehaviour
         instructionsPanelObject = CreatePanel(canvasObject.transform, "InstructionsPanel", new Vector2(0.5f, 0.5f), new Vector2(760f, 690f));
         instructionsGroup = instructionsPanelObject.AddComponent<CanvasGroup>();
 
+        characterSelectionPanelObject = CreateContainer(canvasObject.transform, "CharacterSelectionPanel", new Vector2(0.5f, 0.5f), new Vector2(1280f, 720f));
+        characterSelectionGroup = characterSelectionPanelObject.AddComponent<CanvasGroup>();
+
         titleText = CreateText(menuPanelObject.transform, "TitleText", "Splat Fighters", new Vector2(0f, -42f), 42, FontStyle.Bold, new Vector2(560f, 66f), TextAnchor.UpperCenter);
         CreateText(menuPanelObject.transform, "SubtitleText", "Paint the arena. Control the map. Win the round.", new Vector2(0f, -108f), 19, FontStyle.Italic, new Vector2(560f, 32f), TextAnchor.UpperCenter);
         statusText = CreateText(menuPanelObject.transform, "StatusText", "Ready to start.", new Vector2(0f, -160f), 22, FontStyle.Bold, new Vector2(560f, 34f), TextAnchor.UpperCenter);
@@ -232,6 +252,18 @@ public sealed class MainMenuController : MonoBehaviour
             TextAnchor.UpperLeft);
         CreateButton(instructionsPanelObject.transform, "InstructionsBackButton", "Back", new Vector2(0f, -606f), new Vector2(360f, 46f), () => ShowInstructions(false));
 
+        CreateText(characterSelectionPanelObject.transform, "CharacterSelectionTitleText", "Select Fighters", new Vector2(0f, -16f), 40, FontStyle.Bold, new Vector2(900f, 56f), TextAnchor.UpperCenter);
+        CreateText(characterSelectionPanelObject.transform, "CharacterSelectionHintText", "Choose both animated fighters. Team colors also define their ink colors.", new Vector2(0f, -70f), 18, FontStyle.Normal, new Vector2(1000f, 36f), TextAnchor.UpperCenter);
+        playerCharacterText = CreateText(characterSelectionPanelObject.transform, "PlayerCharacterText", string.Empty, new Vector2(-320f, -128f), 23, FontStyle.Bold, new Vector2(480f, 64f), TextAnchor.UpperCenter);
+        opponentCharacterText = CreateText(characterSelectionPanelObject.transform, "OpponentCharacterText", string.Empty, new Vector2(320f, -128f), 23, FontStyle.Bold, new Vector2(480f, 64f), TextAnchor.UpperCenter);
+        CreateButton(characterSelectionPanelObject.transform, "PreviousPlayerCharacterButton", "< Player", new Vector2(-430f, -520f), new Vector2(210f, 46f), () => SelectPlayerCharacter(selectedPlayerCharacterIndex - 1));
+        CreateButton(characterSelectionPanelObject.transform, "NextPlayerCharacterButton", "Player >", new Vector2(-190f, -520f), new Vector2(210f, 46f), () => SelectPlayerCharacter(selectedPlayerCharacterIndex + 1));
+        CreateButton(characterSelectionPanelObject.transform, "PreviousOpponentCharacterButton", "< Opponent", new Vector2(190f, -520f), new Vector2(210f, 46f), () => SelectOpponentCharacter(selectedOpponentCharacterIndex - 1));
+        CreateButton(characterSelectionPanelObject.transform, "NextOpponentCharacterButton", "Opponent >", new Vector2(430f, -520f), new Vector2(210f, 46f), () => SelectOpponentCharacter(selectedOpponentCharacterIndex + 1));
+        CreateText(characterSelectionPanelObject.transform, "CharacterSelectionControlText", "A / D: player   Left / Right: opponent   Enter: confirm   Esc: back", new Vector2(0f, -584f), 17, FontStyle.Normal, new Vector2(900f, 30f), TextAnchor.UpperCenter);
+        CreateButton(characterSelectionPanelObject.transform, "ConfirmCharacterSelectionButton", "Enter Arena", new Vector2(0f, -630f), new Vector2(300f, 48f), ConfirmCharacterSelection);
+        CreateButton(characterSelectionPanelObject.transform, "CancelCharacterSelectionButton", "Back", new Vector2(-470f, -630f), new Vector2(190f, 44f), () => ShowCharacterSelection(false));
+
         UpdatePresetVisuals();
         ShowMainMenu();
     }
@@ -241,10 +273,12 @@ public sealed class MainMenuController : MonoBehaviour
         if (gameManager == null)
         {
             UpdateMenuText();
-            SetVisible(menuGroup, !settingsVisible && !instructionsVisible);
+            SetVisible(menuGroup, !settingsVisible && !instructionsVisible && !characterSelectionVisible);
             SetVisible(settingsGroup, settingsVisible);
             SetVisible(instructionsGroup, instructionsVisible);
-            SetBackdropVisible(true);
+            SetVisible(characterSelectionGroup, characterSelectionVisible);
+            SetBackdropVisible(!characterSelectionVisible);
+            SetCharacterSelectionStageVisible(characterSelectionVisible);
             SetButtonVisible(modeButton, false);
             SetButtonVisible(secondaryButton, true);
             SetButtonVisible(instructionsButton, true);
@@ -276,6 +310,8 @@ public sealed class MainMenuController : MonoBehaviour
         SetVisible(menuGroup, showMenu && !settingsVisible);
         SetVisible(settingsGroup, showMenu && settingsVisible);
         SetVisible(instructionsGroup, false);
+        SetVisible(characterSelectionGroup, false);
+        SetCharacterSelectionStageVisible(false);
         SetBackdropVisible(showMenu);
         SetButtonVisible(modeButton, currentState == GameManager.MatchState.WaitingToStart);
         SetButtonVisible(secondaryButton, currentState == GameManager.MatchState.Paused || currentState == GameManager.MatchState.Finished);
@@ -301,6 +337,8 @@ public sealed class MainMenuController : MonoBehaviour
         SetVisible(menuGroup, showMenu && !settingsVisible);
         SetVisible(settingsGroup, showMenu && settingsVisible);
         SetVisible(instructionsGroup, false);
+        SetVisible(characterSelectionGroup, false);
+        SetCharacterSelectionStageVisible(false);
         SetBackdropVisible(showMenu);
         SetButtonVisible(modeButton, state == GameManager.MatchState.WaitingToStart);
         SetButtonVisible(secondaryButton, state == GameManager.MatchState.Paused || state == GameManager.MatchState.Finished);
@@ -316,7 +354,7 @@ public sealed class MainMenuController : MonoBehaviour
     {
         if (gameManager == null)
         {
-            SceneManager.LoadScene(GameplaySceneName, LoadSceneMode.Single);
+            ShowCharacterSelection(true);
             return;
         }
 
@@ -378,10 +416,13 @@ public sealed class MainMenuController : MonoBehaviour
     {
         settingsVisible = visible;
         instructionsVisible = false;
+        characterSelectionVisible = false;
         bool showMenu = gameManager == null || gameManager.CurrentState != GameManager.MatchState.Playing;
         SetVisible(menuGroup, showMenu && !settingsVisible);
         SetVisible(settingsGroup, showMenu && settingsVisible);
         SetVisible(instructionsGroup, false);
+        SetVisible(characterSelectionGroup, false);
+        SetCharacterSelectionStageVisible(false);
         SetBackdropVisible(showMenu);
         UpdateButtonLabels();
     }
@@ -390,11 +431,29 @@ public sealed class MainMenuController : MonoBehaviour
     {
         instructionsVisible = visible;
         settingsVisible = false;
+        characterSelectionVisible = false;
         bool showMenu = gameManager == null || gameManager.CurrentState != GameManager.MatchState.Playing;
         SetVisible(menuGroup, showMenu && !instructionsVisible);
         SetVisible(settingsGroup, false);
         SetVisible(instructionsGroup, showMenu && instructionsVisible);
+        SetVisible(characterSelectionGroup, false);
+        SetCharacterSelectionStageVisible(false);
         SetBackdropVisible(showMenu);
+        UpdateButtonLabels();
+    }
+
+    private void ShowCharacterSelection(bool visible)
+    {
+        characterSelectionVisible = visible;
+        instructionsVisible = false;
+        settingsVisible = false;
+        SetVisible(menuGroup, !characterSelectionVisible);
+        SetVisible(settingsGroup, false);
+        SetVisible(instructionsGroup, false);
+        SetVisible(characterSelectionGroup, characterSelectionVisible);
+        SetBackdropVisible(!characterSelectionVisible);
+        SetCharacterSelectionStageVisible(characterSelectionVisible);
+        UpdateCharacterSelectionText();
         UpdateButtonLabels();
     }
 
@@ -402,10 +461,13 @@ public sealed class MainMenuController : MonoBehaviour
     {
         instructionsVisible = false;
         settingsVisible = false;
+        characterSelectionVisible = false;
         bool showMenu = gameManager == null || gameManager.CurrentState != GameManager.MatchState.Playing;
         SetVisible(menuGroup, showMenu);
         SetVisible(settingsGroup, false);
         SetVisible(instructionsGroup, false);
+        SetVisible(characterSelectionGroup, false);
+        SetCharacterSelectionStageVisible(false);
         SetBackdropVisible(showMenu);
         UpdateButtonLabels();
     }
@@ -655,6 +717,171 @@ public sealed class MainMenuController : MonoBehaviour
         PlayerPrefs.Save();
         UpdateMenuText();
         UpdateButtonLabels();
+    }
+
+    private void LoadCharacterSelections()
+    {
+        int legacyIndex = PlayerPrefs.GetInt("SplatFighters.SelectedCharacter", 5);
+        selectedPlayerCharacterIndex = NormalizeCharacterIndex(PlayerPrefs.GetInt(CharacterSelectionManager.PlayerCharacterPrefsKey, legacyIndex));
+        selectedOpponentCharacterIndex = NormalizeCharacterIndex(PlayerPrefs.GetInt(CharacterSelectionManager.OpponentCharacterPrefsKey, selectedPlayerCharacterIndex + 1));
+    }
+
+    private void HandleCharacterSelectionInput()
+    {
+        if (Input.GetKeyDown(KeyCode.A))
+        {
+            SelectPlayerCharacter(selectedPlayerCharacterIndex - 1);
+        }
+        else if (Input.GetKeyDown(KeyCode.D))
+        {
+            SelectPlayerCharacter(selectedPlayerCharacterIndex + 1);
+        }
+
+        if (Input.GetKeyDown(KeyCode.LeftArrow))
+        {
+            SelectOpponentCharacter(selectedOpponentCharacterIndex - 1);
+        }
+        else if (Input.GetKeyDown(KeyCode.RightArrow))
+        {
+            SelectOpponentCharacter(selectedOpponentCharacterIndex + 1);
+        }
+
+        if (Input.GetKeyDown(KeyCode.Return))
+        {
+            ConfirmCharacterSelection();
+        }
+    }
+
+    private void SelectPlayerCharacter(int index)
+    {
+        selectedPlayerCharacterIndex = NormalizeCharacterIndex(index);
+
+        if (playerPreview != null)
+        {
+            playerPreview.Select(selectedPlayerCharacterIndex);
+        }
+
+        UpdateCharacterSelectionText();
+    }
+
+    private void SelectOpponentCharacter(int index)
+    {
+        selectedOpponentCharacterIndex = NormalizeCharacterIndex(index);
+
+        if (opponentPreview != null)
+        {
+            opponentPreview.Select(selectedOpponentCharacterIndex);
+        }
+
+        UpdateCharacterSelectionText();
+    }
+
+    private void ConfirmCharacterSelection()
+    {
+        PlayerPrefs.SetInt(CharacterSelectionManager.PlayerCharacterPrefsKey, selectedPlayerCharacterIndex);
+        PlayerPrefs.SetInt(CharacterSelectionManager.OpponentCharacterPrefsKey, selectedOpponentCharacterIndex);
+        PlayerPrefs.Save();
+        SceneManager.LoadScene(GameplaySceneName, LoadSceneMode.Single);
+    }
+
+    private int NormalizeCharacterIndex(int index)
+    {
+        return characterCatalog != null && characterCatalog.Count > 0 ? characterCatalog.NormalizeIndex(index) : 0;
+    }
+
+    private void EnsureCharacterSelectionPreviewStage()
+    {
+        if (characterSelectionPreviewStage != null || characterCatalog == null || characterCatalog.Count == 0)
+        {
+            return;
+        }
+
+        characterSelectionPreviewStage = new GameObject("CharacterSelectionPreviewStage");
+
+        GameObject lightObject = new GameObject("PreviewDirectionalLight");
+        lightObject.transform.SetParent(characterSelectionPreviewStage.transform, false);
+        lightObject.transform.rotation = Quaternion.Euler(35f, -25f, 0f);
+        Light previewLight = lightObject.AddComponent<Light>();
+        previewLight.type = LightType.Directional;
+        previewLight.intensity = 1.25f;
+
+        playerPreview = CreateCharacterPreview("PlayerPreview", new Vector3(-2.6f, -1.85f, 0f), Team.TeamA, selectedPlayerCharacterIndex);
+        opponentPreview = CreateCharacterPreview("OpponentPreview", new Vector3(2.6f, -1.85f, 0f), Team.TeamB, selectedOpponentCharacterIndex);
+        CreatePreviewPlatform("PlayerPlatform", new Vector3(-2.6f, -2.05f, 0f), Team.TeamA);
+        CreatePreviewPlatform("OpponentPlatform", new Vector3(2.6f, -2.05f, 0f), Team.TeamB);
+    }
+
+    private CharacterPreviewPresenter CreateCharacterPreview(string name, Vector3 position, Team team, int index)
+    {
+        GameObject previewObject = new GameObject(name);
+        previewObject.transform.SetParent(characterSelectionPreviewStage.transform, false);
+        previewObject.transform.position = position;
+
+        CharacterPreviewPresenter preview = previewObject.AddComponent<CharacterPreviewPresenter>();
+        preview.Configure(characterCatalog, team, index);
+        return preview;
+    }
+
+    private void CreatePreviewPlatform(string name, Vector3 position, Team team)
+    {
+        GameObject platformObject = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        platformObject.name = name;
+        platformObject.transform.SetParent(characterSelectionPreviewStage.transform, false);
+        platformObject.transform.position = position;
+        platformObject.transform.localScale = new Vector3(1.55f, 0.14f, 1.55f);
+
+        Collider platformCollider = platformObject.GetComponent<Collider>();
+        if (platformCollider != null)
+        {
+            Destroy(platformCollider);
+        }
+
+        Renderer platformRenderer = platformObject.GetComponent<Renderer>();
+        Shader platformShader = Shader.Find("Universal Render Pipeline/Lit");
+        if (platformRenderer != null && platformShader != null)
+        {
+            Material platformMaterial = new Material(platformShader);
+            Color color = TeamVisualPalette.GetColor(team);
+            platformMaterial.color = color;
+            platformMaterial.SetColor("_BaseColor", color);
+            platformRenderer.sharedMaterial = platformMaterial;
+        }
+    }
+
+    private void SetCharacterSelectionStageVisible(bool visible)
+    {
+        if (visible)
+        {
+            EnsureCharacterSelectionPreviewStage();
+        }
+
+        if (characterSelectionPreviewStage != null)
+        {
+            characterSelectionPreviewStage.SetActive(visible);
+        }
+    }
+
+    private void UpdateCharacterSelectionText()
+    {
+        if (playerCharacterText != null)
+        {
+            string name = playerPreview != null ? playerPreview.CurrentDisplayName : GetCharacterDisplayName(selectedPlayerCharacterIndex);
+            playerCharacterText.text = $"TEAM A PLAYER\n{name}\nBlue ink";
+            playerCharacterText.color = TeamVisualPalette.GetColor(Team.TeamA);
+        }
+
+        if (opponentCharacterText != null)
+        {
+            string name = opponentPreview != null ? opponentPreview.CurrentDisplayName : GetCharacterDisplayName(selectedOpponentCharacterIndex);
+            opponentCharacterText.text = $"TEAM B OPPONENT\n{name}\nOrange ink";
+            opponentCharacterText.color = TeamVisualPalette.GetColor(Team.TeamB);
+        }
+    }
+
+    private string GetCharacterDisplayName(int index)
+    {
+        CharacterVisualOption option = characterCatalog != null ? characterCatalog.GetOption(index) : null;
+        return option != null ? option.DisplayName : "Unavailable";
     }
 
     private GameManager.MatchMode GetCurrentMatchMode()

@@ -15,6 +15,8 @@ The first lightweight menu increment is implemented in the current development b
 - The standalone `MainMenu` scene displays a basic start screen before gameplay loads.
 - The menu provides `Start Game`, mode selection, `How To Play`, `Settings`, and `Quit` actions.
 - The `How To Play` panel explains the Turf War objective, core controls, swim behavior, enemy-ink slowdown, tool switching, pause, restart, and special paint burst.
+- `Start Game` now opens a `Select Fighters` screen before loading the arena.
+- The selection screen previews animated 3D Team A and Team B characters, lets the player choose both sides independently, and applies the blue or orange team ink color to each preview and gameplay character.
 - The menu remains intentionally lightweight. A later visual art pass will add a generated background image and refined presentation assets without changing the navigation flow.
 
 ## Peer Feedback Summary
@@ -56,18 +58,20 @@ Recommended improvement:
 
 Add a simple character selection screen or menu panel before gameplay begins. The first version should stay small: provide a few lightweight visual choices for the TeamA player while preserving the existing movement, shooting, painting, and camera behavior.
 
-Suggested scope for the first version:
+Implemented scope for the first version:
 
-- Add two or three selectable TeamA character appearances.
-- Use existing lightweight materials or public assets with documented licenses.
-- Store the selected character choice before loading the gameplay scene.
-- Apply the selected appearance to the TeamA player when the match starts.
+- Provide ten selectable Team A character appearances from the imported RPG Monster Wave PBR catalog.
+- Provide the same catalog for an independently selectable Team B opponent.
+- Show rotating, animated, team-tinted 3D previews before loading the arena.
+- Store both character choices before loading the gameplay scene.
+- Apply the selected appearances to the Team A player and Team B bot when the match starts.
 - Keep the same gameplay statistics for every appearance.
 
 Acceptance criteria:
 
-- The player can choose a TeamA character appearance from the menu.
-- The selected appearance is visible in the gameplay scene.
+- The player can choose Team A and Team B character appearances from the menu.
+- Both selected appearances are visible in the gameplay scene.
+- The Team A character uses blue ink and the Team B character uses orange ink.
 - Character selection does not change gameplay balance.
 - Existing movement, shooting, swim form, camera, and restart behavior still work.
 - Any public character assets are documented in `Public_Asset_Usage.md`.
