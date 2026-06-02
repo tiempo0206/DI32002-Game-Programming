@@ -369,7 +369,7 @@ Displays the aiming reticle.
 #### `Assets/Scripts/Visuals/TeamVisualPalette.cs`
 `TeamVisualPalette`
 
-Central place for Team A and Team B colors, overlays, and shared visual constants.
+Central place for Team A and Team B colors, overlays, and shared visual constants. The runtime palette stores the selected player and opponent ink colors in `PlayerPrefs`, so paint feedback follows the chosen characters.
 
 #### `Assets/Scripts/Visuals/TeamVisualBinder.cs`
 `TeamVisualBinder`
@@ -400,7 +400,7 @@ Important runtime behavior:
 
 - loads the default catalog from `Resources/CharacterVisualCatalog`
 - provides fallback options if the asset is missing
-- stores prefabs, animation state names, height targets, footprint targets, and local offsets
+- stores prefabs, signature ink colors, animation state names, height targets, footprint targets, and local offsets
 
 #### `Assets/Scripts/Visuals/CharacterSelectionManager.cs`
 `CharacterSelectionManager`
@@ -409,10 +409,10 @@ Bootstraps character selection at runtime.
 
 Important behavior:
 
-- auto-creates itself after scene load if missing
+- registers a scene-loaded callback and auto-creates itself when the gameplay scene loads
 - attaches imported character visuals to Player and Bot
 - lets the player cycle the selected character with `C` and `V`
-- persists the selected index in `PlayerPrefs`
+- persists both selected character indexes and their signature ink colors in `PlayerPrefs`
 - renders a runtime text HUD for the current character
 
 #### `Assets/Scripts/Visuals/CharacterVisualController.cs`
@@ -424,7 +424,7 @@ Important behavior:
 
 - instantiates the selected prefab under a dedicated pivot
 - fits the imported model to the character controller height and footprint
-- tints materials using team colors
+- tints materials using each selected character's signature ink color
 - swaps animation states such as idle, run, sense, and attack
 - hides legacy prototype meshes and swim visual objects
 

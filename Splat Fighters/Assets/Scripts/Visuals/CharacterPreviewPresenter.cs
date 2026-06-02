@@ -1,7 +1,7 @@
 using UnityEngine;
 
 /// <summary>
-/// Displays a rotating, animated, team-tinted character prefab on the menu selection screen.
+/// Displays a rotating, animated, character-tinted prefab on the menu selection screen.
 /// </summary>
 [DisallowMultipleComponent]
 public sealed class CharacterPreviewPresenter : MonoBehaviour
@@ -66,7 +66,7 @@ public sealed class CharacterPreviewPresenter : MonoBehaviour
         currentInstance.transform.localScale = Vector3.one;
 
         FitPreviewToStage();
-        ApplyTeamTint();
+        ApplyCharacterTint();
         PlayIdleAnimation();
     }
 
@@ -124,10 +124,10 @@ public sealed class CharacterPreviewPresenter : MonoBehaviour
         return hasBounds;
     }
 
-    private void ApplyTeamTint()
+    private void ApplyCharacterTint()
     {
         Renderer[] renderers = currentInstance.GetComponentsInChildren<Renderer>(true);
-        Color primary = TeamVisualPalette.GetColor(team);
+        Color primary = currentOption.InkColor;
         Color bright = Color.Lerp(primary, Color.white, 0.24f);
         Color dark = Color.Lerp(primary, Color.black, 0.35f);
 

@@ -57,6 +57,8 @@ public class ScoreUI : MonoBehaviour
         float towerTeamBPercent)
     {
         EnsureRuntimeTextReferences();
+        teamAColor = TeamVisualPalette.GetColor(Team.TeamA);
+        teamBColor = TeamVisualPalette.GetColor(Team.TeamB);
 
         if (presentationText != null)
         {

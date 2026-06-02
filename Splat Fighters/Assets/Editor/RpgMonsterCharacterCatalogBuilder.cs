@@ -36,16 +36,16 @@ public static class RpgMonsterCharacterCatalogBuilder
 
         List<CharacterVisualOption> options = new List<CharacterVisualOption>
         {
-            CreateOption("Bat", "BatPBRMaskTint", "IdleNormal", "FlyFWD", "SenseSomethingST", "Attack01", 1.25f, 1.25f, 0.28f, 1.35f, 1.5f),
-            CreateOption("Dragon", "DragonPBRMaskTint", "IdleNormal", "FlyFWD", "SenseSomethingST", "Attack01", 1.45f, 1.25f, 0.3f, 1.35f, 1.5f),
-            CreateOption("Evil Mage", "EvilMagePBRMaskTint", "IdleNormal", "RunFWD", "SenseSomethingST", "Attack01", 1.45f, 1.05f, 0.34f, 1.2f, 1.35f),
-            CreateOption("Golem", "GolemPBRMaskTint", "IdleNormal", "RunFWD", "SenseSomethingST", "Attack01", 1.48f, 1.2f, 0.34f, 1.22f, 1.4f),
-            CreateOption("Monster Plant", "MonsterPlantPBRMaskTint", "IdleNormal", "RunFWD", "SenseSomethingST", "Attack01", 1.38f, 1.15f, 0.32f, 1.3f, 1.45f),
-            CreateOption("Orc", "OrcPBRMaskTint", "IdleNormal", "RunFWD", "SenseSomethingST", "Attack01", 1.45f, 1.1f, 0.34f, 1.22f, 1.4f),
-            CreateOption("Skeleton", "SkeletonPBRMaskTint", "IdleNormal", "RunFWD", "SenseSomethingST", "Attack01", 1.45f, 1.05f, 0.34f, 1.22f, 1.38f),
-            CreateOption("Slime", "SlimePBRMaskTint", "IdleNormal", "RunFWD", "SenseSomethingST", "Attack01", 1.05f, 1.05f, 0.28f, 1.35f, 1.5f),
-            CreateOption("Spider", "SpiderPBRMaskTint", "IdleNormal", "RunFWD", "SenseSomethingST", "Attack01", 1.1f, 1.25f, 0.28f, 1.4f, 1.55f),
-            CreateOption("Turtle Shell", "TurtleShellPBRMaskTint", "IdleNormal", "RunFWD", "SenseSomethingST", "Attack01", 1.25f, 1.15f, 0.3f, 1.35f, 1.45f)
+            CreateOption("Bat", "BatPBRMaskTint", CharacterInkPalette.Bat, "IdleNormal", "FlyFWD", "SenseSomethingST", "Attack01", 1.25f, 1.25f, 0.28f, 1.35f, 1.5f),
+            CreateOption("Dragon", "DragonPBRMaskTint", CharacterInkPalette.Dragon, "IdleNormal", "FlyFWD", "SenseSomethingST", "Attack01", 1.45f, 1.25f, 0.3f, 1.35f, 1.5f),
+            CreateOption("Evil Mage", "EvilMagePBRMaskTint", CharacterInkPalette.EvilMage, "IdleNormal", "RunFWD", "SenseSomethingST", "Attack01", 1.45f, 1.05f, 0.34f, 1.2f, 1.35f),
+            CreateOption("Golem", "GolemPBRMaskTint", CharacterInkPalette.Golem, "IdleNormal", "RunFWD", "SenseSomethingST", "Attack01", 1.48f, 1.2f, 0.34f, 1.22f, 1.4f),
+            CreateOption("Monster Plant", "MonsterPlantPBRMaskTint", CharacterInkPalette.MonsterPlant, "IdleNormal", "RunFWD", "SenseSomethingST", "Attack01", 1.38f, 1.15f, 0.32f, 1.3f, 1.45f),
+            CreateOption("Orc", "OrcPBRMaskTint", CharacterInkPalette.Orc, "IdleNormal", "RunFWD", "SenseSomethingST", "Attack01", 1.45f, 1.1f, 0.34f, 1.22f, 1.4f),
+            CreateOption("Skeleton", "SkeletonPBRMaskTint", CharacterInkPalette.Skeleton, "IdleNormal", "RunFWD", "SenseSomethingST", "Attack01", 1.45f, 1.05f, 0.34f, 1.22f, 1.38f),
+            CreateOption("Slime", "SlimePBRMaskTint", CharacterInkPalette.Slime, "IdleNormal", "RunFWD", "SenseSomethingST", "Attack01", 1.05f, 1.05f, 0.28f, 1.35f, 1.5f),
+            CreateOption("Spider", "SpiderPBRMaskTint", CharacterInkPalette.Spider, "IdleNormal", "RunFWD", "SenseSomethingST", "Attack01", 1.1f, 1.25f, 0.28f, 1.4f, 1.55f),
+            CreateOption("Turtle Shell", "TurtleShellPBRMaskTint", CharacterInkPalette.TurtleShell, "IdleNormal", "RunFWD", "SenseSomethingST", "Attack01", 1.25f, 1.15f, 0.3f, 1.35f, 1.45f)
         };
 
         options.RemoveAll(option => option == null || option.Prefab == null);
@@ -63,6 +63,7 @@ public static class RpgMonsterCharacterCatalogBuilder
     private static CharacterVisualOption CreateOption(
         string displayName,
         string prefabName,
+        Color inkColor,
         string idleState,
         string moveState,
         string swimState,
@@ -84,6 +85,7 @@ public static class RpgMonsterCharacterCatalogBuilder
         return new CharacterVisualOption(
             displayName,
             prefab,
+            inkColor,
             idleState,
             moveState,
             swimState,

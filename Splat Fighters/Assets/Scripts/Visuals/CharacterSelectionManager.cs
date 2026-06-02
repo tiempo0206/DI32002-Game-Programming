@@ -27,10 +27,27 @@ public sealed class CharacterSelectionManager : MonoBehaviour
     private int selectedIndex;
     private int opponentSelectedIndex;
 
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-    private static void Bootstrap()
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void RegisterSceneLoadedHandler()
     {
-        if (SceneManager.GetActiveScene().name != GameplaySceneName || FindObjectOfType<CharacterSelectionManager>() != null)
+        SceneManager.sceneLoaded -= HandleSceneLoaded;
+        SceneManager.sceneLoaded += HandleSceneLoaded;
+    }
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
+    private static void BootstrapActiveScene()
+    {
+        EnsureManagerForScene(SceneManager.GetActiveScene());
+    }
+
+    private static void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        EnsureManagerForScene(scene);
+    }
+
+    private static void EnsureManagerForScene(Scene scene)
+    {
+        if (scene.name != GameplaySceneName || FindObjectOfType<CharacterSelectionManager>() != null)
         {
             return;
         }
@@ -49,6 +66,13 @@ public sealed class CharacterSelectionManager : MonoBehaviour
         int legacyIndex = PlayerPrefs.GetInt(LegacyCharacterPrefsKey, 5);
         selectedIndex = PlayerPrefs.GetInt(PlayerCharacterPrefsKey, legacyIndex);
         opponentSelectedIndex = PlayerPrefs.GetInt(OpponentCharacterPrefsKey, selectedIndex + 1);
+
+        if (catalog != null && catalog.Count > 0)
+        {
+            selectedIndex = catalog.NormalizeIndex(selectedIndex);
+            opponentSelectedIndex = EnsureDistinctOpponentIndex(opponentSelectedIndex);
+            SaveSelectedCharactersAndColors();
+        }
     }
 
     private void Start()
@@ -93,17 +117,22 @@ public sealed class CharacterSelectionManager : MonoBehaviour
         }
 
         selectedIndex = catalog.NormalizeIndex(index);
-        PlayerPrefs.SetInt(PlayerCharacterPrefsKey, selectedIndex);
-        PlayerPrefs.Save();
+
+        if (catalog.Count > 1 && opponentSelectedIndex == selectedIndex)
+        {
+            opponentSelectedIndex = EnsureDistinctOpponentIndex(opponentSelectedIndex + 1);
+
+            if (botVisual != null)
+            {
+                botVisual.Select(opponentSelectedIndex);
+            }
+        }
+
+        SaveSelectedCharactersAndColors();
 
         if (playerVisual != null)
         {
             playerVisual.Select(selectedIndex);
-        }
-
-        if (botVisual != null)
-        {
-            botVisual.Select(selectedIndex + 1);
         }
     }
 
@@ -151,6 +180,32 @@ public sealed class CharacterSelectionManager : MonoBehaviour
 
         visualController.Configure(catalog, team, index);
         return visualController;
+    }
+
+    private int EnsureDistinctOpponentIndex(int index)
+    {
+        int normalized = catalog.NormalizeIndex(index);
+        return catalog.Count > 1 && normalized == selectedIndex
+            ? catalog.NormalizeIndex(normalized + 1)
+            : normalized;
+    }
+
+    private void SaveSelectedCharactersAndColors()
+    {
+        PlayerPrefs.SetInt(PlayerCharacterPrefsKey, selectedIndex);
+        PlayerPrefs.SetInt(OpponentCharacterPrefsKey, opponentSelectedIndex);
+        SaveSelectedInkColor(Team.TeamA, selectedIndex);
+        SaveSelectedInkColor(Team.TeamB, opponentSelectedIndex);
+        PlayerPrefs.Save();
+    }
+
+    private void SaveSelectedInkColor(Team team, int index)
+    {
+        CharacterVisualOption option = catalog.GetOption(index);
+        if (option != null)
+        {
+            TeamVisualPalette.SaveSelectedColor(team, option.InkColor);
+        }
     }
 
     private void EnsureSelectionUi()

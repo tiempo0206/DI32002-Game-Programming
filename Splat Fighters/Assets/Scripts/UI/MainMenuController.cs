@@ -67,6 +67,8 @@ public sealed class MainMenuController : MonoBehaviour
     private CharacterVisualCatalog characterCatalog;
     private CharacterPreviewPresenter playerPreview;
     private CharacterPreviewPresenter opponentPreview;
+    private Renderer playerPreviewPlatformRenderer;
+    private Renderer opponentPreviewPlatformRenderer;
     private int selectedPlayerCharacterIndex;
     private int selectedOpponentCharacterIndex;
 
@@ -244,7 +246,7 @@ public sealed class MainMenuController : MonoBehaviour
         CreateText(
             instructionsPanelObject.transform,
             "InstructionsText",
-            "OBJECTIVE\nPaint more of the arena than Team B before the timer ends.\n\nCONTROLS\nWASD: Move\nMouse: Aim camera\nLeft Mouse: Fire or use active paint tool\nSpace: Jump\nLeft Shift: Swim faster and recover ink while standing on Team A paint\n1 / 2: Switch between shooter and roller\nQ: Use the special paint burst when ready\nP or Esc: Pause match\nR: Restart match\nM: Cycle demo mode\n\nTIPS\nYour blue paint creates safe movement lanes. Enemy orange paint slows you down.",
+            "OBJECTIVE\nPaint more of the arena than Team B before the timer ends.\n\nCONTROLS\nWASD: Move\nMouse: Aim camera\nLeft Mouse: Fire or use active paint tool\nSpace: Jump\nLeft Shift: Swim faster and recover ink while standing on your paint\n1 / 2: Switch between shooter and roller\nQ: Use the special paint burst when ready\nP or Esc: Pause match\nR: Restart match\nM: Cycle demo mode\n\nTIPS\nYour selected fighter defines your ink color. Your paint creates safe movement lanes. Enemy paint slows you down.",
             new Vector2(0f, -112f),
             19,
             FontStyle.Normal,
@@ -253,7 +255,7 @@ public sealed class MainMenuController : MonoBehaviour
         CreateButton(instructionsPanelObject.transform, "InstructionsBackButton", "Back", new Vector2(0f, -606f), new Vector2(360f, 46f), () => ShowInstructions(false));
 
         CreateText(characterSelectionPanelObject.transform, "CharacterSelectionTitleText", "Select Fighters", new Vector2(0f, -16f), 40, FontStyle.Bold, new Vector2(900f, 56f), TextAnchor.UpperCenter);
-        CreateText(characterSelectionPanelObject.transform, "CharacterSelectionHintText", "Choose both animated fighters. Team colors also define their ink colors.", new Vector2(0f, -70f), 18, FontStyle.Normal, new Vector2(1000f, 36f), TextAnchor.UpperCenter);
+        CreateText(characterSelectionPanelObject.transform, "CharacterSelectionHintText", "Choose two different animated fighters. Each fighter has a signature ink color.", new Vector2(0f, -70f), 18, FontStyle.Normal, new Vector2(1000f, 36f), TextAnchor.UpperCenter);
         playerCharacterText = CreateText(characterSelectionPanelObject.transform, "PlayerCharacterText", string.Empty, new Vector2(-320f, -128f), 23, FontStyle.Bold, new Vector2(480f, 64f), TextAnchor.UpperCenter);
         opponentCharacterText = CreateText(characterSelectionPanelObject.transform, "OpponentCharacterText", string.Empty, new Vector2(320f, -128f), 23, FontStyle.Bold, new Vector2(480f, 64f), TextAnchor.UpperCenter);
         CreateButton(characterSelectionPanelObject.transform, "PreviousPlayerCharacterButton", "< Player", new Vector2(-430f, -520f), new Vector2(210f, 46f), () => SelectPlayerCharacter(selectedPlayerCharacterIndex - 1));
@@ -723,7 +725,7 @@ public sealed class MainMenuController : MonoBehaviour
     {
         int legacyIndex = PlayerPrefs.GetInt("SplatFighters.SelectedCharacter", 5);
         selectedPlayerCharacterIndex = NormalizeCharacterIndex(PlayerPrefs.GetInt(CharacterSelectionManager.PlayerCharacterPrefsKey, legacyIndex));
-        selectedOpponentCharacterIndex = NormalizeCharacterIndex(PlayerPrefs.GetInt(CharacterSelectionManager.OpponentCharacterPrefsKey, selectedPlayerCharacterIndex + 1));
+        selectedOpponentCharacterIndex = EnsureDistinctOpponentIndex(PlayerPrefs.GetInt(CharacterSelectionManager.OpponentCharacterPrefsKey, selectedPlayerCharacterIndex + 1));
     }
 
     private void HandleCharacterSelectionInput()
@@ -756,6 +758,16 @@ public sealed class MainMenuController : MonoBehaviour
     {
         selectedPlayerCharacterIndex = NormalizeCharacterIndex(index);
 
+        if (selectedPlayerCharacterIndex == selectedOpponentCharacterIndex && characterCatalog != null && characterCatalog.Count > 1)
+        {
+            selectedOpponentCharacterIndex = EnsureDistinctOpponentIndex(selectedOpponentCharacterIndex + 1);
+
+            if (opponentPreview != null)
+            {
+                opponentPreview.Select(selectedOpponentCharacterIndex);
+            }
+        }
+
         if (playerPreview != null)
         {
             playerPreview.Select(selectedPlayerCharacterIndex);
@@ -766,7 +778,8 @@ public sealed class MainMenuController : MonoBehaviour
 
     private void SelectOpponentCharacter(int index)
     {
-        selectedOpponentCharacterIndex = NormalizeCharacterIndex(index);
+        int direction = index < selectedOpponentCharacterIndex ? -1 : 1;
+        selectedOpponentCharacterIndex = EnsureDistinctOpponentIndex(index, direction);
 
         if (opponentPreview != null)
         {
@@ -780,6 +793,8 @@ public sealed class MainMenuController : MonoBehaviour
     {
         PlayerPrefs.SetInt(CharacterSelectionManager.PlayerCharacterPrefsKey, selectedPlayerCharacterIndex);
         PlayerPrefs.SetInt(CharacterSelectionManager.OpponentCharacterPrefsKey, selectedOpponentCharacterIndex);
+        TeamVisualPalette.SaveSelectedColor(Team.TeamA, GetCharacterInkColor(selectedPlayerCharacterIndex));
+        TeamVisualPalette.SaveSelectedColor(Team.TeamB, GetCharacterInkColor(selectedOpponentCharacterIndex));
         PlayerPrefs.Save();
         SceneManager.LoadScene(GameplaySceneName, LoadSceneMode.Single);
     }
@@ -787,6 +802,14 @@ public sealed class MainMenuController : MonoBehaviour
     private int NormalizeCharacterIndex(int index)
     {
         return characterCatalog != null && characterCatalog.Count > 0 ? characterCatalog.NormalizeIndex(index) : 0;
+    }
+
+    private int EnsureDistinctOpponentIndex(int index, int direction = 1)
+    {
+        int normalized = NormalizeCharacterIndex(index);
+        return characterCatalog != null && characterCatalog.Count > 1 && normalized == selectedPlayerCharacterIndex
+            ? NormalizeCharacterIndex(normalized + (direction < 0 ? -1 : 1))
+            : normalized;
     }
 
     private void EnsureCharacterSelectionPreviewStage()
@@ -807,8 +830,8 @@ public sealed class MainMenuController : MonoBehaviour
 
         playerPreview = CreateCharacterPreview("PlayerPreview", new Vector3(-2.6f, -1.85f, 0f), Team.TeamA, selectedPlayerCharacterIndex);
         opponentPreview = CreateCharacterPreview("OpponentPreview", new Vector3(2.6f, -1.85f, 0f), Team.TeamB, selectedOpponentCharacterIndex);
-        CreatePreviewPlatform("PlayerPlatform", new Vector3(-2.6f, -2.05f, 0f), Team.TeamA);
-        CreatePreviewPlatform("OpponentPlatform", new Vector3(2.6f, -2.05f, 0f), Team.TeamB);
+        playerPreviewPlatformRenderer = CreatePreviewPlatform("PlayerPlatform", new Vector3(-2.6f, -2.05f, 0f), selectedPlayerCharacterIndex);
+        opponentPreviewPlatformRenderer = CreatePreviewPlatform("OpponentPlatform", new Vector3(2.6f, -2.05f, 0f), selectedOpponentCharacterIndex);
     }
 
     private CharacterPreviewPresenter CreateCharacterPreview(string name, Vector3 position, Team team, int index)
@@ -822,7 +845,7 @@ public sealed class MainMenuController : MonoBehaviour
         return preview;
     }
 
-    private void CreatePreviewPlatform(string name, Vector3 position, Team team)
+    private Renderer CreatePreviewPlatform(string name, Vector3 position, int characterIndex)
     {
         GameObject platformObject = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
         platformObject.name = name;
@@ -841,11 +864,13 @@ public sealed class MainMenuController : MonoBehaviour
         if (platformRenderer != null && platformShader != null)
         {
             Material platformMaterial = new Material(platformShader);
-            Color color = TeamVisualPalette.GetColor(team);
+            Color color = GetCharacterInkColor(characterIndex);
             platformMaterial.color = color;
             platformMaterial.SetColor("_BaseColor", color);
             platformRenderer.sharedMaterial = platformMaterial;
         }
+
+        return platformRenderer;
     }
 
     private void SetCharacterSelectionStageVisible(bool visible)
@@ -866,15 +891,19 @@ public sealed class MainMenuController : MonoBehaviour
         if (playerCharacterText != null)
         {
             string name = playerPreview != null ? playerPreview.CurrentDisplayName : GetCharacterDisplayName(selectedPlayerCharacterIndex);
-            playerCharacterText.text = $"TEAM A PLAYER\n{name}\nBlue ink";
-            playerCharacterText.color = TeamVisualPalette.GetColor(Team.TeamA);
+            Color inkColor = GetCharacterInkColor(selectedPlayerCharacterIndex);
+            playerCharacterText.text = $"TEAM A PLAYER\n{name}\nInk #{ColorUtility.ToHtmlStringRGB(inkColor)}";
+            playerCharacterText.color = inkColor;
+            UpdatePreviewPlatformColor(playerPreviewPlatformRenderer, inkColor);
         }
 
         if (opponentCharacterText != null)
         {
             string name = opponentPreview != null ? opponentPreview.CurrentDisplayName : GetCharacterDisplayName(selectedOpponentCharacterIndex);
-            opponentCharacterText.text = $"TEAM B OPPONENT\n{name}\nOrange ink";
-            opponentCharacterText.color = TeamVisualPalette.GetColor(Team.TeamB);
+            Color inkColor = GetCharacterInkColor(selectedOpponentCharacterIndex);
+            opponentCharacterText.text = $"TEAM B OPPONENT\n{name}\nInk #{ColorUtility.ToHtmlStringRGB(inkColor)}";
+            opponentCharacterText.color = inkColor;
+            UpdatePreviewPlatformColor(opponentPreviewPlatformRenderer, inkColor);
         }
     }
 
@@ -882,6 +911,27 @@ public sealed class MainMenuController : MonoBehaviour
     {
         CharacterVisualOption option = characterCatalog != null ? characterCatalog.GetOption(index) : null;
         return option != null ? option.DisplayName : "Unavailable";
+    }
+
+    private Color GetCharacterInkColor(int index)
+    {
+        CharacterVisualOption option = characterCatalog != null ? characterCatalog.GetOption(index) : null;
+        return option != null ? option.InkColor : Color.white;
+    }
+
+    private static void UpdatePreviewPlatformColor(Renderer platformRenderer, Color inkColor)
+    {
+        if (platformRenderer == null || platformRenderer.sharedMaterial == null)
+        {
+            return;
+        }
+
+        platformRenderer.sharedMaterial.color = inkColor;
+
+        if (platformRenderer.sharedMaterial.HasProperty("_BaseColor"))
+        {
+            platformRenderer.sharedMaterial.SetColor("_BaseColor", inkColor);
+        }
     }
 
     private GameManager.MatchMode GetCurrentMatchMode()

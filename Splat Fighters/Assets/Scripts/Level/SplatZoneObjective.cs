@@ -123,11 +123,11 @@ public class SplatZoneObjective : MonoBehaviour
         }
         else if (controllingTeam == Team.TeamA)
         {
-            color = teamAColor;
+            color = TeamVisualPalette.GetColor(Team.TeamA, teamAColor.a);
         }
         else if (controllingTeam == Team.TeamB)
         {
-            color = teamBColor;
+            color = TeamVisualPalette.GetColor(Team.TeamB, teamBColor.a);
         }
 
         zoneRenderer.material.color = color;

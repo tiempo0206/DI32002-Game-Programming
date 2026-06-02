@@ -173,11 +173,11 @@ public class TowerObjective : MonoBehaviour
         }
         else if (controllingTeam == Team.TeamA)
         {
-            color = teamAColor;
+            color = TeamVisualPalette.GetColor(Team.TeamA);
         }
         else if (controllingTeam == Team.TeamB)
         {
-            color = teamBColor;
+            color = TeamVisualPalette.GetColor(Team.TeamB);
         }
 
         towerRenderer.material.color = color;

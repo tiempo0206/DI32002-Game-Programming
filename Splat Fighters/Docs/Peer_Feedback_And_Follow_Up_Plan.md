@@ -16,7 +16,7 @@ The first lightweight menu increment is implemented in the current development b
 - The menu provides `Start Game`, mode selection, `How To Play`, `Settings`, and `Quit` actions.
 - The `How To Play` panel explains the Turf War objective, core controls, swim behavior, enemy-ink slowdown, tool switching, pause, restart, and special paint burst.
 - `Start Game` now opens a `Select Fighters` screen before loading the arena.
-- The selection screen previews animated 3D Team A and Team B characters, lets the player choose both sides independently, and applies the blue or orange team ink color to each preview and gameplay character.
+- The selection screen previews animated 3D Team A and Team B characters, lets the player choose both sides independently, and applies each selected character's signature ink color to the preview and gameplay arena.
 - The menu remains intentionally lightweight. A later visual art pass will add a generated background image and refined presentation assets without changing the navigation flow.
 
 ## Peer Feedback Summary
@@ -71,7 +71,8 @@ Acceptance criteria:
 
 - The player can choose Team A and Team B character appearances from the menu.
 - Both selected appearances are visible in the gameplay scene.
-- The Team A character uses blue ink and the Team B character uses orange ink.
+- Each selectable character has a signature ink color that is applied to the character preview, gameplay model, projectile visuals, paint overlay, objectives, and HUD.
+- The menu prevents both sides from selecting the same character so the two ink colors remain visually distinct.
 - Character selection does not change gameplay balance.
 - Existing movement, shooting, swim form, camera, and restart behavior still work.
 - Any public character assets are documented in `Public_Asset_Usage.md`.

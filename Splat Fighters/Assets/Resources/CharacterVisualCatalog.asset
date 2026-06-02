@@ -15,6 +15,7 @@ MonoBehaviour:
   options:
   - displayName: Bat
     prefab: {fileID: 1084026556650854, guid: b97c205a111279943ac20347be85b32a, type: 3}
+    inkColor: {r: 0.62, g: 0.2, b: 0.95, a: 1}
     idleState: IdleNormal
     moveState: FlyFWD
     swimState: SenseSomethingST
@@ -27,6 +28,7 @@ MonoBehaviour:
     localEulerOffset: {x: 0, y: 0, z: 0}
   - displayName: Dragon
     prefab: {fileID: 1355366978745300, guid: d5a2c78723409a647af519d34980ed50, type: 3}
+    inkColor: {r: 0.95, g: 0.16, b: 0.2, a: 1}
     idleState: IdleNormal
     moveState: FlyFWD
     swimState: SenseSomethingST
@@ -39,6 +41,7 @@ MonoBehaviour:
     localEulerOffset: {x: 0, y: 0, z: 0}
   - displayName: Evil Mage
     prefab: {fileID: 1020621230016016, guid: 811751be1d786084b9873353df4d23ab, type: 3}
+    inkColor: {r: 0.95, g: 0.15, b: 0.65, a: 1}
     idleState: IdleNormal
     moveState: RunFWD
     swimState: SenseSomethingST
@@ -51,6 +54,7 @@ MonoBehaviour:
     localEulerOffset: {x: 0, y: 0, z: 0}
   - displayName: Golem
     prefab: {fileID: 1522012193435230, guid: f3b95817c755ea344acaaf3a7159ef49, type: 3}
+    inkColor: {r: 0.05, g: 0.65, b: 0.58, a: 1}
     idleState: IdleNormal
     moveState: RunFWD
     swimState: SenseSomethingST
@@ -63,6 +67,7 @@ MonoBehaviour:
     localEulerOffset: {x: 0, y: 0, z: 0}
   - displayName: Monster Plant
     prefab: {fileID: 1830712763959034, guid: cada986a27525df4fa3dd09e9c14d334, type: 3}
+    inkColor: {r: 0.2, g: 0.78, b: 0.22, a: 1}
     idleState: IdleNormal
     moveState: RunFWD
     swimState: SenseSomethingST
@@ -75,6 +80,7 @@ MonoBehaviour:
     localEulerOffset: {x: 0, y: 0, z: 0}
   - displayName: Orc
     prefab: {fileID: 1951009016852862, guid: c282d043ab483824dbc609990acb217d, type: 3}
+    inkColor: {r: 1, g: 0.45, b: 0.05, a: 1}
     idleState: IdleNormal
     moveState: RunFWD
     swimState: SenseSomethingST
@@ -87,6 +93,7 @@ MonoBehaviour:
     localEulerOffset: {x: 0, y: 0, z: 0}
   - displayName: Skeleton
     prefab: {fileID: 1660913145580450, guid: b8aaf128368760b4ca2a7b855dc1cbcc, type: 3}
+    inkColor: {r: 0.05, g: 0.72, b: 1, a: 1}
     idleState: IdleNormal
     moveState: RunFWD
     swimState: SenseSomethingST
@@ -99,6 +106,7 @@ MonoBehaviour:
     localEulerOffset: {x: 0, y: 0, z: 0}
   - displayName: Slime
     prefab: {fileID: 1591548031869842, guid: 1cf605c698d5fec4cafabfe0b22d1e66, type: 3}
+    inkColor: {r: 0.68, g: 0.92, b: 0.08, a: 1}
     idleState: IdleNormal
     moveState: RunFWD
     swimState: SenseSomethingST
@@ -111,6 +119,7 @@ MonoBehaviour:
     localEulerOffset: {x: 0, y: 0, z: 0}
   - displayName: Spider
     prefab: {fileID: 1245321620635218, guid: 369d4450a0bdf8e41b4109360c35876a, type: 3}
+    inkColor: {r: 1, g: 0.78, b: 0.05, a: 1}
     idleState: IdleNormal
     moveState: RunFWD
     swimState: SenseSomethingST
@@ -123,6 +132,7 @@ MonoBehaviour:
     localEulerOffset: {x: 0, y: 0, z: 0}
   - displayName: Turtle Shell
     prefab: {fileID: 1098350002316864, guid: 7c9bfb8ed9be04a4d8d6dab7bcb6e886, type: 3}
+    inkColor: {r: 0.1, g: 0.4, b: 1, a: 1}
     idleState: IdleNormal
     moveState: RunFWD
     swimState: SenseSomethingST
