@@ -8,6 +8,15 @@ This document records feedback collected from other students after they reviewed
 
 The current prototype already supports the core Turf War-style loop: moving through a 3D arena, shooting ink, painting territory, reading team coverage, competing against a TeamB bot, restarting matches, and using a standalone main menu. The next improvements should strengthen the player experience without weakening performance on laptop hardware.
 
+## Current Implementation Progress
+
+The first lightweight menu increment is implemented in the current development branch:
+
+- The standalone `MainMenu` scene displays a basic start screen before gameplay loads.
+- The menu provides `Start Game`, mode selection, `How To Play`, `Settings`, and `Quit` actions.
+- The `How To Play` panel explains the Turf War objective, core controls, swim behavior, enemy-ink slowdown, tool switching, pause, restart, and special paint burst.
+- The menu remains intentionally lightweight. A later visual art pass will add a generated background image and refined presentation assets without changing the navigation flow.
+
 ## Peer Feedback Summary
 
 ### 1. Add Gameplay Guidance
@@ -162,4 +171,3 @@ As a player, I want to choose a character appearance before starting a match, so
 ### Background Music
 
 As a player, I want background music in the menu and during gameplay, so that the game feels more polished and engaging.
-

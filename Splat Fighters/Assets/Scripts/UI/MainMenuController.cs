@@ -32,8 +32,10 @@ public sealed class MainMenuController : MonoBehaviour
     private GameObject backdropObject;
     private GameObject menuPanelObject;
     private GameObject settingsPanelObject;
+    private GameObject instructionsPanelObject;
     private CanvasGroup menuGroup;
     private CanvasGroup settingsGroup;
+    private CanvasGroup instructionsGroup;
     private Text titleText;
     private Text statusText;
     private Text modeText;
@@ -42,6 +44,7 @@ public sealed class MainMenuController : MonoBehaviour
     private Button primaryButton;
     private Button secondaryButton;
     private Button modeButton;
+    private Button instructionsButton;
     private Button settingsButton;
     private Button fullscreenButton;
     private Button performantButton;
@@ -49,6 +52,7 @@ public sealed class MainMenuController : MonoBehaviour
     private Button highFidelityButton;
     private Button quitButton;
     private bool settingsVisible;
+    private bool instructionsVisible;
     private bool fullscreenEnabled;
     private GraphicsPreset selectedPreset;
     private GameManager.MatchMode selectedMatchMode;
@@ -95,9 +99,14 @@ public sealed class MainMenuController : MonoBehaviour
 
         RefreshFromGameState(false);
 
-        if (settingsVisible && Input.GetKeyDown(KeyCode.Escape))
+        if ((settingsVisible || instructionsVisible) && Input.GetKeyDown(KeyCode.Escape))
         {
-            ShowSettings(false);
+            ShowMainMenu();
+        }
+
+        if (gameManager == null && !settingsVisible && !instructionsVisible && Input.GetKeyDown(KeyCode.Return))
+        {
+            HandlePrimaryAction();
         }
     }
 
@@ -174,26 +183,32 @@ public sealed class MainMenuController : MonoBehaviour
 
         canvasObject.AddComponent<GraphicRaycaster>();
 
-        backdropObject = CreateBackdrop(canvasObject.transform, "Backdrop", new Color(0.02f, 0.03f, 0.04f, 0.28f));
+        backdropObject = CreateBackdrop(canvasObject.transform, "Backdrop", new Color(0.035f, 0.055f, 0.085f, 1f));
         backdropObject.transform.SetAsFirstSibling();
         backdropObject.SetActive(false);
 
-        menuPanelObject = CreateContainer(canvasObject.transform, "MenuPanel", new Vector2(0.5f, 0.5f), new Vector2(560f, 540f));
+        menuPanelObject = CreatePanel(canvasObject.transform, "MenuPanel", new Vector2(0.5f, 0.5f), new Vector2(620f, 650f));
         menuGroup = menuPanelObject.AddComponent<CanvasGroup>();
 
-        settingsPanelObject = CreateContainer(canvasObject.transform, "SettingsPanel", new Vector2(0.5f, 0.5f), new Vector2(580f, 560f));
+        settingsPanelObject = CreatePanel(canvasObject.transform, "SettingsPanel", new Vector2(0.5f, 0.5f), new Vector2(620f, 610f));
         settingsGroup = settingsPanelObject.AddComponent<CanvasGroup>();
 
-        titleText = CreateText(menuPanelObject.transform, "TitleText", "Splat Fighters", new Vector2(0f, -30f), 34, FontStyle.Bold, new Vector2(500f, 56f), TextAnchor.UpperCenter);
-        statusText = CreateText(menuPanelObject.transform, "StatusText", "Ready to start.", new Vector2(0f, -88f), 22, FontStyle.Bold, new Vector2(500f, 34f), TextAnchor.UpperCenter);
-        modeText = CreateText(menuPanelObject.transform, "ModeText", "Mode: Turf War", new Vector2(0f, -128f), 19, FontStyle.Normal, new Vector2(500f, 30f), TextAnchor.UpperCenter);
-        hintText = CreateText(menuPanelObject.transform, "HintText", "Press Enter or Start Match to begin. Esc opens settings while paused.", new Vector2(0f, -172f), 17, FontStyle.Normal, new Vector2(500f, 56f), TextAnchor.UpperCenter);
+        instructionsPanelObject = CreatePanel(canvasObject.transform, "InstructionsPanel", new Vector2(0.5f, 0.5f), new Vector2(760f, 690f));
+        instructionsGroup = instructionsPanelObject.AddComponent<CanvasGroup>();
 
-        primaryButton = CreateButton(menuPanelObject.transform, "PrimaryButton", "Start Game", new Vector2(0f, -254f), new Vector2(330f, 50f), HandlePrimaryAction);
-        secondaryButton = CreateButton(menuPanelObject.transform, "SecondaryButton", "Cycle Mode", new Vector2(0f, -312f), new Vector2(330f, 44f), HandleSecondaryAction);
-        modeButton = CreateButton(menuPanelObject.transform, "ModeButton", "Mode: Turf War", new Vector2(0f, -364f), new Vector2(330f, 44f), HandleModeAction);
-        settingsButton = CreateButton(menuPanelObject.transform, "SettingsButton", "Settings", new Vector2(0f, -416f), new Vector2(330f, 44f), () => ShowSettings(true));
-        quitButton = CreateButton(menuPanelObject.transform, "QuitButton", "Quit", new Vector2(0f, -468f), new Vector2(330f, 44f), HandleQuitAction);
+        titleText = CreateText(menuPanelObject.transform, "TitleText", "Splat Fighters", new Vector2(0f, -42f), 42, FontStyle.Bold, new Vector2(560f, 66f), TextAnchor.UpperCenter);
+        CreateText(menuPanelObject.transform, "SubtitleText", "Paint the arena. Control the map. Win the round.", new Vector2(0f, -108f), 19, FontStyle.Italic, new Vector2(560f, 32f), TextAnchor.UpperCenter);
+        statusText = CreateText(menuPanelObject.transform, "StatusText", "Ready to start.", new Vector2(0f, -160f), 22, FontStyle.Bold, new Vector2(560f, 34f), TextAnchor.UpperCenter);
+        modeText = CreateText(menuPanelObject.transform, "ModeText", "Mode: Turf War", new Vector2(0f, -202f), 19, FontStyle.Normal, new Vector2(560f, 30f), TextAnchor.UpperCenter);
+        hintText = CreateText(menuPanelObject.transform, "HintText", "Press Enter or Start Game to enter the arena.", new Vector2(0f, -244f), 17, FontStyle.Normal, new Vector2(560f, 48f), TextAnchor.UpperCenter);
+
+        primaryButton = CreateButton(menuPanelObject.transform, "PrimaryButton", "Start Game", new Vector2(0f, -310f), new Vector2(360f, 52f), HandlePrimaryAction);
+        secondaryButton = CreateButton(menuPanelObject.transform, "SecondaryButton", "Cycle Mode", new Vector2(0f, -372f), new Vector2(360f, 46f), HandleSecondaryAction);
+        modeButton = CreateButton(menuPanelObject.transform, "ModeButton", "Mode: Turf War", new Vector2(0f, -426f), new Vector2(360f, 46f), HandleModeAction);
+        instructionsButton = CreateButton(menuPanelObject.transform, "InstructionsButton", "How To Play", new Vector2(0f, -426f), new Vector2(360f, 46f), () => ShowInstructions(true));
+        settingsButton = CreateButton(menuPanelObject.transform, "SettingsButton", "Settings", new Vector2(0f, -480f), new Vector2(360f, 46f), () => ShowSettings(true));
+        quitButton = CreateButton(menuPanelObject.transform, "QuitButton", "Quit", new Vector2(0f, -534f), new Vector2(360f, 46f), HandleQuitAction);
+        CreateText(menuPanelObject.transform, "VersionText", "Basic menu version | Visual art pass planned", new Vector2(0f, -598f), 14, FontStyle.Normal, new Vector2(560f, 24f), TextAnchor.UpperCenter);
 
         CreateText(settingsPanelObject.transform, "SettingsTitleText", "Settings", new Vector2(0f, -30f), 32, FontStyle.Bold, new Vector2(500f, 52f), TextAnchor.UpperCenter);
         settingsSummaryText = CreateText(settingsPanelObject.transform, "SettingsSummaryText", "Preset: Performant | Fullscreen: Off", new Vector2(0f, -88f), 17, FontStyle.Normal, new Vector2(500f, 64f), TextAnchor.UpperCenter);
@@ -205,8 +220,20 @@ public sealed class MainMenuController : MonoBehaviour
         fullscreenButton = CreateButton(settingsPanelObject.transform, "FullscreenButton", "Fullscreen", new Vector2(0f, -398f), new Vector2(330f, 44f), ToggleFullscreen);
         CreateButton(settingsPanelObject.transform, "BackButton", "Back", new Vector2(0f, -450f), new Vector2(330f, 44f), () => ShowSettings(false));
 
+        CreateText(instructionsPanelObject.transform, "InstructionsTitleText", "How To Play", new Vector2(0f, -34f), 36, FontStyle.Bold, new Vector2(700f, 56f), TextAnchor.UpperCenter);
+        CreateText(
+            instructionsPanelObject.transform,
+            "InstructionsText",
+            "OBJECTIVE\nPaint more of the arena than Team B before the timer ends.\n\nCONTROLS\nWASD: Move\nMouse: Aim camera\nLeft Mouse: Fire or use active paint tool\nSpace: Jump\nLeft Shift: Swim faster and recover ink while standing on Team A paint\n1 / 2: Switch between shooter and roller\nQ: Use the special paint burst when ready\nP or Esc: Pause match\nR: Restart match\nM: Cycle demo mode\n\nTIPS\nYour blue paint creates safe movement lanes. Enemy orange paint slows you down.",
+            new Vector2(0f, -112f),
+            19,
+            FontStyle.Normal,
+            new Vector2(700f, 480f),
+            TextAnchor.UpperLeft);
+        CreateButton(instructionsPanelObject.transform, "InstructionsBackButton", "Back", new Vector2(0f, -606f), new Vector2(360f, 46f), () => ShowInstructions(false));
+
         UpdatePresetVisuals();
-        ShowSettings(false);
+        ShowMainMenu();
     }
 
     private void RefreshFromGameState(bool force)
@@ -214,11 +241,13 @@ public sealed class MainMenuController : MonoBehaviour
         if (gameManager == null)
         {
             UpdateMenuText();
-            SetVisible(menuGroup, !settingsVisible);
+            SetVisible(menuGroup, !settingsVisible && !instructionsVisible);
             SetVisible(settingsGroup, settingsVisible);
-            SetBackdropVisible(settingsVisible);
+            SetVisible(instructionsGroup, instructionsVisible);
+            SetBackdropVisible(true);
             SetButtonVisible(modeButton, false);
             SetButtonVisible(secondaryButton, true);
+            SetButtonVisible(instructionsButton, true);
             if (hideHudWhileMenuOpen && scoreUI != null)
             {
                 scoreUI.gameObject.SetActive(false);
@@ -246,9 +275,11 @@ public sealed class MainMenuController : MonoBehaviour
 
         SetVisible(menuGroup, showMenu && !settingsVisible);
         SetVisible(settingsGroup, showMenu && settingsVisible);
+        SetVisible(instructionsGroup, false);
         SetBackdropVisible(showMenu);
         SetButtonVisible(modeButton, currentState == GameManager.MatchState.WaitingToStart);
         SetButtonVisible(secondaryButton, currentState == GameManager.MatchState.Paused || currentState == GameManager.MatchState.Finished);
+        SetButtonVisible(instructionsButton, false);
 
         if (hideHudWhileMenuOpen && scoreUI != null)
         {
@@ -269,9 +300,11 @@ public sealed class MainMenuController : MonoBehaviour
 
         SetVisible(menuGroup, showMenu && !settingsVisible);
         SetVisible(settingsGroup, showMenu && settingsVisible);
+        SetVisible(instructionsGroup, false);
         SetBackdropVisible(showMenu);
         SetButtonVisible(modeButton, state == GameManager.MatchState.WaitingToStart);
         SetButtonVisible(secondaryButton, state == GameManager.MatchState.Paused || state == GameManager.MatchState.Finished);
+        SetButtonVisible(instructionsButton, false);
 
         if (hideHudWhileMenuOpen && scoreUI != null)
         {
@@ -344,10 +377,36 @@ public sealed class MainMenuController : MonoBehaviour
     private void ShowSettings(bool visible)
     {
         settingsVisible = visible;
+        instructionsVisible = false;
         bool showMenu = gameManager == null || gameManager.CurrentState != GameManager.MatchState.Playing;
         SetVisible(menuGroup, showMenu && !settingsVisible);
         SetVisible(settingsGroup, showMenu && settingsVisible);
-        SetBackdropVisible(showMenu && settingsVisible);
+        SetVisible(instructionsGroup, false);
+        SetBackdropVisible(showMenu);
+        UpdateButtonLabels();
+    }
+
+    private void ShowInstructions(bool visible)
+    {
+        instructionsVisible = visible;
+        settingsVisible = false;
+        bool showMenu = gameManager == null || gameManager.CurrentState != GameManager.MatchState.Playing;
+        SetVisible(menuGroup, showMenu && !instructionsVisible);
+        SetVisible(settingsGroup, false);
+        SetVisible(instructionsGroup, showMenu && instructionsVisible);
+        SetBackdropVisible(showMenu);
+        UpdateButtonLabels();
+    }
+
+    private void ShowMainMenu()
+    {
+        instructionsVisible = false;
+        settingsVisible = false;
+        bool showMenu = gameManager == null || gameManager.CurrentState != GameManager.MatchState.Playing;
+        SetVisible(menuGroup, showMenu);
+        SetVisible(settingsGroup, false);
+        SetVisible(instructionsGroup, false);
+        SetBackdropVisible(showMenu);
         UpdateButtonLabels();
     }
 
@@ -661,15 +720,23 @@ public sealed class MainMenuController : MonoBehaviour
         return containerObject;
     }
 
+    private static GameObject CreatePanel(Transform parent, string name, Vector2 anchorPoint, Vector2 sizeDelta)
+    {
+        GameObject panelObject = CreateContainer(parent, name, anchorPoint, sizeDelta);
+        Image image = panelObject.AddComponent<Image>();
+        image.color = new Color(0.055f, 0.075f, 0.11f, 0.96f);
+        return panelObject;
+    }
+
     private static Text CreateText(Transform parent, string name, string text, Vector2 anchoredPosition, int fontSize, FontStyle fontStyle, Vector2 sizeDelta, TextAnchor alignment)
     {
         GameObject textObject = new GameObject(name);
         textObject.transform.SetParent(parent, false);
 
         RectTransform rect = textObject.AddComponent<RectTransform>();
-        rect.anchorMin = new Vector2(0f, 1f);
-        rect.anchorMax = new Vector2(0f, 1f);
-        rect.pivot = new Vector2(0f, 1f);
+        rect.anchorMin = new Vector2(0.5f, 1f);
+        rect.anchorMax = new Vector2(0.5f, 1f);
+        rect.pivot = new Vector2(0.5f, 1f);
         rect.anchoredPosition = anchoredPosition;
         rect.sizeDelta = sizeDelta;
 
@@ -691,9 +758,9 @@ public sealed class MainMenuController : MonoBehaviour
         buttonObject.transform.SetParent(parent, false);
 
         RectTransform rect = buttonObject.AddComponent<RectTransform>();
-        rect.anchorMin = new Vector2(0f, 1f);
-        rect.anchorMax = new Vector2(0f, 1f);
-        rect.pivot = new Vector2(0f, 1f);
+        rect.anchorMin = new Vector2(0.5f, 1f);
+        rect.anchorMax = new Vector2(0.5f, 1f);
+        rect.pivot = new Vector2(0.5f, 1f);
         rect.anchoredPosition = anchoredPosition;
         rect.sizeDelta = sizeDelta;
 
