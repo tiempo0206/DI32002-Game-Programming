@@ -165,7 +165,7 @@ public sealed class CharacterSelectionManager : MonoBehaviour
         GameObject textObject = new GameObject("CharacterSelectionText");
         textObject.transform.SetParent(canvas.transform, false);
         selectionText = textObject.AddComponent<Text>();
-        selectionText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+        selectionText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         selectionText.fontSize = 16;
         selectionText.alignment = TextAnchor.UpperRight;
         selectionText.color = Color.white;

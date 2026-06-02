@@ -741,7 +741,7 @@ public sealed class MainMenuController : MonoBehaviour
         rect.sizeDelta = sizeDelta;
 
         Text textComponent = textObject.AddComponent<Text>();
-        textComponent.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+        textComponent.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         textComponent.fontSize = fontSize;
         textComponent.fontStyle = fontStyle;
         textComponent.alignment = alignment;
@@ -788,7 +788,7 @@ public sealed class MainMenuController : MonoBehaviour
         labelRect.offsetMax = new Vector2(-10f, -4f);
 
         Text textComponent = labelObject.AddComponent<Text>();
-        textComponent.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+        textComponent.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         textComponent.fontSize = 20;
         textComponent.fontStyle = FontStyle.Bold;
         textComponent.alignment = TextAnchor.MiddleCenter;
