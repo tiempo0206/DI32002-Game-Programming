@@ -11,6 +11,7 @@ public static class TeamVisualPalette
     public static readonly Color TeamAColor = new Color(0.05f, 0.45f, 1f, 1f);
     public static readonly Color TeamBColor = new Color(1f, 0.45f, 0.05f, 1f);
     public static readonly Color NeutralColor = Color.white;
+    private static bool runtimeSelectedColorsEnabled;
 
     public static Color TeamAGizmoColor => GetColor(Team.TeamA, 0.85f);
     public static Color TeamBGizmoColor => GetColor(Team.TeamB, 0.85f);
@@ -57,6 +58,12 @@ public static class TeamVisualPalette
         }
     }
 
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void EnableRuntimeSelectedColors()
+    {
+        runtimeSelectedColorsEnabled = true;
+    }
+
     private static Color WithAlpha(Color color, float alpha)
     {
         color.a = alpha;
@@ -65,6 +72,11 @@ public static class TeamVisualPalette
 
     private static Color LoadSelectedColor(Team team, Color fallback)
     {
+        if (!runtimeSelectedColorsEnabled)
+        {
+            return fallback;
+        }
+
         string keyPrefix = GetColorKeyPrefix(team);
         if (string.IsNullOrEmpty(keyPrefix) || PlayerPrefs.GetInt($"{keyPrefix}.Configured", 0) == 0)
         {

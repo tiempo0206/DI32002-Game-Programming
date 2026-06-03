@@ -509,6 +509,10 @@ The layout is centered on a 32 x 36 arena. The most important objects are placed
 
 #### Boundary and map limits
 
+- `NorthArenaContainmentWall`
+- `SouthArenaContainmentWall`
+- `EastArenaContainmentWall`
+- `WestArenaContainmentWall`
 - `NorthBoundaryRail`
 - `SouthBoundaryRail`
 - `EastBoundaryRail`
@@ -520,7 +524,7 @@ The layout is centered on a 32 x 36 arena. The most important objects are placed
 - `NorthBackstop`
 - `SouthBackstop`
 
-These define the playable rectangle and prevent the camera or characters from escaping the arena.
+The arena containment walls are invisible high `BoxCollider` objects that prevent players, bots, and projectiles from escaping the playable rectangle. The lower boundary rail and backstop objects remain as layout anchors and paint blockers, while the imported hangar wall meshes provide the visible wall treatment.
 
 #### Center contest geometry
 
