@@ -20,6 +20,8 @@ public static class SplatFightersGrayboxMapBuilder
     private const float CharacterControllerRadius = 0.4f;
     private const float MapWidth = 32f;
     private const float MapLength = 36f;
+    private const float ArenaContainmentHeight = 5.5f;
+    private const float ArenaContainmentThickness = 0.8f;
     private const int PaintGridWidth = 80;
     private const int PaintGridHeight = 90;
     private const float HalfMapWidth = MapWidth * 0.5f;
@@ -36,6 +38,39 @@ public static class SplatFightersGrayboxMapBuilder
         AssetDatabase.Refresh();
 
         Debug.Log("Built hangar arena map v1 into the MVP shooting test scene.");
+    }
+
+    [MenuItem("Tools/Splat Fighters/Repair Arena Containment Walls")]
+    public static void RepairArenaContainmentWalls()
+    {
+        Scene scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+        EnsureArenaContainmentCollidersInCurrentScene();
+        EditorSceneManager.SaveScene(scene);
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
+
+        Debug.Log("Repaired arena containment walls in the MVP shooting test scene.");
+    }
+
+    public static void EnsureArenaContainmentCollidersInCurrentScene()
+    {
+        GameObject levelRoot = GameObject.Find(LevelRootName);
+
+        if (levelRoot == null)
+        {
+            return;
+        }
+
+        Transform boundaryRoot = levelRoot.transform.Find("BoundaryWalls");
+
+        if (boundaryRoot == null)
+        {
+            boundaryRoot = CreateGroup(levelRoot.transform, "BoundaryWalls");
+        }
+
+        RemoveExistingArenaContainmentColliders(boundaryRoot);
+        BuildArenaContainmentColliders(boundaryRoot);
+        EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
     }
 
     public static void BuildInCurrentScene()
@@ -88,6 +123,8 @@ public static class SplatFightersGrayboxMapBuilder
 
     private static void BuildBoundaryWalls(Transform parent, Material material)
     {
+        BuildArenaContainmentColliders(parent);
+
         CreateSolidCube("NorthBoundaryRail", new Vector3(0f, 0.55f, HalfMapLength + 0.25f), new Vector3(MapWidth + 0.8f, 1.1f, 0.5f), material, parent);
         CreateSolidCube("SouthBoundaryRail", new Vector3(0f, 0.55f, -HalfMapLength - 0.25f), new Vector3(MapWidth + 0.8f, 1.1f, 0.5f), material, parent);
         CreateSolidCube("EastBoundaryRail", new Vector3(HalfMapWidth + 0.25f, 0.55f, 0f), new Vector3(0.5f, 1.1f, MapLength + 0.8f), material, parent);
@@ -100,6 +137,47 @@ public static class SplatFightersGrayboxMapBuilder
 
         CreateSolidCube("NorthBackstop", new Vector3(0f, 1.25f, HalfMapLength - 1.25f), new Vector3(7.5f, 1.4f, 0.55f), material, parent);
         CreateSolidCube("SouthBackstop", new Vector3(0f, 1.25f, -HalfMapLength + 1.25f), new Vector3(7.5f, 1.4f, 0.55f), material, parent);
+    }
+
+    private static void BuildArenaContainmentColliders(Transform parent)
+    {
+        float verticalCenter = ArenaContainmentHeight * 0.5f;
+        float northSouthOffset = HalfMapLength + ArenaContainmentThickness * 0.5f;
+        float eastWestOffset = HalfMapWidth + ArenaContainmentThickness * 0.5f;
+
+        CreateContainmentCollider(
+            "NorthArenaContainmentWall",
+            new Vector3(0f, verticalCenter, northSouthOffset),
+            new Vector3(MapWidth + ArenaContainmentThickness * 2f, ArenaContainmentHeight, ArenaContainmentThickness),
+            parent);
+        CreateContainmentCollider(
+            "SouthArenaContainmentWall",
+            new Vector3(0f, verticalCenter, -northSouthOffset),
+            new Vector3(MapWidth + ArenaContainmentThickness * 2f, ArenaContainmentHeight, ArenaContainmentThickness),
+            parent);
+        CreateContainmentCollider(
+            "EastArenaContainmentWall",
+            new Vector3(eastWestOffset, verticalCenter, 0f),
+            new Vector3(ArenaContainmentThickness, ArenaContainmentHeight, MapLength + ArenaContainmentThickness * 2f),
+            parent);
+        CreateContainmentCollider(
+            "WestArenaContainmentWall",
+            new Vector3(-eastWestOffset, verticalCenter, 0f),
+            new Vector3(ArenaContainmentThickness, ArenaContainmentHeight, MapLength + ArenaContainmentThickness * 2f),
+            parent);
+    }
+
+    private static void RemoveExistingArenaContainmentColliders(Transform parent)
+    {
+        for (int i = parent.childCount - 1; i >= 0; i--)
+        {
+            Transform child = parent.GetChild(i);
+
+            if (child != null && child.name.EndsWith("ArenaContainmentWall"))
+            {
+                Object.DestroyImmediate(child.gameObject);
+            }
+        }
     }
 
     private static void BuildContestObstacles(Transform obstacleRoot, Transform coverRoot, Material material)
@@ -1258,6 +1336,23 @@ public static class SplatFightersGrayboxMapBuilder
 
         AddPaintBlocker(cube);
         return cube;
+    }
+
+    private static GameObject CreateContainmentCollider(string name, Vector3 position, Vector3 size, Transform parent)
+    {
+        GameObject wall = new GameObject(name);
+        wall.transform.SetParent(parent, false);
+        wall.transform.position = position;
+        wall.transform.rotation = Quaternion.identity;
+
+        BoxCollider collider = wall.AddComponent<BoxCollider>();
+        collider.size = size;
+        collider.isTrigger = false;
+
+        GameObjectUtility.SetStaticEditorFlags(wall, StaticEditorFlags.BatchingStatic);
+        EditorUtility.SetDirty(wall);
+        EditorUtility.SetDirty(collider);
+        return wall;
     }
 
     private static GameObject CreateRamp(string name, Vector3 position, Vector3 scale, Vector3 eulerAngles, Material material, Transform parent)
