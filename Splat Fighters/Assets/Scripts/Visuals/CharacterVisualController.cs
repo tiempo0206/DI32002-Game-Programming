@@ -105,7 +105,7 @@ public sealed class CharacterVisualController : MonoBehaviour
         activeRenderers = currentInstance.GetComponentsInChildren<Renderer>(true);
         animators = currentInstance.GetComponentsInChildren<Animator>(true);
         FitToCharacterController();
-        ApplyTeamTint();
+        ApplyCharacterTint();
         ApplySwimState();
 
         currentAnimationState = string.Empty;
@@ -132,7 +132,7 @@ public sealed class CharacterVisualController : MonoBehaviour
         }
 
         team = newTeam;
-        ApplyTeamTint();
+        ApplyCharacterTint();
     }
 
     private void HidePrototypeRenderers()
@@ -273,7 +273,7 @@ public sealed class CharacterVisualController : MonoBehaviour
         {
             visualPivot.localPosition = basePivotPosition;
             visualPivot.localScale = basePivotScale;
-            ApplyTeamTint();
+            ApplyCharacterTint();
             return;
         }
 
@@ -283,10 +283,10 @@ public sealed class CharacterVisualController : MonoBehaviour
             basePivotScale.x * currentOption.SwimWidthMultiplier,
             basePivotScale.y * swimHeight,
             basePivotScale.z * currentOption.SwimLengthMultiplier);
-        ApplyTeamTint();
+        ApplyCharacterTint();
     }
 
-    private void ApplyTeamTint()
+    private void ApplyCharacterTint()
     {
         if (activeRenderers == null || activeRenderers.Length == 0)
         {
@@ -298,7 +298,7 @@ public sealed class CharacterVisualController : MonoBehaviour
             propertyBlock = new MaterialPropertyBlock();
         }
 
-        Color primary = TeamVisualPalette.GetColor(team);
+        Color primary = currentOption != null ? currentOption.InkColor : TeamVisualPalette.GetColor(team);
         Color bright = Color.Lerp(primary, Color.white, 0.24f);
         Color dark = Color.Lerp(primary, Color.black, 0.35f);
 

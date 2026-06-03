@@ -1211,7 +1211,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c8d6f3c1a2a34f31a0f7b8f42e319d5a, type: 3}
   m_Name:
   m_EditorClassIdentifier:
-  targetFrameRate: 60
+  targetFrameRate: 30
   disableVSync: 1
   fixedDeltaTime: 0.02
   applyOnAwake: 1
@@ -11454,7 +11454,7 @@ MonoBehaviour:
   fallbackDistance: 4.5
   activationKey: 113
   requireMatchPlaying: 1
-  spawnInkSplatterVfx: 1
+  spawnInkSplatterVfx: 0
   splatterRadiusMultiplier: 1.15
   logActivation: 0
 --- !u!114 &1552084111

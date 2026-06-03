@@ -57,6 +57,8 @@ public class ScoreUI : MonoBehaviour
         float towerTeamBPercent)
     {
         EnsureRuntimeTextReferences();
+        teamAColor = TeamVisualPalette.GetColor(Team.TeamA);
+        teamBColor = TeamVisualPalette.GetColor(Team.TeamB);
 
         if (presentationText != null)
         {
@@ -277,14 +279,7 @@ public class ScoreUI : MonoBehaviour
 
     private static Font GetDefaultFont()
     {
-        Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-
-        if (font == null)
-        {
-            font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-        }
-
-        return font;
+        return Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
     }
 
     private static string FormatTime(float seconds)

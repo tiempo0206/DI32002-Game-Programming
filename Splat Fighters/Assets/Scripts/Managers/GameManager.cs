@@ -8,6 +8,8 @@ using UnityEngine;
 [DisallowMultipleComponent]
 public class GameManager : MonoBehaviour
 {
+    private const string MatchModePrefKey = "SplatFighters.Menu.MatchMode";
+
     public enum MatchState
     {
         WaitingToStart,
@@ -94,6 +96,7 @@ public class GameManager : MonoBehaviour
         }
 
         Instance = this;
+        LoadMatchModeFromPreferences();
         ResolveReferences();
         SubscribeToHealthEvents();
         matchTimer.Configure(matchDurationSeconds);
@@ -265,6 +268,12 @@ public class GameManager : MonoBehaviour
     public void CycleMatchMode()
     {
         matchMode = matchMode == MatchMode.TowerControl ? MatchMode.TurfWar : (MatchMode)((int)matchMode + 1);
+        UpdateScoreUI();
+    }
+
+    public void SetMatchMode(MatchMode newMode)
+    {
+        matchMode = newMode;
         UpdateScoreUI();
     }
 
@@ -784,5 +793,22 @@ public class GameManager : MonoBehaviour
 
         currentState = nextState;
         MatchStateChanged?.Invoke(currentState);
+    }
+
+    private void LoadMatchModeFromPreferences()
+    {
+        if (!PlayerPrefs.HasKey(MatchModePrefKey))
+        {
+            return;
+        }
+
+        int rawMode = PlayerPrefs.GetInt(MatchModePrefKey, (int)matchMode);
+
+        if (rawMode < (int)MatchMode.TurfWar || rawMode > (int)MatchMode.TowerControl)
+        {
+            return;
+        }
+
+        matchMode = (MatchMode)rawMode;
     }
 }

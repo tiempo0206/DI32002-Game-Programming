@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 /// <summary>
@@ -8,7 +9,11 @@ using UnityEngine.UI;
 [DefaultExecutionOrder(160)]
 public sealed class CharacterSelectionManager : MonoBehaviour
 {
-    private const string PlayerPrefsKey = "SplatFighters.SelectedCharacter";
+    public const string PlayerCharacterPrefsKey = "SplatFighters.SelectedPlayerCharacter";
+    public const string OpponentCharacterPrefsKey = "SplatFighters.SelectedOpponentCharacter";
+
+    private const string LegacyCharacterPrefsKey = "SplatFighters.SelectedCharacter";
+    private const string GameplaySceneName = "MVP_ShootingTest";
 
     [SerializeField] private KeyCode nextCharacterKey = KeyCode.C;
     [SerializeField] private KeyCode previousCharacterKey = KeyCode.V;
@@ -20,11 +25,29 @@ public sealed class CharacterSelectionManager : MonoBehaviour
     private BotController botController;
     private Text selectionText;
     private int selectedIndex;
+    private int opponentSelectedIndex;
+
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
+    private static void RegisterSceneLoadedHandler()
+    {
+        SceneManager.sceneLoaded -= HandleSceneLoaded;
+        SceneManager.sceneLoaded += HandleSceneLoaded;
+    }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-    private static void Bootstrap()
+    private static void BootstrapActiveScene()
     {
-        if (FindObjectOfType<CharacterSelectionManager>() != null)
+        EnsureManagerForScene(SceneManager.GetActiveScene());
+    }
+
+    private static void HandleSceneLoaded(Scene scene, LoadSceneMode mode)
+    {
+        EnsureManagerForScene(scene);
+    }
+
+    private static void EnsureManagerForScene(Scene scene)
+    {
+        if (scene.name != GameplaySceneName || FindObjectOfType<CharacterSelectionManager>() != null)
         {
             return;
         }
@@ -40,7 +63,16 @@ public sealed class CharacterSelectionManager : MonoBehaviour
             catalog = CharacterVisualCatalog.LoadDefault();
         }
 
-        selectedIndex = PlayerPrefs.GetInt(PlayerPrefsKey, 5);
+        int legacyIndex = PlayerPrefs.GetInt(LegacyCharacterPrefsKey, 5);
+        selectedIndex = PlayerPrefs.GetInt(PlayerCharacterPrefsKey, legacyIndex);
+        opponentSelectedIndex = PlayerPrefs.GetInt(OpponentCharacterPrefsKey, selectedIndex + 1);
+
+        if (catalog != null && catalog.Count > 0)
+        {
+            selectedIndex = catalog.NormalizeIndex(selectedIndex);
+            opponentSelectedIndex = EnsureDistinctOpponentIndex(opponentSelectedIndex);
+            SaveSelectedCharactersAndColors();
+        }
     }
 
     private void Start()
@@ -85,16 +117,22 @@ public sealed class CharacterSelectionManager : MonoBehaviour
         }
 
         selectedIndex = catalog.NormalizeIndex(index);
-        PlayerPrefs.SetInt(PlayerPrefsKey, selectedIndex);
+
+        if (catalog.Count > 1 && opponentSelectedIndex == selectedIndex)
+        {
+            opponentSelectedIndex = EnsureDistinctOpponentIndex(opponentSelectedIndex + 1);
+
+            if (botVisual != null)
+            {
+                botVisual.Select(opponentSelectedIndex);
+            }
+        }
+
+        SaveSelectedCharactersAndColors();
 
         if (playerVisual != null)
         {
             playerVisual.Select(selectedIndex);
-        }
-
-        if (botVisual != null)
-        {
-            botVisual.Select(selectedIndex + 1);
         }
     }
 
@@ -127,7 +165,7 @@ public sealed class CharacterSelectionManager : MonoBehaviour
 
         if (botController != null && botVisual == null)
         {
-            botVisual = AttachVisualController(botController.gameObject, botController.BotTeam, selectedIndex + 1);
+            botVisual = AttachVisualController(botController.gameObject, botController.BotTeam, opponentSelectedIndex);
         }
     }
 
@@ -142,6 +180,32 @@ public sealed class CharacterSelectionManager : MonoBehaviour
 
         visualController.Configure(catalog, team, index);
         return visualController;
+    }
+
+    private int EnsureDistinctOpponentIndex(int index)
+    {
+        int normalized = catalog.NormalizeIndex(index);
+        return catalog.Count > 1 && normalized == selectedIndex
+            ? catalog.NormalizeIndex(normalized + 1)
+            : normalized;
+    }
+
+    private void SaveSelectedCharactersAndColors()
+    {
+        PlayerPrefs.SetInt(PlayerCharacterPrefsKey, selectedIndex);
+        PlayerPrefs.SetInt(OpponentCharacterPrefsKey, opponentSelectedIndex);
+        SaveSelectedInkColor(Team.TeamA, selectedIndex);
+        SaveSelectedInkColor(Team.TeamB, opponentSelectedIndex);
+        PlayerPrefs.Save();
+    }
+
+    private void SaveSelectedInkColor(Team team, int index)
+    {
+        CharacterVisualOption option = catalog.GetOption(index);
+        if (option != null)
+        {
+            TeamVisualPalette.SaveSelectedColor(team, option.InkColor);
+        }
     }
 
     private void EnsureSelectionUi()
@@ -165,7 +229,7 @@ public sealed class CharacterSelectionManager : MonoBehaviour
         GameObject textObject = new GameObject("CharacterSelectionText");
         textObject.transform.SetParent(canvas.transform, false);
         selectionText = textObject.AddComponent<Text>();
-        selectionText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+        selectionText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
         selectionText.fontSize = 16;
         selectionText.alignment = TextAnchor.UpperRight;
         selectionText.color = Color.white;
@@ -189,12 +253,12 @@ public sealed class CharacterSelectionManager : MonoBehaviour
 
         if (catalog == null || catalog.Count == 0 || playerVisual == null)
         {
-            selectionText.text = "角色素材目录生成中...";
+            selectionText.text = "Character catalog is loading...";
             selectionText.color = new Color(1f, 0.78f, 0.28f, 1f);
             return;
         }
 
         selectionText.color = TeamVisualPalette.GetColor(Team.TeamA);
-        selectionText.text = $"角色: {playerVisual.CurrentDisplayName}   C/V 切换";
+        selectionText.text = $"Character: {playerVisual.CurrentDisplayName}   C/V to cycle";
     }
 }

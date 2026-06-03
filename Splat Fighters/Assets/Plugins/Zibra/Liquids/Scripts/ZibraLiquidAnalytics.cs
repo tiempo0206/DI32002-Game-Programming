@@ -394,7 +394,7 @@ namespace com.zibra.liquid.Analytics
                 return;
             }
 
-            request = UnityWebRequest.Post(ANALYTIC_API_URL, jsonData).SendWebRequest();
+            request = UnityWebRequest.PostWwwForm(ANALYTIC_API_URL, jsonData).SendWebRequest();
             request.completed += UpdateKeyRequest;
         }
 

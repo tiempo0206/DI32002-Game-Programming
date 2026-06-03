@@ -93,6 +93,7 @@ public class PaintableArea : MonoBehaviour
 
     private void Awake()
     {
+        RefreshTeamColors();
         EnsureGrid();
         RecalculateCounts();
         RestoreLegacyPaintableMaskIfNeeded();
@@ -849,6 +850,8 @@ public class PaintableArea : MonoBehaviour
 
     private void RefreshRuntimeOverlayNow()
     {
+        RefreshTeamColors();
+
         if (!showRuntimeOverlay)
         {
             if (runtimeOverlayRenderer != null)
@@ -1073,12 +1076,18 @@ public class PaintableArea : MonoBehaviour
         switch (team)
         {
             case Team.TeamA:
-                return teamAGizmoColor;
+                return TeamVisualPalette.GetColor(Team.TeamA, teamAGizmoColor.a);
             case Team.TeamB:
-                return teamBGizmoColor;
+                return TeamVisualPalette.GetColor(Team.TeamB, teamBGizmoColor.a);
             default:
                 return unpaintedGizmoColor;
         }
+    }
+
+    private void RefreshTeamColors()
+    {
+        teamAOverlayColor = TeamVisualPalette.GetColor(Team.TeamA, teamAOverlayColor.a);
+        teamBOverlayColor = TeamVisualPalette.GetColor(Team.TeamB, teamBOverlayColor.a);
     }
 
     [ContextMenu("Debug Paint Center / Team A")]

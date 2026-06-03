@@ -333,7 +333,8 @@ public class InkWeapon : MonoBehaviour
             projectileColorBlock = new MaterialPropertyBlock();
         }
 
-        Color color = team == Team.TeamB ? teamBProjectileColor : teamAProjectileColor;
+        Color fallbackColor = team == Team.TeamB ? teamBProjectileColor : teamAProjectileColor;
+        Color color = team == Team.None ? fallbackColor : TeamVisualPalette.GetColor(team);
         projectileColorBlock.Clear();
         projectileColorBlock.SetColor(BaseColorId, color);
         projectileColorBlock.SetColor(ColorId, color);

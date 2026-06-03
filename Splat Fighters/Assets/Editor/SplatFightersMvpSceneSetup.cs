@@ -136,8 +136,8 @@ public static class SplatFightersMvpSceneSetup
         projectileSo.FindProperty("impactMarkerLifetime").floatValue = 0.25f;
         projectileSo.FindProperty("impactMarkerSurfaceOffset").floatValue = 0.03f;
         projectileSo.FindProperty("logPaintMisses").boolValue = false;
-        projectileSo.FindProperty("spawnInkSplatterVfx").boolValue = true;
-        projectileSo.FindProperty("spawnSplatterOnNonPaintableHit").boolValue = true;
+        projectileSo.FindProperty("spawnInkSplatterVfx").boolValue = false;
+        projectileSo.FindProperty("spawnSplatterOnNonPaintableHit").boolValue = false;
         projectileSo.FindProperty("splatterRadiusMultiplier").floatValue = 1.1f;
         projectileSo.ApplyModifiedPropertiesWithoutUndo();
 
@@ -201,7 +201,7 @@ public static class SplatFightersMvpSceneSetup
         managerSo.ApplyModifiedPropertiesWithoutUndo();
 
         SerializedObject performanceSo = new SerializedObject(performanceProfile);
-        performanceSo.FindProperty("targetFrameRate").intValue = 60;
+        performanceSo.FindProperty("targetFrameRate").intValue = 30;
         performanceSo.FindProperty("disableVSync").boolValue = true;
         performanceSo.FindProperty("fixedDeltaTime").floatValue = 0.02f;
         performanceSo.FindProperty("applyOnAwake").boolValue = true;
