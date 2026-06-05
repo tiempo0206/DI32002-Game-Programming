@@ -478,12 +478,17 @@ public static class SplatFightersGrayboxMapBuilder
     {
         Material floorMaterial = LoadHangarMaterial("mat_floor.mat");
         Material wallMaterial = LoadHangarMaterial("mat_wall.mat");
+        Material roofMaterial = LoadHangarMaterial("mat_roof.mat");
+        Material roofFrameMaterial = LoadHangarMaterial("mat_roof_frame.mat");
 
         CreateTexturedSurface("HangarPaintableFloorSurface", new Vector3(0f, -0.052f, 0f), new Vector3(MapWidth, 0.025f, MapLength), floorMaterial, parent);
         CreateTexturedSurface("HangarNorthWallSurface", new Vector3(0f, 3.1f, HalfMapLength + 0.42f), new Vector3(MapWidth + 1.2f, 6.2f, 0.12f), wallMaterial, parent);
         CreateTexturedSurface("HangarSouthWallSurface", new Vector3(0f, 3.1f, -HalfMapLength - 0.42f), new Vector3(MapWidth + 1.2f, 6.2f, 0.12f), wallMaterial, parent);
         CreateTexturedSurface("HangarEastWallSurface", new Vector3(HalfMapWidth + 0.42f, 3.1f, 0f), new Vector3(0.12f, 6.2f, MapLength + 1.2f), wallMaterial, parent);
         CreateTexturedSurface("HangarWestWallSurface", new Vector3(-HalfMapWidth - 0.42f, 3.1f, 0f), new Vector3(0.12f, 6.2f, MapLength + 1.2f), wallMaterial, parent);
+        CreateTexturedSurface("HangarCeilingSurface", new Vector3(0f, 12.2f, 0f), new Vector3(MapWidth + 1.4f, 0.14f, MapLength + 1.4f), roofMaterial, parent);
+        CreateTexturedSurface("HangarCeilingFrameSurface", new Vector3(0f, 12.08f, 0f), new Vector3(MapWidth + 0.8f, 0.1f, 1.2f), roofFrameMaterial, parent);
+        CreateTexturedSurface("HangarCeilingCrossFrameSurface", new Vector3(0f, 12.07f, 0f), new Vector3(1.2f, 0.1f, MapLength + 0.8f), roofFrameMaterial, parent);
     }
 
     private static void BuildHangarShell(Transform parent)
