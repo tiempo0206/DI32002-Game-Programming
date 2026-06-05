@@ -84,6 +84,7 @@ jobs:
             'Splat Fighters/Assets/Scripts/Managers/PerformanceProfile.cs'
             'Splat Fighters/Assets/Scripts/UI/AimReticleUI.cs'
             'Splat Fighters/Assets/Scripts/UI/ScoreUI.cs'
+            'Splat Fighters/Assets/Scripts/UI/MatchResultsUI.cs'
             'Splat Fighters/Assets/Editor/SplatFightersMvpSceneSetup.cs'
             'Splat Fighters/Assets/Editor/SplatFightersGrayboxMapBuilder.cs'
             'Splat Fighters/Assets/Scenes/MVP_ShootingTest.unity'

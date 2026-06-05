@@ -195,6 +195,7 @@ public static class SplatFightersMvpSceneSetup
         managerSo.FindProperty("matchDurationSeconds").floatValue = 180f;
         managerSo.FindProperty("paintManager").objectReferenceValue = paintManager;
         managerSo.FindProperty("autoCreateScoreUI").boolValue = true;
+        managerSo.FindProperty("autoCreateResultsUI").boolValue = true;
         managerSo.FindProperty("respawnDelaySeconds").floatValue = 2f;
         managerSo.FindProperty("scoreRefreshInterval").floatValue = 0.2f;
         managerSo.FindProperty("enableKeyboardControls").boolValue = true;

@@ -1289,6 +1289,7 @@ public static class SplatFightersGrayboxMapBuilder
         managerSo.FindProperty("teamASpawn").objectReferenceValue = teamASpawn;
         managerSo.FindProperty("teamBSpawn").objectReferenceValue = teamBSpawn;
         managerSo.FindProperty("autoCreateScoreUI").boolValue = true;
+        managerSo.FindProperty("autoCreateResultsUI").boolValue = true;
         managerSo.FindProperty("respawnDelaySeconds").floatValue = 2f;
         managerSo.FindProperty("enableKeyboardControls").boolValue = true;
         managerSo.FindProperty("startKey").intValue = (int)KeyCode.Return;

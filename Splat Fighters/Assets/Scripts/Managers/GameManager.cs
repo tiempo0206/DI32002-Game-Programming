@@ -39,6 +39,7 @@ public class GameManager : MonoBehaviour
     [Header("References")]
     [SerializeField] private PaintManager paintManager = null;
     [SerializeField] private ScoreUI scoreUI = null;
+    [SerializeField] private MatchResultsUI resultsUI = null;
     [SerializeField] private Transform playerRoot = null;
     [SerializeField] private PlayerController playerController = null;
     [SerializeField] private CharacterHealth playerHealth = null;
@@ -52,6 +53,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private SpawnPoint teamASpawn = null;
     [SerializeField] private SpawnPoint teamBSpawn = null;
     [SerializeField] private bool autoCreateScoreUI = true;
+    [SerializeField] private bool autoCreateResultsUI = true;
 
     [Header("Respawn")]
     [SerializeField, Min(0f)] private float respawnDelaySeconds = 2f;
@@ -341,6 +343,21 @@ public class GameManager : MonoBehaviour
         if (scoreUI == null && autoCreateScoreUI)
         {
             scoreUI = ScoreUI.CreateRuntimeScoreUI();
+        }
+
+        if (resultsUI == null)
+        {
+            resultsUI = FindObjectOfType<MatchResultsUI>();
+        }
+
+        if (resultsUI == null && autoCreateResultsUI)
+        {
+            resultsUI = MatchResultsUI.CreateRuntimeResultsUI();
+        }
+
+        if (resultsUI != null)
+        {
+            resultsUI.Bind(this);
         }
 
         if (playerRoot == null)
