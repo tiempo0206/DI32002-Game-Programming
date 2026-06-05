@@ -2,6 +2,7 @@ using System.IO;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
 
 /// <summary>
@@ -149,11 +150,16 @@ public static class SplatFightersMvpSceneSetup
 
     private static void CreateLighting()
     {
+        RenderSettings.ambientMode = AmbientMode.Flat;
+        RenderSettings.ambientLight = new Color(0.72f, 0.76f, 0.8f, 1f);
+        RenderSettings.ambientIntensity = 1.15f;
+
         GameObject lightObject = new GameObject("Directional Light");
         Light light = lightObject.AddComponent<Light>();
         light.type = LightType.Directional;
-        light.intensity = 1.2f;
-        lightObject.transform.rotation = Quaternion.Euler(50f, -30f, 0f);
+        light.intensity = 0.85f;
+        light.shadows = LightShadows.None;
+        lightObject.transform.rotation = Quaternion.Euler(58f, -25f, 0f);
     }
 
     private static Camera CreateCamera()
