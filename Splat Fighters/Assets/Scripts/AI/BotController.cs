@@ -1,5 +1,53 @@
 using UnityEngine;
 
+public enum BotDifficulty
+{
+    Easy,
+    Normal,
+    Hard
+}
+
+public static class BotDifficultySettings
+{
+    public const string PrefKey = "SplatFighters.Menu.BotDifficulty";
+
+    public static BotDifficulty LoadSavedDifficulty()
+    {
+        int rawDifficulty = PlayerPrefs.GetInt(PrefKey, (int)BotDifficulty.Normal);
+
+        if (rawDifficulty < (int)BotDifficulty.Easy || rawDifficulty > (int)BotDifficulty.Hard)
+        {
+            return BotDifficulty.Normal;
+        }
+
+        return (BotDifficulty)rawDifficulty;
+    }
+
+    public static void SaveDifficulty(BotDifficulty difficulty)
+    {
+        PlayerPrefs.SetInt(PrefKey, (int)difficulty);
+        PlayerPrefs.Save();
+    }
+
+    public static BotDifficulty GetNextDifficulty(BotDifficulty difficulty)
+    {
+        return difficulty == BotDifficulty.Hard ? BotDifficulty.Easy : (BotDifficulty)((int)difficulty + 1);
+    }
+
+    public static string GetLabel(BotDifficulty difficulty)
+    {
+        switch (difficulty)
+        {
+            case BotDifficulty.Easy:
+                return "Easy";
+            case BotDifficulty.Hard:
+                return "Hard";
+            default:
+                return "Normal";
+        }
+    }
+}
+
 /// <summary>
 /// Simple single-player bot for the Turf War MVP.
 /// It patrols waypoints, contests enemy paint, and retreats when resources are low.
@@ -18,6 +66,10 @@ public class BotController : MonoBehaviour
     [SerializeField] private Team botTeam = Team.TeamB;
     [SerializeField] private Team priorityPaintTargetTeam = Team.TeamA;
 
+    [Header("Difficulty")]
+    [SerializeField] private BotDifficulty difficulty = BotDifficulty.Normal;
+    [SerializeField] private bool loadDifficultyFromPreferences = true;
+
     [Header("Patrol")]
     [SerializeField] private Transform[] waypoints = new Transform[0];
     [SerializeField] private Transform retreatTarget = null;
@@ -35,6 +87,7 @@ public class BotController : MonoBehaviour
     [SerializeField] private float fireInterval = 0.65f;
     [SerializeField] private float aimRefreshInterval = 1.2f;
     [SerializeField] private float fallbackAimDistance = 4f;
+    [SerializeField] private float aimErrorRadius = 0.55f;
 
     [Header("Retreat")]
     [SerializeField] private bool retreatWhenPressured = true;
@@ -62,11 +115,18 @@ public class BotController : MonoBehaviour
     private bool isRetreating;
 
     public Team BotTeam => botTeam;
+    public BotDifficulty Difficulty => difficulty;
 
     private void Awake()
     {
         ResolveReferences();
+        ApplySavedDifficultyIfNeeded();
         currentAimTarget = ResolveCurrentAimTarget();
+    }
+
+    private void Start()
+    {
+        ApplySavedDifficultyIfNeeded();
     }
 
     private void Update()
@@ -93,6 +153,7 @@ public class BotController : MonoBehaviour
 
     public void ResetBotState()
     {
+        ApplySavedDifficultyIfNeeded();
         currentWaypointIndex = 0;
         currentPaintTargetIndex = 0;
         verticalVelocity = 0f;
@@ -100,6 +161,13 @@ public class BotController : MonoBehaviour
         nextAimRefreshTime = 0f;
         isRetreating = false;
         SetWeaponRetreatModifiers(false);
+        currentAimTarget = ResolveCurrentAimTarget();
+    }
+
+    public void SetDifficulty(BotDifficulty newDifficulty)
+    {
+        difficulty = newDifficulty;
+        ApplyDifficultyPreset();
         currentAimTarget = ResolveCurrentAimTarget();
     }
 
@@ -267,12 +335,12 @@ public class BotController : MonoBehaviour
 
             if (PaintManager.Instance.TryFindNearestCellOwnedBy(priorityPaintTargetTeam, origin, territorySearchRadius, out Vector3 enemyPaintTarget))
             {
-                return enemyPaintTarget;
+                return ApplyAimError(enemyPaintTarget);
             }
 
             if (targetUnpaintedCellsAfterEnemyPaint && PaintManager.Instance.TryFindNearestCellOwnedBy(Team.None, origin, territorySearchRadius, out Vector3 unpaintedTarget))
             {
-                return unpaintedTarget;
+                return ApplyAimError(unpaintedTarget);
             }
         }
 
@@ -282,13 +350,76 @@ public class BotController : MonoBehaviour
 
             if (target != null)
             {
-                return target.position;
+                return ApplyAimError(target.position);
             }
         }
 
         Vector3 fallback = transform.position + transform.forward * fallbackAimDistance;
         fallback.y = 0f;
-        return fallback;
+        return ApplyAimError(fallback);
+    }
+
+    private void ApplySavedDifficultyIfNeeded()
+    {
+        if (loadDifficultyFromPreferences)
+        {
+            difficulty = BotDifficultySettings.LoadSavedDifficulty();
+        }
+
+        ApplyDifficultyPreset();
+    }
+
+    private void ApplyDifficultyPreset()
+    {
+        switch (difficulty)
+        {
+            case BotDifficulty.Easy:
+                moveSpeed = 2.45f;
+                fireInterval = 1.05f;
+                aimRefreshInterval = 1.65f;
+                territorySearchRadius = 11.5f;
+                aimErrorRadius = 1.55f;
+                lowInkRetreatPercent = 44f;
+                resumeInkPercent = 78f;
+                lowHealthRetreatPercent = 64f;
+                retreatRecoveryMultiplier = 1.2f;
+                break;
+            case BotDifficulty.Hard:
+                moveSpeed = 3.85f;
+                fireInterval = 0.42f;
+                aimRefreshInterval = 0.7f;
+                territorySearchRadius = 18f;
+                aimErrorRadius = 0.18f;
+                lowInkRetreatPercent = 16f;
+                resumeInkPercent = 48f;
+                lowHealthRetreatPercent = 28f;
+                retreatRecoveryMultiplier = 1.55f;
+                break;
+            default:
+                moveSpeed = 3.2f;
+                fireInterval = 0.65f;
+                aimRefreshInterval = 1.2f;
+                territorySearchRadius = 16f;
+                aimErrorRadius = 0.55f;
+                lowInkRetreatPercent = 28f;
+                resumeInkPercent = 62f;
+                lowHealthRetreatPercent = 45f;
+                retreatRecoveryMultiplier = 1.35f;
+                break;
+        }
+    }
+
+    private Vector3 ApplyAimError(Vector3 target)
+    {
+        if (aimErrorRadius <= 0.001f)
+        {
+            return target;
+        }
+
+        Vector2 offset = Random.insideUnitCircle * aimErrorRadius;
+        target.x += offset.x;
+        target.z += offset.y;
+        return target;
     }
 
     private Vector3 ResolvePatrolTarget()

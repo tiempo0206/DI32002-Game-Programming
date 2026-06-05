@@ -78,16 +78,29 @@ public static class TeamVisualPalette
         }
 
         string keyPrefix = GetColorKeyPrefix(team);
-        if (string.IsNullOrEmpty(keyPrefix) || PlayerPrefs.GetInt($"{keyPrefix}.Configured", 0) == 0)
+
+        if (string.IsNullOrEmpty(keyPrefix))
         {
             return fallback;
         }
 
-        return new Color(
-            PlayerPrefs.GetFloat($"{keyPrefix}.R", fallback.r),
-            PlayerPrefs.GetFloat($"{keyPrefix}.G", fallback.g),
-            PlayerPrefs.GetFloat($"{keyPrefix}.B", fallback.b),
-            1f);
+        try
+        {
+            if (PlayerPrefs.GetInt($"{keyPrefix}.Configured", 0) == 0)
+            {
+                return fallback;
+            }
+
+            return new Color(
+                PlayerPrefs.GetFloat($"{keyPrefix}.R", fallback.r),
+                PlayerPrefs.GetFloat($"{keyPrefix}.G", fallback.g),
+                PlayerPrefs.GetFloat($"{keyPrefix}.B", fallback.b),
+                1f);
+        }
+        catch (UnityException)
+        {
+            return fallback;
+        }
     }
 
     private static string GetColorKeyPrefix(Team team)

@@ -84,6 +84,7 @@ jobs:
             'Splat Fighters/Assets/Scripts/Managers/PerformanceProfile.cs'
             'Splat Fighters/Assets/Scripts/UI/AimReticleUI.cs'
             'Splat Fighters/Assets/Scripts/UI/ScoreUI.cs'
+            'Splat Fighters/Assets/Scripts/UI/MatchResultsUI.cs'
             'Splat Fighters/Assets/Editor/SplatFightersMvpSceneSetup.cs'
             'Splat Fighters/Assets/Editor/SplatFightersGrayboxMapBuilder.cs'
             'Splat Fighters/Assets/Scenes/MVP_ShootingTest.unity'
@@ -105,6 +106,7 @@ jobs:
             'Splat Fighters/Docs/ADR-001-Input-System-Strategy.md'
             'Splat Fighters/Docs/Public_Asset_Usage.md'
             'Splat Fighters/Docs/Performance_Notes.md'
+            'Splat Fighters/Docs/Final_Map_Playtest_And_Route_Tuning.md'
             'class activity/2D-shooter/Packages/manifest.json'
             'class activity/2D-shooter/Packages/packages-lock.json'
             'class activity/2D-shooter/ProjectSettings/ProjectVersion.txt'
@@ -882,6 +884,9 @@ jobs:
           }
 
           required_bot_patterns=(
+            'BotDifficulty'
+            'ApplyDifficultyPreset'
+            'aimErrorRadius'
             'useTerritoryAwareAim'
             'priorityPaintTargetTeam'
             'lowInkRetreatPercent'
@@ -895,6 +900,38 @@ jobs:
           for pattern in "${required_bot_patterns[@]}"; do
             grep -q "$pattern" 'Splat Fighters/Assets/Scripts/AI/BotController.cs' || {
               echo "Missing territory-aware bot code pattern: $pattern"
+              exit 1
+            }
+          done
+
+          required_bot_difficulty_patterns=(
+            'public enum BotDifficulty'
+            'Easy'
+            'Normal'
+            'Hard'
+            'SplatFighters.Menu.BotDifficulty'
+            'GetNextDifficulty'
+            'GetLabel'
+          )
+
+          for pattern in "${required_bot_difficulty_patterns[@]}"; do
+            grep -q "$pattern" 'Splat Fighters/Assets/Scripts/AI/BotController.cs' || {
+              echo "Missing bot difficulty code pattern: $pattern"
+              exit 1
+            }
+          done
+
+          required_menu_difficulty_patterns=(
+            'AI Difficulty'
+            'BotDifficultySettings.LoadSavedDifficulty'
+            'HandleDifficultyAction'
+            'BotDifficultySettings.SaveDifficulty'
+            'ApplyDifficultyToActiveBot'
+          )
+
+          for pattern in "${required_menu_difficulty_patterns[@]}"; do
+            grep -q "$pattern" 'Splat Fighters/Assets/Scripts/UI/MainMenuController.cs' || {
+              echo "Missing main menu AI difficulty pattern: $pattern"
               exit 1
             }
           done

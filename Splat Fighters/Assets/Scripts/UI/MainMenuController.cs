@@ -49,6 +49,7 @@ public sealed class MainMenuController : MonoBehaviour
     private Button primaryButton;
     private Button secondaryButton;
     private Button modeButton;
+    private Button difficultyButton;
     private Button instructionsButton;
     private Button settingsButton;
     private Button fullscreenButton;
@@ -62,6 +63,7 @@ public sealed class MainMenuController : MonoBehaviour
     private bool fullscreenEnabled;
     private GraphicsPreset selectedPreset;
     private GameManager.MatchMode selectedMatchMode;
+    private BotDifficulty selectedDifficulty;
     private GameManager.MatchState lastKnownState = GameManager.MatchState.WaitingToStart;
     private GameManager boundGameManager;
     private CharacterVisualCatalog characterCatalog;
@@ -89,6 +91,7 @@ public sealed class MainMenuController : MonoBehaviour
         selectedPreset = LoadGraphicsPreset();
         fullscreenEnabled = PlayerPrefs.GetInt(FullscreenPrefKey, 0) == 1;
         selectedMatchMode = LoadMatchMode();
+        selectedDifficulty = BotDifficultySettings.LoadSavedDifficulty();
         characterCatalog = CharacterVisualCatalog.LoadDefault();
         LoadCharacterSelections();
         ApplyFullscreenMode();
@@ -206,7 +209,7 @@ public sealed class MainMenuController : MonoBehaviour
         backdropObject.transform.SetAsFirstSibling();
         backdropObject.SetActive(false);
 
-        menuPanelObject = CreatePanel(canvasObject.transform, "MenuPanel", new Vector2(0.5f, 0.5f), new Vector2(620f, 650f));
+        menuPanelObject = CreatePanel(canvasObject.transform, "MenuPanel", new Vector2(0.5f, 0.5f), new Vector2(620f, 720f));
         menuGroup = menuPanelObject.AddComponent<CanvasGroup>();
 
         settingsPanelObject = CreatePanel(canvasObject.transform, "SettingsPanel", new Vector2(0.5f, 0.5f), new Vector2(620f, 610f));
@@ -226,11 +229,12 @@ public sealed class MainMenuController : MonoBehaviour
 
         primaryButton = CreateButton(menuPanelObject.transform, "PrimaryButton", "Start Game", new Vector2(0f, -310f), new Vector2(360f, 52f), HandlePrimaryAction);
         secondaryButton = CreateButton(menuPanelObject.transform, "SecondaryButton", "Cycle Mode", new Vector2(0f, -372f), new Vector2(360f, 46f), HandleSecondaryAction);
-        modeButton = CreateButton(menuPanelObject.transform, "ModeButton", "Mode: Turf War", new Vector2(0f, -426f), new Vector2(360f, 46f), HandleModeAction);
-        instructionsButton = CreateButton(menuPanelObject.transform, "InstructionsButton", "How To Play", new Vector2(0f, -426f), new Vector2(360f, 46f), () => ShowInstructions(true));
-        settingsButton = CreateButton(menuPanelObject.transform, "SettingsButton", "Settings", new Vector2(0f, -480f), new Vector2(360f, 46f), () => ShowSettings(true));
-        quitButton = CreateButton(menuPanelObject.transform, "QuitButton", "Quit", new Vector2(0f, -534f), new Vector2(360f, 46f), HandleQuitAction);
-        CreateText(menuPanelObject.transform, "VersionText", "Basic menu version | Visual art pass planned", new Vector2(0f, -598f), 14, FontStyle.Normal, new Vector2(560f, 24f), TextAnchor.UpperCenter);
+        modeButton = CreateButton(menuPanelObject.transform, "ModeButton", "Mode: Turf War", new Vector2(0f, -372f), new Vector2(360f, 46f), HandleModeAction);
+        difficultyButton = CreateButton(menuPanelObject.transform, "DifficultyButton", "AI Difficulty: Normal", new Vector2(0f, -426f), new Vector2(360f, 46f), HandleDifficultyAction);
+        instructionsButton = CreateButton(menuPanelObject.transform, "InstructionsButton", "How To Play", new Vector2(0f, -480f), new Vector2(360f, 46f), () => ShowInstructions(true));
+        settingsButton = CreateButton(menuPanelObject.transform, "SettingsButton", "Settings", new Vector2(0f, -534f), new Vector2(360f, 46f), () => ShowSettings(true));
+        quitButton = CreateButton(menuPanelObject.transform, "QuitButton", "Quit", new Vector2(0f, -588f), new Vector2(360f, 46f), HandleQuitAction);
+        CreateText(menuPanelObject.transform, "VersionText", "Basic menu version | Visual art pass planned", new Vector2(0f, -656f), 14, FontStyle.Normal, new Vector2(560f, 24f), TextAnchor.UpperCenter);
 
         CreateText(settingsPanelObject.transform, "SettingsTitleText", "Settings", new Vector2(0f, -30f), 32, FontStyle.Bold, new Vector2(500f, 52f), TextAnchor.UpperCenter);
         settingsSummaryText = CreateText(settingsPanelObject.transform, "SettingsSummaryText", "Preset: Performant | Fullscreen: Off", new Vector2(0f, -88f), 17, FontStyle.Normal, new Vector2(500f, 64f), TextAnchor.UpperCenter);
@@ -283,6 +287,7 @@ public sealed class MainMenuController : MonoBehaviour
             SetCharacterSelectionStageVisible(characterSelectionVisible);
             SetButtonVisible(modeButton, false);
             SetButtonVisible(secondaryButton, true);
+            SetButtonVisible(difficultyButton, true);
             SetButtonVisible(instructionsButton, true);
             if (hideHudWhileMenuOpen && scoreUI != null)
             {
@@ -317,6 +322,7 @@ public sealed class MainMenuController : MonoBehaviour
         SetBackdropVisible(showMenu);
         SetButtonVisible(modeButton, currentState == GameManager.MatchState.WaitingToStart);
         SetButtonVisible(secondaryButton, currentState == GameManager.MatchState.Paused || currentState == GameManager.MatchState.Finished);
+        SetButtonVisible(difficultyButton, currentState == GameManager.MatchState.WaitingToStart);
         SetButtonVisible(instructionsButton, false);
 
         if (hideHudWhileMenuOpen && scoreUI != null)
@@ -344,6 +350,7 @@ public sealed class MainMenuController : MonoBehaviour
         SetBackdropVisible(showMenu);
         SetButtonVisible(modeButton, state == GameManager.MatchState.WaitingToStart);
         SetButtonVisible(secondaryButton, state == GameManager.MatchState.Paused || state == GameManager.MatchState.Finished);
+        SetButtonVisible(difficultyButton, state == GameManager.MatchState.WaitingToStart);
         SetButtonVisible(instructionsButton, false);
 
         if (hideHudWhileMenuOpen && scoreUI != null)
@@ -404,6 +411,15 @@ public sealed class MainMenuController : MonoBehaviour
 
         gameManager.CycleMatchMode();
         UpdateMenuText();
+    }
+
+    private void HandleDifficultyAction()
+    {
+        selectedDifficulty = BotDifficultySettings.GetNextDifficulty(selectedDifficulty);
+        BotDifficultySettings.SaveDifficulty(selectedDifficulty);
+        ApplyDifficultyToActiveBot();
+        UpdateMenuText();
+        UpdateButtonLabels();
     }
 
     private void HandleQuitAction()
@@ -576,7 +592,7 @@ public sealed class MainMenuController : MonoBehaviour
 
         if (modeText != null)
         {
-            modeText.text = $"Mode: {GetMatchModeLabel(GetCurrentMatchMode())}";
+            modeText.text = $"Mode: {GetMatchModeLabel(GetCurrentMatchMode())} | AI: {BotDifficultySettings.GetLabel(GetCurrentDifficulty())}";
         }
 
         if (hintText != null)
@@ -585,12 +601,12 @@ public sealed class MainMenuController : MonoBehaviour
             {
                 hintText.text = settingsVisible
                     ? "Settings are saved for the next game launch."
-                    : "Press Start Game to enter the arena scene.";
+                    : "Press Start Game to choose fighters and enter the arena.";
             }
             else
             {
                 hintText.text = gameManager.CurrentState == GameManager.MatchState.WaitingToStart
-                    ? "Enter starts the match. Use the mode button if you want a different ruleset."
+                    ? "Enter starts the match. Tune mode and AI difficulty before play."
                     : "Esc pauses during play. Use the settings screen for performance tuning.";
             }
         }
@@ -626,6 +642,11 @@ public sealed class MainMenuController : MonoBehaviour
         if (modeButton != null)
         {
             SetButtonText(modeButton, $"Mode: {GetMatchModeLabel(GetCurrentMatchMode())}");
+        }
+
+        if (difficultyButton != null)
+        {
+            SetButtonText(difficultyButton, $"AI Difficulty: {BotDifficultySettings.GetLabel(GetCurrentDifficulty())}");
         }
 
         if (settingsButton != null)
@@ -721,6 +742,21 @@ public sealed class MainMenuController : MonoBehaviour
         UpdateButtonLabels();
     }
 
+    private BotDifficulty GetCurrentDifficulty()
+    {
+        return selectedDifficulty;
+    }
+
+    private void ApplyDifficultyToActiveBot()
+    {
+        BotController bot = FindObjectOfType<BotController>();
+
+        if (bot != null)
+        {
+            bot.SetDifficulty(selectedDifficulty);
+        }
+    }
+
     private void LoadCharacterSelections()
     {
         int legacyIndex = PlayerPrefs.GetInt("SplatFighters.SelectedCharacter", 5);
@@ -793,6 +829,7 @@ public sealed class MainMenuController : MonoBehaviour
     {
         PlayerPrefs.SetInt(CharacterSelectionManager.PlayerCharacterPrefsKey, selectedPlayerCharacterIndex);
         PlayerPrefs.SetInt(CharacterSelectionManager.OpponentCharacterPrefsKey, selectedOpponentCharacterIndex);
+        BotDifficultySettings.SaveDifficulty(selectedDifficulty);
         TeamVisualPalette.SaveSelectedColor(Team.TeamA, GetCharacterInkColor(selectedPlayerCharacterIndex));
         TeamVisualPalette.SaveSelectedColor(Team.TeamB, GetCharacterInkColor(selectedOpponentCharacterIndex));
         PlayerPrefs.Save();
