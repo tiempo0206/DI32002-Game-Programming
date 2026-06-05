@@ -21,7 +21,13 @@ public static class SplatFightersGrayboxMapBuilder
     private const float CharacterControllerRadius = 0.4f;
     private const float MapWidth = 32f;
     private const float MapLength = 36f;
-    private const float ArenaContainmentHeight = 5.5f;
+    private const float HangarCeilingCenterY = 12.2f;
+    private const float HangarCeilingThickness = 0.14f;
+    private const float HangarCeilingFrameCenterY = 12.08f;
+    private const float HangarCeilingCrossFrameCenterY = 12.07f;
+    private const float HangarCeilingUndersideY = HangarCeilingCenterY - HangarCeilingThickness * 0.5f;
+    private const float HangarWallCenterY = HangarCeilingUndersideY * 0.5f;
+    private const float ArenaContainmentHeight = HangarCeilingUndersideY;
     private const float ArenaContainmentThickness = 0.8f;
     private const int PaintGridWidth = 80;
     private const int PaintGridHeight = 90;
@@ -482,13 +488,13 @@ public static class SplatFightersGrayboxMapBuilder
         Material roofFrameMaterial = LoadHangarMaterial("mat_roof_frame.mat");
 
         CreateTexturedSurface("HangarPaintableFloorSurface", new Vector3(0f, -0.052f, 0f), new Vector3(MapWidth, 0.025f, MapLength), floorMaterial, parent);
-        CreateTexturedSurface("HangarNorthWallSurface", new Vector3(0f, 3.1f, HalfMapLength + 0.42f), new Vector3(MapWidth + 1.2f, 6.2f, 0.12f), wallMaterial, parent);
-        CreateTexturedSurface("HangarSouthWallSurface", new Vector3(0f, 3.1f, -HalfMapLength - 0.42f), new Vector3(MapWidth + 1.2f, 6.2f, 0.12f), wallMaterial, parent);
-        CreateTexturedSurface("HangarEastWallSurface", new Vector3(HalfMapWidth + 0.42f, 3.1f, 0f), new Vector3(0.12f, 6.2f, MapLength + 1.2f), wallMaterial, parent);
-        CreateTexturedSurface("HangarWestWallSurface", new Vector3(-HalfMapWidth - 0.42f, 3.1f, 0f), new Vector3(0.12f, 6.2f, MapLength + 1.2f), wallMaterial, parent);
-        CreateTexturedSurface("HangarCeilingSurface", new Vector3(0f, 12.2f, 0f), new Vector3(MapWidth + 1.4f, 0.14f, MapLength + 1.4f), roofMaterial, parent);
-        CreateTexturedSurface("HangarCeilingFrameSurface", new Vector3(0f, 12.08f, 0f), new Vector3(MapWidth + 0.8f, 0.1f, 1.2f), roofFrameMaterial, parent);
-        CreateTexturedSurface("HangarCeilingCrossFrameSurface", new Vector3(0f, 12.07f, 0f), new Vector3(1.2f, 0.1f, MapLength + 0.8f), roofFrameMaterial, parent);
+        CreateTexturedSurface("HangarNorthWallSurface", new Vector3(0f, HangarWallCenterY, HalfMapLength + 0.42f), new Vector3(MapWidth + 1.2f, HangarCeilingUndersideY, 0.12f), wallMaterial, parent);
+        CreateTexturedSurface("HangarSouthWallSurface", new Vector3(0f, HangarWallCenterY, -HalfMapLength - 0.42f), new Vector3(MapWidth + 1.2f, HangarCeilingUndersideY, 0.12f), wallMaterial, parent);
+        CreateTexturedSurface("HangarEastWallSurface", new Vector3(HalfMapWidth + 0.42f, HangarWallCenterY, 0f), new Vector3(0.12f, HangarCeilingUndersideY, MapLength + 1.2f), wallMaterial, parent);
+        CreateTexturedSurface("HangarWestWallSurface", new Vector3(-HalfMapWidth - 0.42f, HangarWallCenterY, 0f), new Vector3(0.12f, HangarCeilingUndersideY, MapLength + 1.2f), wallMaterial, parent);
+        CreateTexturedSurface("HangarCeilingSurface", new Vector3(0f, HangarCeilingCenterY, 0f), new Vector3(MapWidth + 1.4f, HangarCeilingThickness, MapLength + 1.4f), roofMaterial, parent);
+        CreateTexturedSurface("HangarCeilingFrameSurface", new Vector3(0f, HangarCeilingFrameCenterY, 0f), new Vector3(MapWidth + 0.8f, 0.1f, 1.2f), roofFrameMaterial, parent);
+        CreateTexturedSurface("HangarCeilingCrossFrameSurface", new Vector3(0f, HangarCeilingCrossFrameCenterY, 0f), new Vector3(1.2f, 0.1f, MapLength + 0.8f), roofFrameMaterial, parent);
     }
 
     private static void BuildHangarShell(Transform parent)
