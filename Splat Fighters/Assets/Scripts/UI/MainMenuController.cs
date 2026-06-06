@@ -4,7 +4,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 /// <summary>
-/// Builds the main menu and settings screen at runtime so the project can start from a proper flow without a hand-authored scene UI.
+/// Drives the prefab-authored main menu flow and saves selections before entering the gameplay scene.
 /// </summary>
 [DisallowMultipleComponent]
 [DefaultExecutionOrder(170)]
@@ -21,42 +21,60 @@ public sealed class MainMenuController : MonoBehaviour
     private const string FullscreenPrefKey = "SplatFighters.Menu.Fullscreen";
     private const string MatchModePrefKey = "SplatFighters.Menu.MatchMode";
     private const string GameplaySceneName = "MVP_ShootingTest";
+    private const string MainMenuCanvasPrefabResource = "UI/MainMenu/Prefabs/MainMenuCanvas";
+    private const string CharacterCardResourceRoot = "UI/CharacterSelection/Cards/";
 
     [SerializeField] private GameManager gameManager = null;
     [SerializeField] private PerformanceProfile performanceProfile = null;
     [SerializeField] private ScoreUI scoreUI = null;
     [SerializeField] private bool hideHudWhileMenuOpen = true;
     [SerializeField] private bool applySavedSettingsOnAwake = true;
+    [SerializeField] private MainMenuView menuViewPrefab = null;
+    [SerializeField] private MainMenuView menuView = null;
 
-    private Canvas canvas;
     private GameObject backdropObject;
-    private GameObject menuPanelObject;
-    private GameObject settingsPanelObject;
-    private GameObject instructionsPanelObject;
-    private GameObject characterSelectionPanelObject;
     private GameObject characterSelectionPreviewStage;
     private CanvasGroup menuGroup;
+    private CanvasGroup setupGroup;
     private CanvasGroup settingsGroup;
     private CanvasGroup instructionsGroup;
     private CanvasGroup characterSelectionGroup;
+    private Text titleCyanText;
+    private Text titlePinkText;
     private Text titleText;
     private Text statusText;
     private Text modeText;
     private Text hintText;
+    private Text setupSummaryText;
     private Text settingsSummaryText;
     private Text playerCharacterText;
     private Text opponentCharacterText;
+    private Image playerCharacterCardImage;
+    private Image opponentCharacterCardImage;
     private Button primaryButton;
     private Button secondaryButton;
     private Button modeButton;
     private Button difficultyButton;
+    private Button setupModeButton;
+    private Button setupDifficultyButton;
+    private Button continueToFightersButton;
+    private Button setupBackButton;
     private Button instructionsButton;
+    private Button instructionsBackButton;
     private Button settingsButton;
+    private Button settingsBackButton;
     private Button fullscreenButton;
     private Button performantButton;
     private Button balancedButton;
     private Button highFidelityButton;
     private Button quitButton;
+    private Button previousPlayerCharacterButton;
+    private Button nextPlayerCharacterButton;
+    private Button previousOpponentCharacterButton;
+    private Button nextOpponentCharacterButton;
+    private Button confirmCharacterSelectionButton;
+    private Button cancelCharacterSelectionButton;
+    private bool setupVisible;
     private bool settingsVisible;
     private bool instructionsVisible;
     private bool characterSelectionVisible;
@@ -71,8 +89,12 @@ public sealed class MainMenuController : MonoBehaviour
     private CharacterPreviewPresenter opponentPreview;
     private Renderer playerPreviewPlatformRenderer;
     private Renderer opponentPreviewPlatformRenderer;
+    private SpriteRenderer playerPreviewCardRenderer;
+    private SpriteRenderer opponentPreviewCardRenderer;
+    private Sprite[] characterCardSprites;
     private int selectedPlayerCharacterIndex;
     private int selectedOpponentCharacterIndex;
+    private bool menuViewBound;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void Bootstrap()
@@ -101,7 +123,7 @@ public sealed class MainMenuController : MonoBehaviour
     {
         EnsureBindings();
         EnsureEventSystem();
-        EnsureRuntimeUi();
+        EnsureMenuView();
 
         if (applySavedSettingsOnAwake)
         {
@@ -117,7 +139,7 @@ public sealed class MainMenuController : MonoBehaviour
 
         RefreshFromGameState(false);
 
-        if ((settingsVisible || instructionsVisible || characterSelectionVisible) && Input.GetKeyDown(KeyCode.Escape))
+        if ((setupVisible || settingsVisible || instructionsVisible || characterSelectionVisible) && Input.GetKeyDown(KeyCode.Escape))
         {
             ShowMainMenu();
         }
@@ -125,6 +147,10 @@ public sealed class MainMenuController : MonoBehaviour
         if (gameManager == null && characterSelectionVisible)
         {
             HandleCharacterSelectionInput();
+        }
+        else if (gameManager == null && setupVisible && Input.GetKeyDown(KeyCode.Return))
+        {
+            ShowCharacterSelection(true);
         }
         else if (gameManager == null && !settingsVisible && !instructionsVisible && Input.GetKeyDown(KeyCode.Return))
         {
@@ -186,92 +212,133 @@ public sealed class MainMenuController : MonoBehaviour
         eventSystemObject.AddComponent<StandaloneInputModule>();
     }
 
-    private void EnsureRuntimeUi()
+    private void EnsureMenuView()
     {
-        if (canvas != null)
+        if (menuViewBound)
         {
             return;
         }
 
-        GameObject canvasObject = new GameObject("MainMenuCanvas");
-        canvas = canvasObject.AddComponent<Canvas>();
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvas.sortingOrder = 30;
+        if (menuView == null)
+        {
+            MainMenuView view = FindObjectOfType<MainMenuView>();
 
-        CanvasScaler scaler = canvasObject.AddComponent<CanvasScaler>();
-        scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-        scaler.referenceResolution = new Vector2(1920f, 1080f);
-        scaler.matchWidthOrHeight = 0.5f;
+            if (view == null)
+            {
+                if (menuViewPrefab == null)
+                {
+                    menuViewPrefab = Resources.Load<MainMenuView>(MainMenuCanvasPrefabResource);
+                }
 
-        canvasObject.AddComponent<GraphicRaycaster>();
+                if (menuViewPrefab != null)
+                {
+                    view = Instantiate(menuViewPrefab);
+                    view.name = menuViewPrefab.name;
+                }
+            }
 
-        backdropObject = CreateBackdrop(canvasObject.transform, "Backdrop", new Color(0.035f, 0.055f, 0.085f, 1f));
-        backdropObject.transform.SetAsFirstSibling();
-        backdropObject.SetActive(false);
+            menuView = view;
+        }
 
-        menuPanelObject = CreatePanel(canvasObject.transform, "MenuPanel", new Vector2(0.5f, 0.5f), new Vector2(620f, 720f));
-        menuGroup = menuPanelObject.AddComponent<CanvasGroup>();
+        if (menuView == null)
+        {
+            Debug.LogError("Main menu view prefab is missing. Assign MainMenuCanvas.prefab or place a MainMenuView in the scene.", this);
+            enabled = false;
+            return;
+        }
 
-        settingsPanelObject = CreatePanel(canvasObject.transform, "SettingsPanel", new Vector2(0.5f, 0.5f), new Vector2(620f, 610f));
-        settingsGroup = settingsPanelObject.AddComponent<CanvasGroup>();
-
-        instructionsPanelObject = CreatePanel(canvasObject.transform, "InstructionsPanel", new Vector2(0.5f, 0.5f), new Vector2(760f, 690f));
-        instructionsGroup = instructionsPanelObject.AddComponent<CanvasGroup>();
-
-        characterSelectionPanelObject = CreateContainer(canvasObject.transform, "CharacterSelectionPanel", new Vector2(0.5f, 0.5f), new Vector2(1280f, 720f));
-        characterSelectionGroup = characterSelectionPanelObject.AddComponent<CanvasGroup>();
-
-        titleText = CreateText(menuPanelObject.transform, "TitleText", "Splat Fighters", new Vector2(0f, -42f), 42, FontStyle.Bold, new Vector2(560f, 66f), TextAnchor.UpperCenter);
-        CreateText(menuPanelObject.transform, "SubtitleText", "Paint the arena. Control the map. Win the round.", new Vector2(0f, -108f), 19, FontStyle.Italic, new Vector2(560f, 32f), TextAnchor.UpperCenter);
-        statusText = CreateText(menuPanelObject.transform, "StatusText", "Ready to start.", new Vector2(0f, -160f), 22, FontStyle.Bold, new Vector2(560f, 34f), TextAnchor.UpperCenter);
-        modeText = CreateText(menuPanelObject.transform, "ModeText", "Mode: Turf War", new Vector2(0f, -202f), 19, FontStyle.Normal, new Vector2(560f, 30f), TextAnchor.UpperCenter);
-        hintText = CreateText(menuPanelObject.transform, "HintText", "Press Enter or Start Game to enter the arena.", new Vector2(0f, -244f), 17, FontStyle.Normal, new Vector2(560f, 48f), TextAnchor.UpperCenter);
-
-        primaryButton = CreateButton(menuPanelObject.transform, "PrimaryButton", "Start Game", new Vector2(0f, -310f), new Vector2(360f, 52f), HandlePrimaryAction);
-        secondaryButton = CreateButton(menuPanelObject.transform, "SecondaryButton", "Cycle Mode", new Vector2(0f, -372f), new Vector2(360f, 46f), HandleSecondaryAction);
-        modeButton = CreateButton(menuPanelObject.transform, "ModeButton", "Mode: Turf War", new Vector2(0f, -372f), new Vector2(360f, 46f), HandleModeAction);
-        difficultyButton = CreateButton(menuPanelObject.transform, "DifficultyButton", "AI Difficulty: Normal", new Vector2(0f, -426f), new Vector2(360f, 46f), HandleDifficultyAction);
-        instructionsButton = CreateButton(menuPanelObject.transform, "InstructionsButton", "How To Play", new Vector2(0f, -480f), new Vector2(360f, 46f), () => ShowInstructions(true));
-        settingsButton = CreateButton(menuPanelObject.transform, "SettingsButton", "Settings", new Vector2(0f, -534f), new Vector2(360f, 46f), () => ShowSettings(true));
-        quitButton = CreateButton(menuPanelObject.transform, "QuitButton", "Quit", new Vector2(0f, -588f), new Vector2(360f, 46f), HandleQuitAction);
-        CreateText(menuPanelObject.transform, "VersionText", "Basic menu version | Visual art pass planned", new Vector2(0f, -656f), 14, FontStyle.Normal, new Vector2(560f, 24f), TextAnchor.UpperCenter);
-
-        CreateText(settingsPanelObject.transform, "SettingsTitleText", "Settings", new Vector2(0f, -30f), 32, FontStyle.Bold, new Vector2(500f, 52f), TextAnchor.UpperCenter);
-        settingsSummaryText = CreateText(settingsPanelObject.transform, "SettingsSummaryText", "Preset: Performant | Fullscreen: Off", new Vector2(0f, -88f), 17, FontStyle.Normal, new Vector2(500f, 64f), TextAnchor.UpperCenter);
-        CreateText(settingsPanelObject.transform, "GraphicsTitleText", "Graphics Preset", new Vector2(0f, -168f), 22, FontStyle.Bold, new Vector2(500f, 34f), TextAnchor.UpperCenter);
-
-        performantButton = CreateButton(settingsPanelObject.transform, "PerformantButton", "Performant", new Vector2(0f, -220f), new Vector2(330f, 44f), () => SelectPreset(GraphicsPreset.Performant));
-        balancedButton = CreateButton(settingsPanelObject.transform, "BalancedButton", "Balanced", new Vector2(0f, -272f), new Vector2(330f, 44f), () => SelectPreset(GraphicsPreset.Balanced));
-        highFidelityButton = CreateButton(settingsPanelObject.transform, "HighFidelityButton", "High Fidelity", new Vector2(0f, -324f), new Vector2(330f, 44f), () => SelectPreset(GraphicsPreset.HighFidelity));
-        fullscreenButton = CreateButton(settingsPanelObject.transform, "FullscreenButton", "Fullscreen", new Vector2(0f, -398f), new Vector2(330f, 44f), ToggleFullscreen);
-        CreateButton(settingsPanelObject.transform, "BackButton", "Back", new Vector2(0f, -450f), new Vector2(330f, 44f), () => ShowSettings(false));
-
-        CreateText(instructionsPanelObject.transform, "InstructionsTitleText", "How To Play", new Vector2(0f, -34f), 36, FontStyle.Bold, new Vector2(700f, 56f), TextAnchor.UpperCenter);
-        CreateText(
-            instructionsPanelObject.transform,
-            "InstructionsText",
-            "OBJECTIVE\nPaint more of the arena than Team B before the timer ends.\n\nCONTROLS\nWASD: Move\nMouse: Aim camera\nLeft Mouse: Fire or use active paint tool\nSpace: Jump\nLeft Shift: Swim faster and recover ink while standing on your paint\n1 / 2: Switch between shooter and roller\nQ: Use the special paint burst when ready\nP or Esc: Pause match\nR: Restart match\nM: Cycle demo mode\n\nTIPS\nYour selected fighter defines your ink color. Your paint creates safe movement lanes. Enemy paint slows you down.",
-            new Vector2(0f, -112f),
-            19,
-            FontStyle.Normal,
-            new Vector2(700f, 480f),
-            TextAnchor.UpperLeft);
-        CreateButton(instructionsPanelObject.transform, "InstructionsBackButton", "Back", new Vector2(0f, -606f), new Vector2(360f, 46f), () => ShowInstructions(false));
-
-        CreateText(characterSelectionPanelObject.transform, "CharacterSelectionTitleText", "Select Fighters", new Vector2(0f, -16f), 40, FontStyle.Bold, new Vector2(900f, 56f), TextAnchor.UpperCenter);
-        CreateText(characterSelectionPanelObject.transform, "CharacterSelectionHintText", "Choose two different animated fighters. Each fighter has a signature ink color.", new Vector2(0f, -70f), 18, FontStyle.Normal, new Vector2(1000f, 36f), TextAnchor.UpperCenter);
-        playerCharacterText = CreateText(characterSelectionPanelObject.transform, "PlayerCharacterText", string.Empty, new Vector2(-320f, -128f), 23, FontStyle.Bold, new Vector2(480f, 64f), TextAnchor.UpperCenter);
-        opponentCharacterText = CreateText(characterSelectionPanelObject.transform, "OpponentCharacterText", string.Empty, new Vector2(320f, -128f), 23, FontStyle.Bold, new Vector2(480f, 64f), TextAnchor.UpperCenter);
-        CreateButton(characterSelectionPanelObject.transform, "PreviousPlayerCharacterButton", "< Player", new Vector2(-430f, -520f), new Vector2(210f, 46f), () => SelectPlayerCharacter(selectedPlayerCharacterIndex - 1));
-        CreateButton(characterSelectionPanelObject.transform, "NextPlayerCharacterButton", "Player >", new Vector2(-190f, -520f), new Vector2(210f, 46f), () => SelectPlayerCharacter(selectedPlayerCharacterIndex + 1));
-        CreateButton(characterSelectionPanelObject.transform, "PreviousOpponentCharacterButton", "< Opponent", new Vector2(190f, -520f), new Vector2(210f, 46f), () => SelectOpponentCharacter(selectedOpponentCharacterIndex - 1));
-        CreateButton(characterSelectionPanelObject.transform, "NextOpponentCharacterButton", "Opponent >", new Vector2(430f, -520f), new Vector2(210f, 46f), () => SelectOpponentCharacter(selectedOpponentCharacterIndex + 1));
-        CreateText(characterSelectionPanelObject.transform, "CharacterSelectionControlText", "A / D: player   Left / Right: opponent   Enter: confirm   Esc: back", new Vector2(0f, -584f), 17, FontStyle.Normal, new Vector2(900f, 30f), TextAnchor.UpperCenter);
-        CreateButton(characterSelectionPanelObject.transform, "ConfirmCharacterSelectionButton", "Enter Arena", new Vector2(0f, -630f), new Vector2(300f, 48f), ConfirmCharacterSelection);
-        CreateButton(characterSelectionPanelObject.transform, "CancelCharacterSelectionButton", "Back", new Vector2(-470f, -630f), new Vector2(190f, 44f), () => ShowCharacterSelection(false));
+        BindView(menuView);
+        RegisterButtonHandlers();
+        LoadCharacterCardSprites();
+        menuViewBound = true;
 
         UpdatePresetVisuals();
         ShowMainMenu();
+    }
+
+    private void BindView(MainMenuView view)
+    {
+        backdropObject = view.BackdropObject;
+        menuGroup = view.MenuGroup;
+        setupGroup = view.SetupGroup;
+        settingsGroup = view.SettingsGroup;
+        instructionsGroup = view.InstructionsGroup;
+        characterSelectionGroup = view.CharacterSelectionGroup;
+        titleCyanText = view.TitleCyanText;
+        titlePinkText = view.TitlePinkText;
+        titleText = view.TitleText;
+        statusText = view.StatusText;
+        modeText = view.ModeText;
+        hintText = view.HintText;
+        setupSummaryText = view.SetupSummaryText;
+        settingsSummaryText = view.SettingsSummaryText;
+        playerCharacterText = view.PlayerCharacterText;
+        opponentCharacterText = view.OpponentCharacterText;
+        playerCharacterCardImage = view.PlayerCharacterCardImage;
+        opponentCharacterCardImage = view.OpponentCharacterCardImage;
+        characterCardSprites = view.CharacterCardSprites;
+        primaryButton = view.PrimaryButton;
+        secondaryButton = view.SecondaryButton;
+        modeButton = view.ModeButton;
+        difficultyButton = view.DifficultyButton;
+        setupModeButton = view.SetupModeButton;
+        setupDifficultyButton = view.SetupDifficultyButton;
+        continueToFightersButton = view.ContinueToFightersButton;
+        setupBackButton = view.SetupBackButton;
+        instructionsButton = view.InstructionsButton;
+        instructionsBackButton = view.InstructionsBackButton;
+        settingsButton = view.SettingsButton;
+        settingsBackButton = view.SettingsBackButton;
+        fullscreenButton = view.FullscreenButton;
+        performantButton = view.PerformantButton;
+        balancedButton = view.BalancedButton;
+        highFidelityButton = view.HighFidelityButton;
+        quitButton = view.QuitButton;
+        previousPlayerCharacterButton = view.PreviousPlayerCharacterButton;
+        nextPlayerCharacterButton = view.NextPlayerCharacterButton;
+        previousOpponentCharacterButton = view.PreviousOpponentCharacterButton;
+        nextOpponentCharacterButton = view.NextOpponentCharacterButton;
+        confirmCharacterSelectionButton = view.ConfirmCharacterSelectionButton;
+        cancelCharacterSelectionButton = view.CancelCharacterSelectionButton;
+    }
+
+    private void RegisterButtonHandlers()
+    {
+        ConfigureButton(primaryButton, HandlePrimaryAction);
+        ConfigureButton(secondaryButton, HandleSecondaryAction);
+        ConfigureButton(modeButton, HandleModeAction);
+        ConfigureButton(difficultyButton, HandleDifficultyAction);
+        ConfigureButton(setupModeButton, HandleSetupModeAction);
+        ConfigureButton(setupDifficultyButton, HandleSetupDifficultyAction);
+        ConfigureButton(continueToFightersButton, () => ShowCharacterSelection(true));
+        ConfigureButton(setupBackButton, () => ShowSetup(false));
+        ConfigureButton(instructionsButton, () => ShowInstructions(true));
+        ConfigureButton(instructionsBackButton, () => ShowInstructions(false));
+        ConfigureButton(settingsButton, () => ShowSettings(true));
+        ConfigureButton(settingsBackButton, () => ShowSettings(false));
+        ConfigureButton(fullscreenButton, ToggleFullscreen);
+        ConfigureButton(performantButton, () => SelectPreset(GraphicsPreset.Performant));
+        ConfigureButton(balancedButton, () => SelectPreset(GraphicsPreset.Balanced));
+        ConfigureButton(highFidelityButton, () => SelectPreset(GraphicsPreset.HighFidelity));
+        ConfigureButton(quitButton, HandleQuitAction);
+        ConfigureButton(previousPlayerCharacterButton, () => SelectPlayerCharacter(selectedPlayerCharacterIndex - 1));
+        ConfigureButton(nextPlayerCharacterButton, () => SelectPlayerCharacter(selectedPlayerCharacterIndex + 1));
+        ConfigureButton(previousOpponentCharacterButton, () => SelectOpponentCharacter(selectedOpponentCharacterIndex - 1));
+        ConfigureButton(nextOpponentCharacterButton, () => SelectOpponentCharacter(selectedOpponentCharacterIndex + 1));
+        ConfigureButton(confirmCharacterSelectionButton, ConfirmCharacterSelection);
+        ConfigureButton(cancelCharacterSelectionButton, () => ShowSetup(true));
+    }
+
+    private static void ConfigureButton(Button button, UnityEngine.Events.UnityAction action)
+    {
+        if (button == null)
+        {
+            return;
+        }
+
+        button.onClick.RemoveAllListeners();
+        button.onClick.AddListener(action);
+        SetButtonTextColor(button);
     }
 
     private void RefreshFromGameState(bool force)
@@ -279,15 +346,16 @@ public sealed class MainMenuController : MonoBehaviour
         if (gameManager == null)
         {
             UpdateMenuText();
-            SetVisible(menuGroup, !settingsVisible && !instructionsVisible && !characterSelectionVisible);
+            SetVisible(menuGroup, !setupVisible && !settingsVisible && !instructionsVisible && !characterSelectionVisible);
+            SetVisible(setupGroup, setupVisible);
             SetVisible(settingsGroup, settingsVisible);
             SetVisible(instructionsGroup, instructionsVisible);
             SetVisible(characterSelectionGroup, characterSelectionVisible);
             SetBackdropVisible(!characterSelectionVisible);
-            SetCharacterSelectionStageVisible(characterSelectionVisible);
+            RefreshCharacterSelectionPresentation();
             SetButtonVisible(modeButton, false);
-            SetButtonVisible(secondaryButton, true);
-            SetButtonVisible(difficultyButton, true);
+            SetButtonVisible(secondaryButton, false);
+            SetButtonVisible(difficultyButton, false);
             SetButtonVisible(instructionsButton, true);
             if (hideHudWhileMenuOpen && scoreUI != null)
             {
@@ -311,19 +379,21 @@ public sealed class MainMenuController : MonoBehaviour
         bool showMenu = currentState != GameManager.MatchState.Playing;
         if (!showMenu)
         {
+            setupVisible = false;
             settingsVisible = false;
         }
 
         SetVisible(menuGroup, showMenu && !settingsVisible);
+        SetVisible(setupGroup, false);
         SetVisible(settingsGroup, showMenu && settingsVisible);
         SetVisible(instructionsGroup, false);
         SetVisible(characterSelectionGroup, false);
         SetCharacterSelectionStageVisible(false);
         SetBackdropVisible(showMenu);
-        SetButtonVisible(modeButton, currentState == GameManager.MatchState.WaitingToStart);
-        SetButtonVisible(secondaryButton, currentState == GameManager.MatchState.Paused || currentState == GameManager.MatchState.Finished);
+        SetButtonVisible(modeButton, false);
+        SetButtonVisible(secondaryButton, showMenu);
         SetButtonVisible(difficultyButton, currentState == GameManager.MatchState.WaitingToStart);
-        SetButtonVisible(instructionsButton, false);
+        SetButtonVisible(instructionsButton, currentState == GameManager.MatchState.WaitingToStart);
 
         if (hideHudWhileMenuOpen && scoreUI != null)
         {
@@ -339,19 +409,21 @@ public sealed class MainMenuController : MonoBehaviour
         bool showMenu = state != GameManager.MatchState.Playing;
         if (!showMenu)
         {
+            setupVisible = false;
             settingsVisible = false;
         }
 
         SetVisible(menuGroup, showMenu && !settingsVisible);
+        SetVisible(setupGroup, false);
         SetVisible(settingsGroup, showMenu && settingsVisible);
         SetVisible(instructionsGroup, false);
         SetVisible(characterSelectionGroup, false);
         SetCharacterSelectionStageVisible(false);
         SetBackdropVisible(showMenu);
-        SetButtonVisible(modeButton, state == GameManager.MatchState.WaitingToStart);
-        SetButtonVisible(secondaryButton, state == GameManager.MatchState.Paused || state == GameManager.MatchState.Finished);
+        SetButtonVisible(modeButton, false);
+        SetButtonVisible(secondaryButton, showMenu);
         SetButtonVisible(difficultyButton, state == GameManager.MatchState.WaitingToStart);
-        SetButtonVisible(instructionsButton, false);
+        SetButtonVisible(instructionsButton, state == GameManager.MatchState.WaitingToStart);
 
         if (hideHudWhileMenuOpen && scoreUI != null)
         {
@@ -363,7 +435,7 @@ public sealed class MainMenuController : MonoBehaviour
     {
         if (gameManager == null)
         {
-            ShowCharacterSelection(true);
+            ShowSetup(true);
             return;
         }
 
@@ -422,6 +494,16 @@ public sealed class MainMenuController : MonoBehaviour
         UpdateButtonLabels();
     }
 
+    private void HandleSetupModeAction()
+    {
+        CycleMenuMatchMode();
+    }
+
+    private void HandleSetupDifficultyAction()
+    {
+        HandleDifficultyAction();
+    }
+
     private void HandleQuitAction()
     {
         Application.Quit();
@@ -432,11 +514,13 @@ public sealed class MainMenuController : MonoBehaviour
 
     private void ShowSettings(bool visible)
     {
+        setupVisible = false;
         settingsVisible = visible;
         instructionsVisible = false;
         characterSelectionVisible = false;
         bool showMenu = gameManager == null || gameManager.CurrentState != GameManager.MatchState.Playing;
         SetVisible(menuGroup, showMenu && !settingsVisible);
+        SetVisible(setupGroup, false);
         SetVisible(settingsGroup, showMenu && settingsVisible);
         SetVisible(instructionsGroup, false);
         SetVisible(characterSelectionGroup, false);
@@ -447,11 +531,13 @@ public sealed class MainMenuController : MonoBehaviour
 
     private void ShowInstructions(bool visible)
     {
+        setupVisible = false;
         instructionsVisible = visible;
         settingsVisible = false;
         characterSelectionVisible = false;
         bool showMenu = gameManager == null || gameManager.CurrentState != GameManager.MatchState.Playing;
         SetVisible(menuGroup, showMenu && !instructionsVisible);
+        SetVisible(setupGroup, false);
         SetVisible(settingsGroup, false);
         SetVisible(instructionsGroup, showMenu && instructionsVisible);
         SetVisible(characterSelectionGroup, false);
@@ -460,28 +546,49 @@ public sealed class MainMenuController : MonoBehaviour
         UpdateButtonLabels();
     }
 
+    private void ShowSetup(bool visible)
+    {
+        setupVisible = visible;
+        instructionsVisible = false;
+        settingsVisible = false;
+        characterSelectionVisible = false;
+        bool showMenu = gameManager == null || gameManager.CurrentState != GameManager.MatchState.Playing;
+        SetVisible(menuGroup, showMenu && !setupVisible);
+        SetVisible(setupGroup, showMenu && setupVisible);
+        SetVisible(settingsGroup, false);
+        SetVisible(instructionsGroup, false);
+        SetVisible(characterSelectionGroup, false);
+        SetCharacterSelectionStageVisible(false);
+        SetBackdropVisible(showMenu);
+        UpdateMenuText();
+        UpdateButtonLabels();
+    }
+
     private void ShowCharacterSelection(bool visible)
     {
+        setupVisible = false;
         characterSelectionVisible = visible;
         instructionsVisible = false;
         settingsVisible = false;
         SetVisible(menuGroup, !characterSelectionVisible);
+        SetVisible(setupGroup, false);
         SetVisible(settingsGroup, false);
         SetVisible(instructionsGroup, false);
         SetVisible(characterSelectionGroup, characterSelectionVisible);
         SetBackdropVisible(!characterSelectionVisible);
-        SetCharacterSelectionStageVisible(characterSelectionVisible);
-        UpdateCharacterSelectionText();
+        RefreshCharacterSelectionPresentation();
         UpdateButtonLabels();
     }
 
     private void ShowMainMenu()
     {
+        setupVisible = false;
         instructionsVisible = false;
         settingsVisible = false;
         characterSelectionVisible = false;
         bool showMenu = gameManager == null || gameManager.CurrentState != GameManager.MatchState.Playing;
         SetVisible(menuGroup, showMenu);
+        SetVisible(setupGroup, false);
         SetVisible(settingsGroup, false);
         SetVisible(instructionsGroup, false);
         SetVisible(characterSelectionGroup, false);
@@ -538,31 +645,27 @@ public sealed class MainMenuController : MonoBehaviour
 
     private void UpdateMenuText()
     {
-        if (titleText != null)
+        string titleLabel = "Splat Fighters";
+
+        if (gameManager != null)
         {
-            if (gameManager == null)
+            switch (gameManager.CurrentState)
             {
-                titleText.text = "Splat Fighters";
-            }
-            else
-            {
-                switch (gameManager.CurrentState)
-                {
-                    case GameManager.MatchState.WaitingToStart:
-                        titleText.text = "Splat Fighters";
-                        break;
-                    case GameManager.MatchState.Playing:
-                        titleText.text = "Match Live";
-                        break;
-                    case GameManager.MatchState.Paused:
-                        titleText.text = "Paused";
-                        break;
-                    case GameManager.MatchState.Finished:
-                        titleText.text = "Match Complete";
-                        break;
-                }
+                case GameManager.MatchState.Playing:
+                    titleLabel = "Match Live";
+                    break;
+                case GameManager.MatchState.Paused:
+                    titleLabel = "Paused";
+                    break;
+                case GameManager.MatchState.Finished:
+                    titleLabel = "Match Complete";
+                    break;
             }
         }
+
+        SetText(titleText, titleLabel);
+        SetText(titleCyanText, titleLabel);
+        SetText(titlePinkText, titleLabel);
 
         if (statusText != null)
         {
@@ -592,7 +695,12 @@ public sealed class MainMenuController : MonoBehaviour
 
         if (modeText != null)
         {
-            modeText.text = $"Mode: {GetMatchModeLabel(GetCurrentMatchMode())} | AI: {BotDifficultySettings.GetLabel(GetCurrentDifficulty())}";
+            modeText.text = gameManager == null ? string.Empty : $"Mode: {GetMatchModeLabel(GetCurrentMatchMode())} | AI: {BotDifficultySettings.GetLabel(GetCurrentDifficulty())}";
+        }
+
+        if (setupSummaryText != null)
+        {
+            setupSummaryText.text = $"Mode: {GetMatchModeLabel(GetCurrentMatchMode())}\nAI: {BotDifficultySettings.GetLabel(GetCurrentDifficulty())}";
         }
 
         if (hintText != null)
@@ -649,6 +757,16 @@ public sealed class MainMenuController : MonoBehaviour
             SetButtonText(difficultyButton, $"AI Difficulty: {BotDifficultySettings.GetLabel(GetCurrentDifficulty())}");
         }
 
+        if (setupModeButton != null)
+        {
+            SetButtonText(setupModeButton, $"Mode: {GetMatchModeLabel(GetCurrentMatchMode())}");
+        }
+
+        if (setupDifficultyButton != null)
+        {
+            SetButtonText(setupDifficultyButton, $"AI Difficulty: {BotDifficultySettings.GetLabel(GetCurrentDifficulty())}");
+        }
+
         if (settingsButton != null)
         {
             SetButtonText(settingsButton, settingsVisible ? "Close Settings" : "Settings");
@@ -679,18 +797,18 @@ public sealed class MainMenuController : MonoBehaviour
     {
         if (gameManager == null)
         {
-            return "Cycle Mode";
+            return "Mode Selection";
         }
 
         switch (gameManager.CurrentState)
         {
             case GameManager.MatchState.WaitingToStart:
-                return "Cycle Mode";
+                return "Mode Selection";
             case GameManager.MatchState.Paused:
             case GameManager.MatchState.Finished:
                 return "Reset Match";
             default:
-                return "Cycle Mode";
+                return "Mode Selection";
         }
     }
 
@@ -809,7 +927,7 @@ public sealed class MainMenuController : MonoBehaviour
             playerPreview.Select(selectedPlayerCharacterIndex);
         }
 
-        UpdateCharacterSelectionText();
+        RefreshCharacterSelectionPresentation();
     }
 
     private void SelectOpponentCharacter(int index)
@@ -822,7 +940,7 @@ public sealed class MainMenuController : MonoBehaviour
             opponentPreview.Select(selectedOpponentCharacterIndex);
         }
 
-        UpdateCharacterSelectionText();
+        RefreshCharacterSelectionPresentation();
     }
 
     private void ConfirmCharacterSelection()
@@ -865,10 +983,26 @@ public sealed class MainMenuController : MonoBehaviour
         previewLight.type = LightType.Directional;
         previewLight.intensity = 1.25f;
 
+        playerPreviewCardRenderer = CreatePreviewCard("PlayerCardBackdrop", new Vector3(-2.6f, -0.55f, 0.7f), selectedPlayerCharacterIndex);
+        opponentPreviewCardRenderer = CreatePreviewCard("OpponentCardBackdrop", new Vector3(2.6f, -0.55f, 0.7f), selectedOpponentCharacterIndex);
         playerPreview = CreateCharacterPreview("PlayerPreview", new Vector3(-2.6f, -1.85f, 0f), Team.TeamA, selectedPlayerCharacterIndex);
         opponentPreview = CreateCharacterPreview("OpponentPreview", new Vector3(2.6f, -1.85f, 0f), Team.TeamB, selectedOpponentCharacterIndex);
         playerPreviewPlatformRenderer = CreatePreviewPlatform("PlayerPlatform", new Vector3(-2.6f, -2.05f, 0f), selectedPlayerCharacterIndex);
         opponentPreviewPlatformRenderer = CreatePreviewPlatform("OpponentPlatform", new Vector3(2.6f, -2.05f, 0f), selectedOpponentCharacterIndex);
+    }
+
+    private SpriteRenderer CreatePreviewCard(string name, Vector3 position, int characterIndex)
+    {
+        GameObject cardObject = new GameObject(name);
+        cardObject.transform.SetParent(characterSelectionPreviewStage.transform, false);
+        cardObject.transform.position = position;
+
+        SpriteRenderer cardRenderer = cardObject.AddComponent<SpriteRenderer>();
+        cardRenderer.sprite = GetCharacterCardSprite(characterIndex);
+        cardRenderer.color = new Color(1f, 1f, 1f, 0.92f);
+        cardRenderer.sortingOrder = -20;
+        FitPreviewCard(cardRenderer);
+        return cardRenderer;
     }
 
     private CharacterPreviewPresenter CreateCharacterPreview(string name, Vector3 position, Team team, int index)
@@ -923,13 +1057,49 @@ public sealed class MainMenuController : MonoBehaviour
         }
     }
 
+    private void RefreshCharacterSelectionPresentation()
+    {
+        SetCharacterSelectionStageVisible(characterSelectionVisible);
+        UpdateCharacterSelectionText();
+    }
+
+    private void LoadCharacterCardSprites()
+    {
+        if (characterCardSprites != null && characterCardSprites.Length > 0)
+        {
+            return;
+        }
+
+        int cardCount = characterCatalog != null ? characterCatalog.Count : 0;
+        characterCardSprites = new Sprite[cardCount];
+
+        for (int i = 0; i < cardCount; i++)
+        {
+            string displayName = GetCharacterDisplayName(i);
+            string resourceName = BuildCharacterCardResourceName(displayName);
+
+            if (!string.IsNullOrEmpty(resourceName))
+            {
+                characterCardSprites[i] = Resources.Load<Sprite>($"{CharacterCardResourceRoot}{resourceName}");
+            }
+        }
+    }
+
     private void UpdateCharacterSelectionText()
     {
+        LoadCharacterCardSprites();
+        UpdateCharacterCardImage(playerCharacterCardImage, selectedPlayerCharacterIndex);
+        UpdateCharacterCardImage(opponentCharacterCardImage, selectedOpponentCharacterIndex);
+        UpdatePreviewCardSprite(playerPreviewCardRenderer, selectedPlayerCharacterIndex);
+        UpdatePreviewCardSprite(opponentPreviewCardRenderer, selectedOpponentCharacterIndex);
+
         if (playerCharacterText != null)
         {
             string name = playerPreview != null ? playerPreview.CurrentDisplayName : GetCharacterDisplayName(selectedPlayerCharacterIndex);
             Color inkColor = GetCharacterInkColor(selectedPlayerCharacterIndex);
-            playerCharacterText.text = $"TEAM A PLAYER\n{name}\nInk #{ColorUtility.ToHtmlStringRGB(inkColor)}";
+            bool hasCharacterCard = HasCharacterCard(selectedPlayerCharacterIndex);
+            playerCharacterText.gameObject.SetActive(!hasCharacterCard);
+            playerCharacterText.text = hasCharacterCard ? string.Empty : $"TEAM A PLAYER\n{name}";
             playerCharacterText.color = inkColor;
             UpdatePreviewPlatformColor(playerPreviewPlatformRenderer, inkColor);
         }
@@ -938,10 +1108,82 @@ public sealed class MainMenuController : MonoBehaviour
         {
             string name = opponentPreview != null ? opponentPreview.CurrentDisplayName : GetCharacterDisplayName(selectedOpponentCharacterIndex);
             Color inkColor = GetCharacterInkColor(selectedOpponentCharacterIndex);
-            opponentCharacterText.text = $"TEAM B OPPONENT\n{name}\nInk #{ColorUtility.ToHtmlStringRGB(inkColor)}";
+            bool hasCharacterCard = HasCharacterCard(selectedOpponentCharacterIndex);
+            opponentCharacterText.gameObject.SetActive(!hasCharacterCard);
+            opponentCharacterText.text = hasCharacterCard ? string.Empty : $"TEAM B OPPONENT\n{name}";
             opponentCharacterText.color = inkColor;
             UpdatePreviewPlatformColor(opponentPreviewPlatformRenderer, inkColor);
         }
+    }
+
+    private void UpdateCharacterCardImage(Image image, int characterIndex)
+    {
+        if (image == null)
+        {
+            return;
+        }
+
+        Sprite cardSprite = GetCharacterCardSprite(characterIndex);
+        bool usingWorldPreviewCards = characterSelectionPreviewStage != null && characterSelectionPreviewStage.activeSelf;
+        if (usingWorldPreviewCards)
+        {
+            image.sprite = null;
+            image.enabled = false;
+            return;
+        }
+
+        image.sprite = cardSprite;
+        image.enabled = cardSprite != null;
+        image.color = Color.white;
+    }
+
+    private void UpdatePreviewCardSprite(SpriteRenderer renderer, int characterIndex)
+    {
+        if (renderer == null)
+        {
+            return;
+        }
+
+        Sprite cardSprite = GetCharacterCardSprite(characterIndex);
+        renderer.sprite = cardSprite;
+        renderer.enabled = cardSprite != null;
+        renderer.color = new Color(1f, 1f, 1f, 0.92f);
+        FitPreviewCard(renderer);
+    }
+
+    private static void FitPreviewCard(SpriteRenderer renderer)
+    {
+        if (renderer == null || renderer.sprite == null || renderer.sprite.bounds.size.y <= Mathf.Epsilon)
+        {
+            return;
+        }
+
+        const float targetHeight = 4.6f;
+        float scale = targetHeight / renderer.sprite.bounds.size.y;
+        renderer.transform.localScale = new Vector3(scale, scale, 1f);
+    }
+
+    private bool HasCharacterCard(int index)
+    {
+        return GetCharacterCardSprite(index) != null;
+    }
+
+    private Sprite GetCharacterCardSprite(int index)
+    {
+        LoadCharacterCardSprites();
+
+        if (characterCardSprites == null || characterCardSprites.Length == 0)
+        {
+            return null;
+        }
+
+        int normalizedIndex = NormalizeCharacterIndex(index);
+        return normalizedIndex >= 0 && normalizedIndex < characterCardSprites.Length ? characterCardSprites[normalizedIndex] : null;
+    }
+
+    private static string BuildCharacterCardResourceName(string displayName)
+    {
+        return string.IsNullOrEmpty(displayName) ? string.Empty : $"{displayName.Replace(" ", string.Empty)}Card";
     }
 
     private string GetCharacterDisplayName(int index)
@@ -1000,120 +1242,6 @@ public sealed class MainMenuController : MonoBehaviour
         return (GameManager.MatchMode)rawMode;
     }
 
-    private static GameObject CreateBackdrop(Transform parent, string name, Color color)
-    {
-        GameObject backdropObject = new GameObject(name);
-        backdropObject.transform.SetParent(parent, false);
-
-        RectTransform rect = backdropObject.AddComponent<RectTransform>();
-        rect.anchorMin = Vector2.zero;
-        rect.anchorMax = Vector2.one;
-        rect.pivot = new Vector2(0.5f, 0.5f);
-        rect.anchoredPosition = Vector2.zero;
-        rect.sizeDelta = Vector2.zero;
-
-        Image image = backdropObject.AddComponent<Image>();
-        image.color = color;
-        image.raycastTarget = false;
-
-        return backdropObject;
-    }
-
-    private static GameObject CreateContainer(Transform parent, string name, Vector2 anchorPoint, Vector2 sizeDelta)
-    {
-        GameObject containerObject = new GameObject(name);
-        containerObject.transform.SetParent(parent, false);
-
-        RectTransform rect = containerObject.AddComponent<RectTransform>();
-        rect.anchorMin = anchorPoint;
-        rect.anchorMax = anchorPoint;
-        rect.pivot = new Vector2(0.5f, 0.5f);
-        rect.anchoredPosition = Vector2.zero;
-        rect.sizeDelta = sizeDelta;
-
-        return containerObject;
-    }
-
-    private static GameObject CreatePanel(Transform parent, string name, Vector2 anchorPoint, Vector2 sizeDelta)
-    {
-        GameObject panelObject = CreateContainer(parent, name, anchorPoint, sizeDelta);
-        Image image = panelObject.AddComponent<Image>();
-        image.color = new Color(0.055f, 0.075f, 0.11f, 0.96f);
-        return panelObject;
-    }
-
-    private static Text CreateText(Transform parent, string name, string text, Vector2 anchoredPosition, int fontSize, FontStyle fontStyle, Vector2 sizeDelta, TextAnchor alignment)
-    {
-        GameObject textObject = new GameObject(name);
-        textObject.transform.SetParent(parent, false);
-
-        RectTransform rect = textObject.AddComponent<RectTransform>();
-        rect.anchorMin = new Vector2(0.5f, 1f);
-        rect.anchorMax = new Vector2(0.5f, 1f);
-        rect.pivot = new Vector2(0.5f, 1f);
-        rect.anchoredPosition = anchoredPosition;
-        rect.sizeDelta = sizeDelta;
-
-        Text textComponent = textObject.AddComponent<Text>();
-        textComponent.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        textComponent.fontSize = fontSize;
-        textComponent.fontStyle = fontStyle;
-        textComponent.alignment = alignment;
-        textComponent.horizontalOverflow = HorizontalWrapMode.Wrap;
-        textComponent.verticalOverflow = VerticalWrapMode.Overflow;
-        textComponent.color = Color.white;
-        textComponent.text = text;
-        return textComponent;
-    }
-
-    private static Button CreateButton(Transform parent, string name, string label, Vector2 anchoredPosition, Vector2 sizeDelta, UnityEngine.Events.UnityAction onClick)
-    {
-        GameObject buttonObject = new GameObject(name);
-        buttonObject.transform.SetParent(parent, false);
-
-        RectTransform rect = buttonObject.AddComponent<RectTransform>();
-        rect.anchorMin = new Vector2(0.5f, 1f);
-        rect.anchorMax = new Vector2(0.5f, 1f);
-        rect.pivot = new Vector2(0.5f, 1f);
-        rect.anchoredPosition = anchoredPosition;
-        rect.sizeDelta = sizeDelta;
-
-        Image image = buttonObject.AddComponent<Image>();
-        image.color = new Color(0.2f, 0.24f, 0.28f, 0.95f);
-
-        Button button = buttonObject.AddComponent<Button>();
-        ColorBlock colors = button.colors;
-        colors.normalColor = new Color(0.2f, 0.24f, 0.28f, 0.95f);
-        colors.highlightedColor = new Color(0.28f, 0.32f, 0.38f, 0.98f);
-        colors.pressedColor = new Color(0.12f, 0.14f, 0.18f, 0.98f);
-        colors.selectedColor = colors.highlightedColor;
-        colors.disabledColor = new Color(0.14f, 0.16f, 0.2f, 0.6f);
-        button.colors = colors;
-        button.targetGraphic = image;
-        button.onClick.AddListener(onClick);
-
-        GameObject labelObject = new GameObject("Label");
-        labelObject.transform.SetParent(buttonObject.transform, false);
-
-        RectTransform labelRect = labelObject.AddComponent<RectTransform>();
-        labelRect.anchorMin = Vector2.zero;
-        labelRect.anchorMax = Vector2.one;
-        labelRect.offsetMin = new Vector2(10f, 4f);
-        labelRect.offsetMax = new Vector2(-10f, -4f);
-
-        Text textComponent = labelObject.AddComponent<Text>();
-        textComponent.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-        textComponent.fontSize = 20;
-        textComponent.fontStyle = FontStyle.Bold;
-        textComponent.alignment = TextAnchor.MiddleCenter;
-        textComponent.horizontalOverflow = HorizontalWrapMode.Wrap;
-        textComponent.verticalOverflow = VerticalWrapMode.Overflow;
-        textComponent.color = Color.white;
-        textComponent.text = label;
-
-        return button;
-    }
-
     private static void SetButtonText(Button button, string label)
     {
         if (button == null)
@@ -1121,11 +1249,33 @@ public sealed class MainMenuController : MonoBehaviour
             return;
         }
 
-        Text text = button.GetComponentInChildren<Text>();
+        Text text = button.GetComponentInChildren<Text>(true);
 
         if (text != null)
         {
             text.text = label;
+            text.color = Color.white;
+        }
+    }
+
+    private static void SetButtonTextColor(Button button)
+    {
+        if (button == null)
+        {
+            return;
+        }
+
+        foreach (Text text in button.GetComponentsInChildren<Text>(true))
+        {
+            text.color = Color.white;
+        }
+    }
+
+    private static void SetText(Text text, string value)
+    {
+        if (text != null)
+        {
+            text.text = value;
         }
     }
 

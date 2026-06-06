@@ -1,0 +1,107 @@
+using UnityEngine;
+using UnityEngine.UI;
+
+/// <summary>
+/// Holds prefab references for the main menu canvas so layout stays editable in Unity.
+/// </summary>
+[DisallowMultipleComponent]
+public sealed class MainMenuView : MonoBehaviour
+{
+    [SerializeField] private Canvas canvas = null;
+    [SerializeField] private GameObject backdropObject = null;
+    [SerializeField] private GameObject menuPanelObject = null;
+    [SerializeField] private GameObject setupPanelObject = null;
+    [SerializeField] private GameObject settingsPanelObject = null;
+    [SerializeField] private GameObject instructionsPanelObject = null;
+    [SerializeField] private GameObject characterSelectionPanelObject = null;
+    [SerializeField] private CanvasGroup menuGroup = null;
+    [SerializeField] private CanvasGroup setupGroup = null;
+    [SerializeField] private CanvasGroup settingsGroup = null;
+    [SerializeField] private CanvasGroup instructionsGroup = null;
+    [SerializeField] private CanvasGroup characterSelectionGroup = null;
+    [SerializeField] private Text titleCyanText = null;
+    [SerializeField] private Text titlePinkText = null;
+    [SerializeField] private Text titleText = null;
+    [SerializeField] private Text statusText = null;
+    [SerializeField] private Text modeText = null;
+    [SerializeField] private Text hintText = null;
+    [SerializeField] private Text setupSummaryText = null;
+    [SerializeField] private Text settingsSummaryText = null;
+    [SerializeField] private Text playerCharacterText = null;
+    [SerializeField] private Text opponentCharacterText = null;
+    [SerializeField] private Image playerCharacterCardImage = null;
+    [SerializeField] private Image opponentCharacterCardImage = null;
+    [SerializeField] private Sprite[] characterCardSprites = null;
+    [SerializeField] private Button primaryButton = null;
+    [SerializeField] private Button secondaryButton = null;
+    [SerializeField] private Button modeButton = null;
+    [SerializeField] private Button difficultyButton = null;
+    [SerializeField] private Button setupModeButton = null;
+    [SerializeField] private Button setupDifficultyButton = null;
+    [SerializeField] private Button continueToFightersButton = null;
+    [SerializeField] private Button setupBackButton = null;
+    [SerializeField] private Button instructionsButton = null;
+    [SerializeField] private Button instructionsBackButton = null;
+    [SerializeField] private Button settingsButton = null;
+    [SerializeField] private Button settingsBackButton = null;
+    [SerializeField] private Button fullscreenButton = null;
+    [SerializeField] private Button performantButton = null;
+    [SerializeField] private Button balancedButton = null;
+    [SerializeField] private Button highFidelityButton = null;
+    [SerializeField] private Button quitButton = null;
+    [SerializeField] private Button previousPlayerCharacterButton = null;
+    [SerializeField] private Button nextPlayerCharacterButton = null;
+    [SerializeField] private Button previousOpponentCharacterButton = null;
+    [SerializeField] private Button nextOpponentCharacterButton = null;
+    [SerializeField] private Button confirmCharacterSelectionButton = null;
+    [SerializeField] private Button cancelCharacterSelectionButton = null;
+
+    public Canvas Canvas => canvas;
+    public GameObject BackdropObject => backdropObject;
+    public GameObject MenuPanelObject => menuPanelObject;
+    public GameObject SetupPanelObject => setupPanelObject;
+    public GameObject SettingsPanelObject => settingsPanelObject;
+    public GameObject InstructionsPanelObject => instructionsPanelObject;
+    public GameObject CharacterSelectionPanelObject => characterSelectionPanelObject;
+    public CanvasGroup MenuGroup => menuGroup;
+    public CanvasGroup SetupGroup => setupGroup;
+    public CanvasGroup SettingsGroup => settingsGroup;
+    public CanvasGroup InstructionsGroup => instructionsGroup;
+    public CanvasGroup CharacterSelectionGroup => characterSelectionGroup;
+    public Text TitleCyanText => titleCyanText;
+    public Text TitlePinkText => titlePinkText;
+    public Text TitleText => titleText;
+    public Text StatusText => statusText;
+    public Text ModeText => modeText;
+    public Text HintText => hintText;
+    public Text SetupSummaryText => setupSummaryText;
+    public Text SettingsSummaryText => settingsSummaryText;
+    public Text PlayerCharacterText => playerCharacterText;
+    public Text OpponentCharacterText => opponentCharacterText;
+    public Image PlayerCharacterCardImage => playerCharacterCardImage;
+    public Image OpponentCharacterCardImage => opponentCharacterCardImage;
+    public Sprite[] CharacterCardSprites => characterCardSprites;
+    public Button PrimaryButton => primaryButton;
+    public Button SecondaryButton => secondaryButton;
+    public Button ModeButton => modeButton;
+    public Button DifficultyButton => difficultyButton;
+    public Button SetupModeButton => setupModeButton;
+    public Button SetupDifficultyButton => setupDifficultyButton;
+    public Button ContinueToFightersButton => continueToFightersButton;
+    public Button SetupBackButton => setupBackButton;
+    public Button InstructionsButton => instructionsButton;
+    public Button InstructionsBackButton => instructionsBackButton;
+    public Button SettingsButton => settingsButton;
+    public Button SettingsBackButton => settingsBackButton;
+    public Button FullscreenButton => fullscreenButton;
+    public Button PerformantButton => performantButton;
+    public Button BalancedButton => balancedButton;
+    public Button HighFidelityButton => highFidelityButton;
+    public Button QuitButton => quitButton;
+    public Button PreviousPlayerCharacterButton => previousPlayerCharacterButton;
+    public Button NextPlayerCharacterButton => nextPlayerCharacterButton;
+    public Button PreviousOpponentCharacterButton => previousOpponentCharacterButton;
+    public Button NextOpponentCharacterButton => nextOpponentCharacterButton;
+    public Button ConfirmCharacterSelectionButton => confirmCharacterSelectionButton;
+    public Button CancelCharacterSelectionButton => cancelCharacterSelectionButton;
+}
