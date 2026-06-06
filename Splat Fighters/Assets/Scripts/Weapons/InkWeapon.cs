@@ -131,6 +131,7 @@ public class InkWeapon : MonoBehaviour
 
         nextFireTime = Time.time + fireCooldown;
         Fired?.Invoke();
+        SplatAudioManager.PlayWeaponFireSound();
         return true;
     }
 

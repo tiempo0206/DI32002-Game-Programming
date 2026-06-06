@@ -357,6 +357,7 @@ public class InkProjectile : MonoBehaviour
     {
         SpawnImpactMarker(hitPoint, hitNormal, canPaintLayer);
         SpawnInkSplatter(hitPoint, hitNormal, canPaintLayer);
+        SplatAudioManager.PlayInkImpactSound();
     }
 
     private void SpawnImpactMarker(Vector3 hitPoint, Vector3 hitNormal, bool canPaintLayer)

@@ -27,6 +27,9 @@ public sealed class MainMenuView : MonoBehaviour
     [SerializeField] private Text hintText = null;
     [SerializeField] private Text setupSummaryText = null;
     [SerializeField] private Text settingsSummaryText = null;
+    [SerializeField] private Text masterVolumeValueText = null;
+    [SerializeField] private Text musicVolumeValueText = null;
+    [SerializeField] private Text sfxVolumeValueText = null;
     [SerializeField] private Text playerCharacterText = null;
     [SerializeField] private Text opponentCharacterText = null;
     [SerializeField] private Image playerCharacterCardImage = null;
@@ -48,6 +51,9 @@ public sealed class MainMenuView : MonoBehaviour
     [SerializeField] private Button performantButton = null;
     [SerializeField] private Button balancedButton = null;
     [SerializeField] private Button highFidelityButton = null;
+    [SerializeField] private Slider masterVolumeSlider = null;
+    [SerializeField] private Slider musicVolumeSlider = null;
+    [SerializeField] private Slider sfxVolumeSlider = null;
     [SerializeField] private Button quitButton = null;
     [SerializeField] private Button previousPlayerCharacterButton = null;
     [SerializeField] private Button nextPlayerCharacterButton = null;
@@ -76,6 +82,9 @@ public sealed class MainMenuView : MonoBehaviour
     public Text HintText => hintText;
     public Text SetupSummaryText => setupSummaryText;
     public Text SettingsSummaryText => settingsSummaryText;
+    public Text MasterVolumeValueText => masterVolumeValueText;
+    public Text MusicVolumeValueText => musicVolumeValueText;
+    public Text SfxVolumeValueText => sfxVolumeValueText;
     public Text PlayerCharacterText => playerCharacterText;
     public Text OpponentCharacterText => opponentCharacterText;
     public Image PlayerCharacterCardImage => playerCharacterCardImage;
@@ -97,6 +106,9 @@ public sealed class MainMenuView : MonoBehaviour
     public Button PerformantButton => performantButton;
     public Button BalancedButton => balancedButton;
     public Button HighFidelityButton => highFidelityButton;
+    public Slider MasterVolumeSlider => masterVolumeSlider;
+    public Slider MusicVolumeSlider => musicVolumeSlider;
+    public Slider SfxVolumeSlider => sfxVolumeSlider;
     public Button QuitButton => quitButton;
     public Button PreviousPlayerCharacterButton => previousPlayerCharacterButton;
     public Button NextPlayerCharacterButton => nextPlayerCharacterButton;
