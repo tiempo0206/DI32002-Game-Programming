@@ -35,6 +35,7 @@ public sealed class MainMenuView : MonoBehaviour
     [SerializeField] private Image playerCharacterCardImage = null;
     [SerializeField] private Image opponentCharacterCardImage = null;
     [SerializeField] private Sprite[] characterCardSprites = null;
+    [SerializeField] private Sprite characterSelectionBackgroundSprite = null;
     [SerializeField] private Button primaryButton = null;
     [SerializeField] private Button secondaryButton = null;
     [SerializeField] private Button modeButton = null;
@@ -90,6 +91,7 @@ public sealed class MainMenuView : MonoBehaviour
     public Image PlayerCharacterCardImage => playerCharacterCardImage;
     public Image OpponentCharacterCardImage => opponentCharacterCardImage;
     public Sprite[] CharacterCardSprites => characterCardSprites;
+    public Sprite CharacterSelectionBackgroundSprite => characterSelectionBackgroundSprite;
     public Button PrimaryButton => primaryButton;
     public Button SecondaryButton => secondaryButton;
     public Button ModeButton => modeButton;

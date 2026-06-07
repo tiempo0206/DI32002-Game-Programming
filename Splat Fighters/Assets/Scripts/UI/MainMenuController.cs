@@ -31,6 +31,7 @@ public sealed class MainMenuController : MonoBehaviour
     private const string MatchModePrefKey = "SplatFighters.Menu.MatchMode";
     private const string GameplaySceneName = "MVP_ShootingTest";
     private const string MainMenuCanvasPrefabResource = "UI/MainMenu/Prefabs/MainMenuCanvas";
+    private const string CharacterSelectionBackgroundResource = "UI/CharacterSelection/Backgrounds/ChooseFightersBackground";
     private const string CharacterCardResourceRoot = "UI/CharacterSelection/Cards/";
 
     [SerializeField] private GameManager gameManager = null;
@@ -106,6 +107,7 @@ public sealed class MainMenuController : MonoBehaviour
     private Renderer opponentPreviewPlatformRenderer;
     private SpriteRenderer playerPreviewCardRenderer;
     private SpriteRenderer opponentPreviewCardRenderer;
+    private Sprite characterSelectionBackgroundSprite;
     private Sprite[] characterCardSprites;
     private int selectedPlayerCharacterIndex;
     private int selectedOpponentCharacterIndex;
@@ -296,6 +298,7 @@ public sealed class MainMenuController : MonoBehaviour
         playerCharacterCardImage = view.PlayerCharacterCardImage;
         opponentCharacterCardImage = view.OpponentCharacterCardImage;
         characterCardSprites = view.CharacterCardSprites;
+        characterSelectionBackgroundSprite = view.CharacterSelectionBackgroundSprite;
         primaryButton = view.PrimaryButton;
         secondaryButton = view.SecondaryButton;
         modeButton = view.ModeButton;
@@ -1086,12 +1089,33 @@ public sealed class MainMenuController : MonoBehaviour
         previewLight.type = LightType.Directional;
         previewLight.intensity = 1.25f;
 
-        playerPreviewCardRenderer = CreatePreviewCard("PlayerCardBackdrop", new Vector3(-2.6f, -0.45f, 0.72f), selectedPlayerCharacterIndex);
-        opponentPreviewCardRenderer = CreatePreviewCard("OpponentCardBackdrop", new Vector3(2.6f, -0.45f, 0.72f), selectedOpponentCharacterIndex);
-        playerPreview = CreateCharacterPreview("PlayerPreview", new Vector3(-5.28f, -2.6f, -0.22f), Team.TeamA, selectedPlayerCharacterIndex);
-        opponentPreview = CreateCharacterPreview("OpponentPreview", new Vector3(5.28f, -2.6f, -0.22f), Team.TeamB, selectedOpponentCharacterIndex);
-        playerPreviewPlatformRenderer = CreatePreviewPlatform("PlayerPlatform", new Vector3(-5.28f, -2.76f, -0.22f), selectedPlayerCharacterIndex);
-        opponentPreviewPlatformRenderer = CreatePreviewPlatform("OpponentPlatform", new Vector3(5.28f, -2.76f, -0.22f), selectedOpponentCharacterIndex);
+        CreateCharacterSelectionBackground();
+        playerPreviewCardRenderer = CreatePreviewCard("PlayerCardBackdrop", new Vector3(-4.86f, -0.22f, 0.52f), selectedPlayerCharacterIndex);
+        opponentPreviewCardRenderer = CreatePreviewCard("OpponentCardBackdrop", new Vector3(4.86f, -0.22f, 0.52f), selectedOpponentCharacterIndex);
+        playerPreview = CreateCharacterPreview("PlayerPreview", new Vector3(-7.18f, -3.22f, -0.35f), Team.TeamA, selectedPlayerCharacterIndex);
+        opponentPreview = CreateCharacterPreview("OpponentPreview", new Vector3(7.18f, -3.22f, -0.35f), Team.TeamB, selectedOpponentCharacterIndex);
+        playerPreviewPlatformRenderer = CreatePreviewPlatform("PlayerPlatform", new Vector3(-7.18f, -3.42f, -0.35f), selectedPlayerCharacterIndex);
+        opponentPreviewPlatformRenderer = CreatePreviewPlatform("OpponentPlatform", new Vector3(7.18f, -3.42f, -0.35f), selectedOpponentCharacterIndex);
+    }
+
+    private SpriteRenderer CreateCharacterSelectionBackground()
+    {
+        Sprite backgroundSprite = GetCharacterSelectionBackgroundSprite();
+        if (backgroundSprite == null)
+        {
+            return null;
+        }
+
+        GameObject backgroundObject = new GameObject("ChooseFightersBackground");
+        backgroundObject.transform.SetParent(characterSelectionPreviewStage.transform, false);
+        backgroundObject.transform.position = new Vector3(0f, 0f, 1.6f);
+
+        SpriteRenderer backgroundRenderer = backgroundObject.AddComponent<SpriteRenderer>();
+        backgroundRenderer.sprite = backgroundSprite;
+        backgroundRenderer.color = Color.white;
+        backgroundRenderer.sortingOrder = -100;
+        FitSelectionBackground(backgroundRenderer);
+        return backgroundRenderer;
     }
 
     private SpriteRenderer CreatePreviewCard(string name, Vector3 position, int characterIndex)
@@ -1116,7 +1140,7 @@ public sealed class MainMenuController : MonoBehaviour
 
         CharacterPreviewPresenter preview = previewObject.AddComponent<CharacterPreviewPresenter>();
         preview.Configure(characterCatalog, team, index);
-        preview.ConfigureStageFit(2.55f, 1.55f);
+        preview.ConfigureStageFit(2.72f, 1.68f);
         return preview;
     }
 
@@ -1126,7 +1150,7 @@ public sealed class MainMenuController : MonoBehaviour
         platformObject.name = name;
         platformObject.transform.SetParent(characterSelectionPreviewStage.transform, false);
         platformObject.transform.position = position;
-        platformObject.transform.localScale = new Vector3(1.32f, 0.11f, 1.32f);
+        platformObject.transform.localScale = new Vector3(1.48f, 0.11f, 1.48f);
 
         Collider platformCollider = platformObject.GetComponent<Collider>();
         if (platformCollider != null)
@@ -1255,6 +1279,28 @@ public sealed class MainMenuController : MonoBehaviour
         FitPreviewCard(renderer);
     }
 
+    private Sprite GetCharacterSelectionBackgroundSprite()
+    {
+        if (characterSelectionBackgroundSprite == null)
+        {
+            characterSelectionBackgroundSprite = Resources.Load<Sprite>(CharacterSelectionBackgroundResource);
+        }
+
+        return characterSelectionBackgroundSprite;
+    }
+
+    private static void FitSelectionBackground(SpriteRenderer renderer)
+    {
+        if (renderer == null || renderer.sprite == null || renderer.sprite.bounds.size.y <= Mathf.Epsilon)
+        {
+            return;
+        }
+
+        const float targetHeight = 10f;
+        float scale = targetHeight / renderer.sprite.bounds.size.y;
+        renderer.transform.localScale = new Vector3(scale, scale, 1f);
+    }
+
     private static void FitPreviewCard(SpriteRenderer renderer)
     {
         if (renderer == null || renderer.sprite == null || renderer.sprite.bounds.size.y <= Mathf.Epsilon)
@@ -1262,7 +1308,7 @@ public sealed class MainMenuController : MonoBehaviour
             return;
         }
 
-        const float targetHeight = 4.6f;
+        const float targetHeight = 5.35f;
         float scale = targetHeight / renderer.sprite.bounds.size.y;
         renderer.transform.localScale = new Vector3(scale, scale, 1f);
     }
