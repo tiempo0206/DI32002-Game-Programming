@@ -39,6 +39,17 @@ public sealed class CharacterPreviewPresenter : MonoBehaviour
         Select(initialIndex);
     }
 
+    public void ConfigureStageFit(float newTargetHeight, float newMaxFootprint)
+    {
+        targetHeight = Mathf.Max(0.5f, newTargetHeight);
+        maxFootprint = Mathf.Max(0.5f, newMaxFootprint);
+
+        if (currentInstance != null)
+        {
+            FitPreviewToStage();
+        }
+    }
+
     public void Select(int index)
     {
         if (catalog == null || catalog.Count == 0)

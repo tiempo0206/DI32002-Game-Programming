@@ -1,12 +1,14 @@
 # External Asset Package References
 
-Last updated: 2026-06-05
+Last updated: 2026-06-07
 
 ## Purpose
 
 This document lists the external asset packages currently present in the Splat Fighters Unity project. It is intended for course review, attribution checks, and final submission preparation.
 
 The project does not use Nintendo, Splatoon, or other copyrighted commercial game assets. External assets are used only as presentation, character, or plugin support around the original Splat Fighters gameplay code.
+
+Project-original generated audio is documented separately in `Generated_Audio_Notes.md` because it is not an external asset package.
 
 ## Summary Table
 

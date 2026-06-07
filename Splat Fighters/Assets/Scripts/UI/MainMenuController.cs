@@ -17,11 +17,21 @@ public sealed class MainMenuController : MonoBehaviour
         HighFidelity
     }
 
+    private enum MenuButtonSound
+    {
+        None,
+        Click,
+        Confirm,
+        Back,
+        Selection
+    }
+
     private const string GraphicsPresetPrefKey = "SplatFighters.Menu.GraphicsPreset";
     private const string FullscreenPrefKey = "SplatFighters.Menu.Fullscreen";
     private const string MatchModePrefKey = "SplatFighters.Menu.MatchMode";
     private const string GameplaySceneName = "MVP_ShootingTest";
     private const string MainMenuCanvasPrefabResource = "UI/MainMenu/Prefabs/MainMenuCanvas";
+    private const string CharacterSelectionBackgroundResource = "UI/CharacterSelection/Backgrounds/ChooseFightersBackground";
     private const string CharacterCardResourceRoot = "UI/CharacterSelection/Cards/";
 
     [SerializeField] private GameManager gameManager = null;
@@ -47,6 +57,9 @@ public sealed class MainMenuController : MonoBehaviour
     private Text hintText;
     private Text setupSummaryText;
     private Text settingsSummaryText;
+    private Text masterVolumeValueText;
+    private Text musicVolumeValueText;
+    private Text sfxVolumeValueText;
     private Text playerCharacterText;
     private Text opponentCharacterText;
     private Image playerCharacterCardImage;
@@ -67,6 +80,9 @@ public sealed class MainMenuController : MonoBehaviour
     private Button performantButton;
     private Button balancedButton;
     private Button highFidelityButton;
+    private Slider masterVolumeSlider;
+    private Slider musicVolumeSlider;
+    private Slider sfxVolumeSlider;
     private Button quitButton;
     private Button previousPlayerCharacterButton;
     private Button nextPlayerCharacterButton;
@@ -91,6 +107,7 @@ public sealed class MainMenuController : MonoBehaviour
     private Renderer opponentPreviewPlatformRenderer;
     private SpriteRenderer playerPreviewCardRenderer;
     private SpriteRenderer opponentPreviewCardRenderer;
+    private Sprite characterSelectionBackgroundSprite;
     private Sprite[] characterCardSprites;
     private int selectedPlayerCharacterIndex;
     private int selectedOpponentCharacterIndex;
@@ -141,6 +158,7 @@ public sealed class MainMenuController : MonoBehaviour
 
         if ((setupVisible || settingsVisible || instructionsVisible || characterSelectionVisible) && Input.GetKeyDown(KeyCode.Escape))
         {
+            SplatAudioManager.PlayUiBackSound();
             ShowMainMenu();
         }
 
@@ -272,11 +290,15 @@ public sealed class MainMenuController : MonoBehaviour
         hintText = view.HintText;
         setupSummaryText = view.SetupSummaryText;
         settingsSummaryText = view.SettingsSummaryText;
+        masterVolumeValueText = view.MasterVolumeValueText;
+        musicVolumeValueText = view.MusicVolumeValueText;
+        sfxVolumeValueText = view.SfxVolumeValueText;
         playerCharacterText = view.PlayerCharacterText;
         opponentCharacterText = view.OpponentCharacterText;
         playerCharacterCardImage = view.PlayerCharacterCardImage;
         opponentCharacterCardImage = view.OpponentCharacterCardImage;
         characterCardSprites = view.CharacterCardSprites;
+        characterSelectionBackgroundSprite = view.CharacterSelectionBackgroundSprite;
         primaryButton = view.PrimaryButton;
         secondaryButton = view.SecondaryButton;
         modeButton = view.ModeButton;
@@ -293,6 +315,9 @@ public sealed class MainMenuController : MonoBehaviour
         performantButton = view.PerformantButton;
         balancedButton = view.BalancedButton;
         highFidelityButton = view.HighFidelityButton;
+        masterVolumeSlider = view.MasterVolumeSlider;
+        musicVolumeSlider = view.MusicVolumeSlider;
+        sfxVolumeSlider = view.SfxVolumeSlider;
         quitButton = view.QuitButton;
         previousPlayerCharacterButton = view.PreviousPlayerCharacterButton;
         nextPlayerCharacterButton = view.NextPlayerCharacterButton;
@@ -304,32 +329,33 @@ public sealed class MainMenuController : MonoBehaviour
 
     private void RegisterButtonHandlers()
     {
-        ConfigureButton(primaryButton, HandlePrimaryAction);
-        ConfigureButton(secondaryButton, HandleSecondaryAction);
-        ConfigureButton(modeButton, HandleModeAction);
-        ConfigureButton(difficultyButton, HandleDifficultyAction);
-        ConfigureButton(setupModeButton, HandleSetupModeAction);
-        ConfigureButton(setupDifficultyButton, HandleSetupDifficultyAction);
-        ConfigureButton(continueToFightersButton, () => ShowCharacterSelection(true));
-        ConfigureButton(setupBackButton, () => ShowSetup(false));
+        ConfigureButton(primaryButton, HandlePrimaryAction, MenuButtonSound.Confirm);
+        ConfigureButton(secondaryButton, HandleSecondaryAction, MenuButtonSound.Selection);
+        ConfigureButton(modeButton, HandleModeAction, MenuButtonSound.Selection);
+        ConfigureButton(difficultyButton, HandleDifficultyAction, MenuButtonSound.Selection);
+        ConfigureButton(setupModeButton, HandleSetupModeAction, MenuButtonSound.Selection);
+        ConfigureButton(setupDifficultyButton, HandleSetupDifficultyAction, MenuButtonSound.Selection);
+        ConfigureButton(continueToFightersButton, () => ShowCharacterSelection(true), MenuButtonSound.Confirm);
+        ConfigureButton(setupBackButton, () => ShowSetup(false), MenuButtonSound.Back);
         ConfigureButton(instructionsButton, () => ShowInstructions(true));
-        ConfigureButton(instructionsBackButton, () => ShowInstructions(false));
+        ConfigureButton(instructionsBackButton, () => ShowInstructions(false), MenuButtonSound.Back);
         ConfigureButton(settingsButton, () => ShowSettings(true));
-        ConfigureButton(settingsBackButton, () => ShowSettings(false));
-        ConfigureButton(fullscreenButton, ToggleFullscreen);
-        ConfigureButton(performantButton, () => SelectPreset(GraphicsPreset.Performant));
-        ConfigureButton(balancedButton, () => SelectPreset(GraphicsPreset.Balanced));
-        ConfigureButton(highFidelityButton, () => SelectPreset(GraphicsPreset.HighFidelity));
-        ConfigureButton(quitButton, HandleQuitAction);
-        ConfigureButton(previousPlayerCharacterButton, () => SelectPlayerCharacter(selectedPlayerCharacterIndex - 1));
-        ConfigureButton(nextPlayerCharacterButton, () => SelectPlayerCharacter(selectedPlayerCharacterIndex + 1));
-        ConfigureButton(previousOpponentCharacterButton, () => SelectOpponentCharacter(selectedOpponentCharacterIndex - 1));
-        ConfigureButton(nextOpponentCharacterButton, () => SelectOpponentCharacter(selectedOpponentCharacterIndex + 1));
-        ConfigureButton(confirmCharacterSelectionButton, ConfirmCharacterSelection);
-        ConfigureButton(cancelCharacterSelectionButton, () => ShowSetup(true));
+        ConfigureButton(settingsBackButton, () => ShowSettings(false), MenuButtonSound.Back);
+        ConfigureButton(fullscreenButton, ToggleFullscreen, MenuButtonSound.Selection);
+        ConfigureButton(performantButton, () => SelectPreset(GraphicsPreset.Performant), MenuButtonSound.Selection);
+        ConfigureButton(balancedButton, () => SelectPreset(GraphicsPreset.Balanced), MenuButtonSound.Selection);
+        ConfigureButton(highFidelityButton, () => SelectPreset(GraphicsPreset.HighFidelity), MenuButtonSound.Selection);
+        ConfigureButton(quitButton, HandleQuitAction, MenuButtonSound.Back);
+        ConfigureButton(previousPlayerCharacterButton, () => SelectPlayerCharacter(selectedPlayerCharacterIndex - 1), MenuButtonSound.None);
+        ConfigureButton(nextPlayerCharacterButton, () => SelectPlayerCharacter(selectedPlayerCharacterIndex + 1), MenuButtonSound.None);
+        ConfigureButton(previousOpponentCharacterButton, () => SelectOpponentCharacter(selectedOpponentCharacterIndex - 1), MenuButtonSound.None);
+        ConfigureButton(nextOpponentCharacterButton, () => SelectOpponentCharacter(selectedOpponentCharacterIndex + 1), MenuButtonSound.None);
+        ConfigureButton(confirmCharacterSelectionButton, ConfirmCharacterSelection, MenuButtonSound.Confirm);
+        ConfigureButton(cancelCharacterSelectionButton, () => ShowSetup(true), MenuButtonSound.Back);
+        RegisterAudioControlHandlers();
     }
 
-    private static void ConfigureButton(Button button, UnityEngine.Events.UnityAction action)
+    private static void ConfigureButton(Button button, UnityEngine.Events.UnityAction action, MenuButtonSound sound = MenuButtonSound.Click)
     {
         if (button == null)
         {
@@ -337,8 +363,35 @@ public sealed class MainMenuController : MonoBehaviour
         }
 
         button.onClick.RemoveAllListeners();
-        button.onClick.AddListener(action);
+        button.onClick.AddListener(() =>
+        {
+            PlayMenuButtonSound(sound);
+            action?.Invoke();
+        });
         SetButtonTextColor(button);
+    }
+
+    private void RegisterAudioControlHandlers()
+    {
+        ConfigureVolumeSlider(masterVolumeSlider, SplatAudioManager.GetMasterVolume(), HandleMasterVolumeChanged);
+        ConfigureVolumeSlider(musicVolumeSlider, SplatAudioManager.GetMusicVolume(), HandleMusicVolumeChanged);
+        ConfigureVolumeSlider(sfxVolumeSlider, SplatAudioManager.GetSfxVolume(), HandleSfxVolumeChanged);
+        UpdateAudioControls();
+    }
+
+    private static void ConfigureVolumeSlider(Slider slider, float value, UnityEngine.Events.UnityAction<float> action)
+    {
+        if (slider == null)
+        {
+            return;
+        }
+
+        slider.minValue = 0f;
+        slider.maxValue = 1f;
+        slider.wholeNumbers = false;
+        slider.SetValueWithoutNotify(Mathf.Clamp01(value));
+        slider.onValueChanged.RemoveAllListeners();
+        slider.onValueChanged.AddListener(action);
     }
 
     private void RefreshFromGameState(bool force)
@@ -527,6 +580,7 @@ public sealed class MainMenuController : MonoBehaviour
         SetCharacterSelectionStageVisible(false);
         SetBackdropVisible(showMenu);
         UpdateButtonLabels();
+        UpdateAudioControls();
     }
 
     private void ShowInstructions(bool visible)
@@ -846,7 +900,46 @@ public sealed class MainMenuController : MonoBehaviour
             return;
         }
 
-        settingsSummaryText.text = $"Preset: {selectedPreset} | Fullscreen: {(fullscreenEnabled ? "On" : "Off")}";
+        settingsSummaryText.text =
+            $"Preset: {selectedPreset} | Fullscreen: {(fullscreenEnabled ? "On" : "Off")}\n"
+            + $"Audio: Master {FormatVolume(SplatAudioManager.GetMasterVolume())} | Music {FormatVolume(SplatAudioManager.GetMusicVolume())} | SFX {FormatVolume(SplatAudioManager.GetSfxVolume())}";
+    }
+
+    private void HandleMasterVolumeChanged(float value)
+    {
+        SplatAudioManager.SetMasterVolumeValue(value);
+        UpdateAudioVolumeLabels();
+        UpdateSettingsSummary();
+    }
+
+    private void HandleMusicVolumeChanged(float value)
+    {
+        SplatAudioManager.SetMusicVolumeValue(value);
+        UpdateAudioVolumeLabels();
+        UpdateSettingsSummary();
+    }
+
+    private void HandleSfxVolumeChanged(float value)
+    {
+        SplatAudioManager.SetSfxVolumeValue(value);
+        UpdateAudioVolumeLabels();
+        UpdateSettingsSummary();
+    }
+
+    private void UpdateAudioControls()
+    {
+        SetSliderValue(masterVolumeSlider, SplatAudioManager.GetMasterVolume());
+        SetSliderValue(musicVolumeSlider, SplatAudioManager.GetMusicVolume());
+        SetSliderValue(sfxVolumeSlider, SplatAudioManager.GetSfxVolume());
+        UpdateAudioVolumeLabels();
+        UpdateSettingsSummary();
+    }
+
+    private void UpdateAudioVolumeLabels()
+    {
+        SetText(masterVolumeValueText, FormatVolume(SplatAudioManager.GetMasterVolume()));
+        SetText(musicVolumeValueText, FormatVolume(SplatAudioManager.GetMusicVolume()));
+        SetText(sfxVolumeValueText, FormatVolume(SplatAudioManager.GetSfxVolume()));
     }
 
     private void CycleMenuMatchMode()
@@ -904,12 +997,14 @@ public sealed class MainMenuController : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Return))
         {
+            SplatAudioManager.PlayUiConfirmSound();
             ConfirmCharacterSelection();
         }
     }
 
     private void SelectPlayerCharacter(int index)
     {
+        int previousIndex = selectedPlayerCharacterIndex;
         selectedPlayerCharacterIndex = NormalizeCharacterIndex(index);
 
         if (selectedPlayerCharacterIndex == selectedOpponentCharacterIndex && characterCatalog != null && characterCatalog.Count > 1)
@@ -927,17 +1022,28 @@ public sealed class MainMenuController : MonoBehaviour
             playerPreview.Select(selectedPlayerCharacterIndex);
         }
 
+        if (selectedPlayerCharacterIndex != previousIndex)
+        {
+            SplatAudioManager.PlaySelectionMoveSound();
+        }
+
         RefreshCharacterSelectionPresentation();
     }
 
     private void SelectOpponentCharacter(int index)
     {
+        int previousIndex = selectedOpponentCharacterIndex;
         int direction = index < selectedOpponentCharacterIndex ? -1 : 1;
         selectedOpponentCharacterIndex = EnsureDistinctOpponentIndex(index, direction);
 
         if (opponentPreview != null)
         {
             opponentPreview.Select(selectedOpponentCharacterIndex);
+        }
+
+        if (selectedOpponentCharacterIndex != previousIndex)
+        {
+            SplatAudioManager.PlaySelectionMoveSound();
         }
 
         RefreshCharacterSelectionPresentation();
@@ -983,12 +1089,33 @@ public sealed class MainMenuController : MonoBehaviour
         previewLight.type = LightType.Directional;
         previewLight.intensity = 1.25f;
 
-        playerPreviewCardRenderer = CreatePreviewCard("PlayerCardBackdrop", new Vector3(-2.6f, -0.55f, 0.7f), selectedPlayerCharacterIndex);
-        opponentPreviewCardRenderer = CreatePreviewCard("OpponentCardBackdrop", new Vector3(2.6f, -0.55f, 0.7f), selectedOpponentCharacterIndex);
-        playerPreview = CreateCharacterPreview("PlayerPreview", new Vector3(-2.6f, -1.85f, 0f), Team.TeamA, selectedPlayerCharacterIndex);
-        opponentPreview = CreateCharacterPreview("OpponentPreview", new Vector3(2.6f, -1.85f, 0f), Team.TeamB, selectedOpponentCharacterIndex);
-        playerPreviewPlatformRenderer = CreatePreviewPlatform("PlayerPlatform", new Vector3(-2.6f, -2.05f, 0f), selectedPlayerCharacterIndex);
-        opponentPreviewPlatformRenderer = CreatePreviewPlatform("OpponentPlatform", new Vector3(2.6f, -2.05f, 0f), selectedOpponentCharacterIndex);
+        CreateCharacterSelectionBackground();
+        playerPreviewCardRenderer = CreatePreviewCard("PlayerCardBackdrop", new Vector3(-4.86f, -0.22f, 0.52f), selectedPlayerCharacterIndex);
+        opponentPreviewCardRenderer = CreatePreviewCard("OpponentCardBackdrop", new Vector3(4.86f, -0.22f, 0.52f), selectedOpponentCharacterIndex);
+        playerPreview = CreateCharacterPreview("PlayerPreview", new Vector3(-7.18f, -3.22f, -0.35f), Team.TeamA, selectedPlayerCharacterIndex);
+        opponentPreview = CreateCharacterPreview("OpponentPreview", new Vector3(7.18f, -3.22f, -0.35f), Team.TeamB, selectedOpponentCharacterIndex);
+        playerPreviewPlatformRenderer = CreatePreviewPlatform("PlayerPlatform", new Vector3(-7.18f, -3.42f, -0.35f), selectedPlayerCharacterIndex);
+        opponentPreviewPlatformRenderer = CreatePreviewPlatform("OpponentPlatform", new Vector3(7.18f, -3.42f, -0.35f), selectedOpponentCharacterIndex);
+    }
+
+    private SpriteRenderer CreateCharacterSelectionBackground()
+    {
+        Sprite backgroundSprite = GetCharacterSelectionBackgroundSprite();
+        if (backgroundSprite == null)
+        {
+            return null;
+        }
+
+        GameObject backgroundObject = new GameObject("ChooseFightersBackground");
+        backgroundObject.transform.SetParent(characterSelectionPreviewStage.transform, false);
+        backgroundObject.transform.position = new Vector3(0f, 0f, 1.6f);
+
+        SpriteRenderer backgroundRenderer = backgroundObject.AddComponent<SpriteRenderer>();
+        backgroundRenderer.sprite = backgroundSprite;
+        backgroundRenderer.color = Color.white;
+        backgroundRenderer.sortingOrder = -100;
+        FitSelectionBackground(backgroundRenderer);
+        return backgroundRenderer;
     }
 
     private SpriteRenderer CreatePreviewCard(string name, Vector3 position, int characterIndex)
@@ -1013,6 +1140,7 @@ public sealed class MainMenuController : MonoBehaviour
 
         CharacterPreviewPresenter preview = previewObject.AddComponent<CharacterPreviewPresenter>();
         preview.Configure(characterCatalog, team, index);
+        preview.ConfigureStageFit(2.72f, 1.68f);
         return preview;
     }
 
@@ -1022,7 +1150,7 @@ public sealed class MainMenuController : MonoBehaviour
         platformObject.name = name;
         platformObject.transform.SetParent(characterSelectionPreviewStage.transform, false);
         platformObject.transform.position = position;
-        platformObject.transform.localScale = new Vector3(1.55f, 0.14f, 1.55f);
+        platformObject.transform.localScale = new Vector3(1.48f, 0.11f, 1.48f);
 
         Collider platformCollider = platformObject.GetComponent<Collider>();
         if (platformCollider != null)
@@ -1151,6 +1279,28 @@ public sealed class MainMenuController : MonoBehaviour
         FitPreviewCard(renderer);
     }
 
+    private Sprite GetCharacterSelectionBackgroundSprite()
+    {
+        if (characterSelectionBackgroundSprite == null)
+        {
+            characterSelectionBackgroundSprite = Resources.Load<Sprite>(CharacterSelectionBackgroundResource);
+        }
+
+        return characterSelectionBackgroundSprite;
+    }
+
+    private static void FitSelectionBackground(SpriteRenderer renderer)
+    {
+        if (renderer == null || renderer.sprite == null || renderer.sprite.bounds.size.y <= Mathf.Epsilon)
+        {
+            return;
+        }
+
+        const float targetHeight = 10f;
+        float scale = targetHeight / renderer.sprite.bounds.size.y;
+        renderer.transform.localScale = new Vector3(scale, scale, 1f);
+    }
+
     private static void FitPreviewCard(SpriteRenderer renderer)
     {
         if (renderer == null || renderer.sprite == null || renderer.sprite.bounds.size.y <= Mathf.Epsilon)
@@ -1158,7 +1308,7 @@ public sealed class MainMenuController : MonoBehaviour
             return;
         }
 
-        const float targetHeight = 4.6f;
+        const float targetHeight = 5.35f;
         float scale = targetHeight / renderer.sprite.bounds.size.y;
         renderer.transform.localScale = new Vector3(scale, scale, 1f);
     }
@@ -1271,12 +1421,44 @@ public sealed class MainMenuController : MonoBehaviour
         }
     }
 
+    private static void PlayMenuButtonSound(MenuButtonSound sound)
+    {
+        switch (sound)
+        {
+            case MenuButtonSound.Click:
+                SplatAudioManager.PlayUiClickSound();
+                break;
+            case MenuButtonSound.Confirm:
+                SplatAudioManager.PlayUiConfirmSound();
+                break;
+            case MenuButtonSound.Back:
+                SplatAudioManager.PlayUiBackSound();
+                break;
+            case MenuButtonSound.Selection:
+                SplatAudioManager.PlaySelectionMoveSound();
+                break;
+        }
+    }
+
     private static void SetText(Text text, string value)
     {
         if (text != null)
         {
             text.text = value;
         }
+    }
+
+    private static void SetSliderValue(Slider slider, float value)
+    {
+        if (slider != null)
+        {
+            slider.SetValueWithoutNotify(Mathf.Clamp01(value));
+        }
+    }
+
+    private static string FormatVolume(float value)
+    {
+        return $"{Mathf.RoundToInt(Mathf.Clamp01(value) * 100f)}%";
     }
 
     private static void SetButtonHighlight(Button button, bool highlighted)

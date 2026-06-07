@@ -1,6 +1,6 @@
 # Public Asset Usage
 
-Last updated: 2026-06-02
+Last updated: 2026-06-07
 
 ## Current Status
 
@@ -15,6 +15,7 @@ The current prototype uses:
 - Imported RPG Monster Wave PBR character prefabs, materials, and animations for selectable player and opponent visuals.
 - Unity-generated materials created by editor setup scripts.
 - Procedural ink splatter particle effects generated at runtime from original C# scripts.
+- Project-original procedural music and sound effects generated for this course project under `Assets/Resources/Audio`; see `Generated_Audio_Notes.md`.
 - Original C# scripts written for this course project.
 - Runtime UI built from Unity UI text and image components.
 

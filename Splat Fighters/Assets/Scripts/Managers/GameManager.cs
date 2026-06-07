@@ -177,6 +177,7 @@ public class GameManager : MonoBehaviour
         matchTimer.Reset();
         matchTimer.Start();
         SetState(MatchState.Playing);
+        SplatAudioManager.PlayMatchStartSound();
         RefreshScore(true);
         UpdateScoreUI();
     }
@@ -189,6 +190,7 @@ public class GameManager : MonoBehaviour
         RefreshScore(true);
         winningTeam = GetWinningTeam();
         SetState(MatchState.Finished);
+        SplatAudioManager.PlayMatchEndSound();
         UpdateScoreUI();
     }
 

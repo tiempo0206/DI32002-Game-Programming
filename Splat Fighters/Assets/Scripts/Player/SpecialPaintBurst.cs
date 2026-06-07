@@ -70,6 +70,7 @@ public class SpecialPaintBurst : MonoBehaviour
 
         specialMeter.ConsumeReadyCharge();
         SpawnFeedback(paintPoint);
+        SplatAudioManager.PlaySpecialBurstSound();
 
         if (logActivation)
         {
