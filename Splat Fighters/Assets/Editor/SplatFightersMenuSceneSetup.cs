@@ -11,6 +11,7 @@ public static class SplatFightersMenuSceneSetup
 {
     private const string MenuScenePath = "Assets/Scenes/MainMenu.unity";
     private const string GameplayScenePath = "Assets/Scenes/MVP_ShootingTest.unity";
+    private const string TrainingScenePath = "Assets/Scenes/HowToPlayTraining.unity";
     private const string MainMenuCanvasPrefabPath = "Assets/Resources/UI/MainMenu/Prefabs/MainMenuCanvas.prefab";
 
     [MenuItem("Tools/Splat Fighters/Create Main Menu Scene")]
@@ -35,6 +36,7 @@ public static class SplatFightersMenuSceneSetup
         {
             new EditorBuildSettingsScene(MenuScenePath, true),
             new EditorBuildSettingsScene(GameplayScenePath, true),
+            new EditorBuildSettingsScene(TrainingScenePath, true),
         };
 
         AssetDatabase.SaveAssets();

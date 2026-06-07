@@ -11,4 +11,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/MVP_ShootingTest.unity
     guid: a1f4345ac2e014b679fae8c9823bc7ee
+  - enabled: 1
+    path: Assets/Scenes/HowToPlayTraining.unity
+    guid: 7299e9e1a87fc46659eda6c417df0c3e
   m_configObjects: {}

@@ -9,6 +9,7 @@ using UnityEngine;
 public class GameManager : MonoBehaviour
 {
     private const string MatchModePrefKey = "SplatFighters.Menu.MatchMode";
+    private const float TowerWinProgressEpsilon = 0.01f;
 
     public enum MatchState
     {
@@ -20,9 +21,8 @@ public class GameManager : MonoBehaviour
 
     public enum MatchMode
     {
-        TurfWar,
-        SplatZones,
-        TowerControl
+        TurfWar = 0,
+        TowerControl = 2
     }
 
     public static GameManager Instance { get; private set; }
@@ -46,7 +46,6 @@ public class GameManager : MonoBehaviour
     [SerializeField] private InkWeapon playerWeapon = null;
     [SerializeField] private PlayerToolSwitcher playerToolSwitcher = null;
     [SerializeField] private SpecialMeter playerSpecialMeter = null;
-    [SerializeField] private SplatZoneObjective centerZoneObjective = null;
     [SerializeField] private TowerObjective centerTowerObjective = null;
     [SerializeField] private BotController teamBBot = null;
     [SerializeField] private CharacterHealth teamBBotHealth = null;
@@ -98,6 +97,7 @@ public class GameManager : MonoBehaviour
         }
 
         Instance = this;
+        matchMode = NormalizeMatchMode(matchMode);
         LoadMatchModeFromPreferences();
         ResolveReferences();
         SubscribeToHealthEvents();
@@ -123,6 +123,11 @@ public class GameManager : MonoBehaviour
         if (currentState != MatchState.Playing)
         {
             UpdateScoreUI();
+            return;
+        }
+
+        if (TryEndTowerControlByGoal())
+        {
             return;
         }
 
@@ -271,13 +276,13 @@ public class GameManager : MonoBehaviour
 
     public void CycleMatchMode()
     {
-        matchMode = matchMode == MatchMode.TowerControl ? MatchMode.TurfWar : (MatchMode)((int)matchMode + 1);
+        matchMode = matchMode == MatchMode.TowerControl ? MatchMode.TurfWar : MatchMode.TowerControl;
         UpdateScoreUI();
     }
 
     public void SetMatchMode(MatchMode newMode)
     {
-        matchMode = newMode;
+        matchMode = NormalizeMatchMode(newMode);
         UpdateScoreUI();
     }
 
@@ -391,11 +396,6 @@ public class GameManager : MonoBehaviour
         if (playerSpecialMeter == null && playerRoot != null)
         {
             playerSpecialMeter = playerRoot.GetComponentInChildren<SpecialMeter>();
-        }
-
-        if (centerZoneObjective == null)
-        {
-            centerZoneObjective = FindObjectOfType<SplatZoneObjective>();
         }
 
         if (centerTowerObjective == null)
@@ -758,6 +758,51 @@ public class GameManager : MonoBehaviour
 
     private Team GetWinningTeam()
     {
+        if (matchMode == MatchMode.TowerControl)
+        {
+            return GetTowerControlWinningTeam();
+        }
+
+        return GetPaintCoverageWinningTeam();
+    }
+
+    private Team GetTowerControlWinningTeam()
+    {
+        if (centerTowerObjective == null)
+        {
+            return GetPaintCoverageWinningTeam();
+        }
+
+        Team goalTeam = centerTowerObjective.GoalTeam;
+
+        if (goalTeam != Team.None)
+        {
+            return goalTeam;
+        }
+
+        float signedProgress = centerTowerObjective.SignedRouteProgress;
+
+        if (Mathf.Abs(signedProgress) > TowerWinProgressEpsilon)
+        {
+            return signedProgress > 0f ? Team.TeamA : Team.TeamB;
+        }
+
+        if (!centerTowerObjective.IsContested && centerTowerObjective.ControllingTeam != Team.None)
+        {
+            return centerTowerObjective.ControllingTeam;
+        }
+
+        float towerPaintDelta = centerTowerObjective.TeamAPercent - centerTowerObjective.TeamBPercent;
+        if (Mathf.Abs(towerPaintDelta) > TowerWinProgressEpsilon)
+        {
+            return towerPaintDelta > 0f ? Team.TeamA : Team.TeamB;
+        }
+
+        return Team.None;
+    }
+
+    private Team GetPaintCoverageWinningTeam()
+    {
         if (Mathf.Approximately(teamACoverage, teamBCoverage))
         {
             return Team.None;
@@ -791,10 +836,6 @@ public class GameManager : MonoBehaviour
             playerHealth != null && playerHealth.IsEliminated,
             playerSpecialMeter != null ? playerSpecialMeter.ChargePercent : -1f,
             playerSpecialMeter != null && playerSpecialMeter.IsReady,
-            centerZoneObjective != null ? centerZoneObjective.ControllingTeam : Team.None,
-            centerZoneObjective != null && centerZoneObjective.IsContested,
-            centerZoneObjective != null ? centerZoneObjective.TeamAPercent : -1f,
-            centerZoneObjective != null ? centerZoneObjective.TeamBPercent : -1f,
             centerTowerObjective != null ? centerTowerObjective.ControllingTeam : Team.None,
             centerTowerObjective != null && centerTowerObjective.IsContested,
             centerTowerObjective != null ? centerTowerObjective.LeadingTeam : Team.None,
@@ -814,6 +855,36 @@ public class GameManager : MonoBehaviour
         MatchStateChanged?.Invoke(currentState);
     }
 
+    private bool TryEndTowerControlByGoal()
+    {
+        if (matchMode != MatchMode.TowerControl || centerTowerObjective == null)
+        {
+            return false;
+        }
+
+        Team goalTeam = centerTowerObjective.GoalTeam;
+
+        if (goalTeam == Team.None)
+        {
+            return false;
+        }
+
+        EndMatchWithWinner(goalTeam);
+        return true;
+    }
+
+    private void EndMatchWithWinner(Team forcedWinner)
+    {
+        StopRespawnRoutines();
+        ApplyPausedTimeScale(false);
+        matchTimer.Stop();
+        RefreshScore(true);
+        winningTeam = forcedWinner;
+        SetState(MatchState.Finished);
+        SplatAudioManager.PlayMatchEndSound();
+        UpdateScoreUI();
+    }
+
     private void LoadMatchModeFromPreferences()
     {
         if (!PlayerPrefs.HasKey(MatchModePrefKey))
@@ -821,13 +892,17 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        int rawMode = PlayerPrefs.GetInt(MatchModePrefKey, (int)matchMode);
+        matchMode = NormalizeMatchMode((MatchMode)PlayerPrefs.GetInt(MatchModePrefKey, (int)matchMode));
+    }
 
-        if (rawMode < (int)MatchMode.TurfWar || rawMode > (int)MatchMode.TowerControl)
+    private static MatchMode NormalizeMatchMode(MatchMode mode)
+    {
+        int rawMode = (int)mode;
+        if (rawMode == (int)MatchMode.TowerControl || rawMode == 1)
         {
-            return;
+            return MatchMode.TowerControl;
         }
 
-        matchMode = (MatchMode)rawMode;
+        return MatchMode.TurfWar;
     }
 }

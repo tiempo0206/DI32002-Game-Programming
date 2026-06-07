@@ -32,7 +32,6 @@ public sealed class MatchResultsUI : MonoBehaviour
     [SerializeField] private bool manageCursor = true;
 
     private GameManager boundGameManager;
-    private SplatZoneObjective zoneObjective;
     private TowerObjective towerObjective;
     private bool visible;
 
@@ -192,7 +191,7 @@ public sealed class MatchResultsUI : MonoBehaviour
 
         if (winnerText != null)
         {
-            winnerText.text = winningTeam == Team.None ? "Both teams finished with equal painted coverage." : $"{TeamVisualPalette.GetLabel(winningTeam)} wins by {margin:0.0} percentage points.";
+            winnerText.text = FormatWinnerLine(winningTeam, margin);
             winnerText.color = Color.white;
         }
 
@@ -229,14 +228,6 @@ public sealed class MatchResultsUI : MonoBehaviour
 
         switch (gameManager.CurrentMatchMode)
         {
-            case GameManager.MatchMode.SplatZones:
-                ResolveObjectiveReferences();
-                if (zoneObjective == null)
-                {
-                    return "Splat Zones summary unavailable.";
-                }
-
-                return $"Zone control: {FormatControlState(zoneObjective.ControllingTeam, zoneObjective.IsContested)} | Zone paint {TeamVisualPalette.TeamALabel} {zoneObjective.TeamAPercent:0}% / {TeamVisualPalette.TeamBLabel} {zoneObjective.TeamBPercent:0}%";
             case GameManager.MatchMode.TowerControl:
                 ResolveObjectiveReferences();
                 if (towerObjective == null)
@@ -244,8 +235,10 @@ public sealed class MatchResultsUI : MonoBehaviour
                     return "Tower Control summary unavailable.";
                 }
 
-                string leadLabel = towerObjective.LeadingTeam == Team.None ? "No tower lead" : $"{TeamVisualPalette.GetLabel(towerObjective.LeadingTeam)} led the tower";
-                return $"{leadLabel} {towerObjective.RouteProgressPercent:0}% | Tower control: {FormatControlState(towerObjective.ControllingTeam, towerObjective.IsContested)}";
+                string progressLabel = towerObjective.GoalTeam == Team.None
+                    ? $"{FormatTowerLead()} | Tower control: {FormatControlState(towerObjective.ControllingTeam, towerObjective.IsContested)}"
+                    : $"{TeamVisualPalette.GetLabel(towerObjective.GoalTeam)} reached the goal.";
+                return $"{progressLabel} | Tower paint {TeamVisualPalette.TeamALabel} {towerObjective.TeamAPercent:0}% / {TeamVisualPalette.TeamBLabel} {towerObjective.TeamBPercent:0}%";
             default:
                 float margin = Mathf.Abs(gameManager.TeamACoverage - gameManager.TeamBCoverage);
                 return $"Turf War is decided by final painted ground coverage. Paint margin: {margin:0.0} percentage points.";
@@ -254,15 +247,49 @@ public sealed class MatchResultsUI : MonoBehaviour
 
     private void ResolveObjectiveReferences()
     {
-        if (zoneObjective == null)
-        {
-            zoneObjective = FindObjectOfType<SplatZoneObjective>();
-        }
-
         if (towerObjective == null)
         {
             towerObjective = FindObjectOfType<TowerObjective>();
         }
+    }
+
+    private string FormatWinnerLine(Team winningTeam, float paintMargin)
+    {
+        if (gameManager == null)
+        {
+            return string.Empty;
+        }
+
+        if (gameManager.CurrentMatchMode != GameManager.MatchMode.TowerControl)
+        {
+            return winningTeam == Team.None ? "Both teams finished with equal painted coverage." : $"{TeamVisualPalette.GetLabel(winningTeam)} wins by {paintMargin:0.0} percentage points.";
+        }
+
+        ResolveObjectiveReferences();
+
+        if (winningTeam == Team.None)
+        {
+            return "The tower stayed even with no control advantage.";
+        }
+
+        if (towerObjective != null && towerObjective.GoalTeam == winningTeam)
+        {
+            return $"{TeamVisualPalette.GetLabel(winningTeam)} wins by pushing the tower to the goal.";
+        }
+
+        return towerObjective != null
+            ? $"{TeamVisualPalette.GetLabel(winningTeam)} wins with the better tower push."
+            : $"{TeamVisualPalette.GetLabel(winningTeam)} wins the Tower Control round.";
+    }
+
+    private string FormatTowerLead()
+    {
+        if (towerObjective == null || towerObjective.LeadingTeam == Team.None)
+        {
+            return "No tower lead";
+        }
+
+        return $"{TeamVisualPalette.GetLabel(towerObjective.LeadingTeam)} led the tower {towerObjective.RouteProgressPercent:0}%";
     }
 
     private static string FormatControlState(Team team, bool contested)
@@ -279,8 +306,6 @@ public sealed class MatchResultsUI : MonoBehaviour
     {
         switch (mode)
         {
-            case GameManager.MatchMode.SplatZones:
-                return "Splat Zones";
             case GameManager.MatchMode.TowerControl:
                 return "Tower Control";
             default:

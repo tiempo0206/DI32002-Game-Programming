@@ -872,8 +872,6 @@ public sealed class MainMenuController : MonoBehaviour
         {
             case GameManager.MatchMode.TurfWar:
                 return "Turf War";
-            case GameManager.MatchMode.SplatZones:
-                return "Splat Zones";
             case GameManager.MatchMode.TowerControl:
                 return "Tower Control";
             default:
@@ -946,7 +944,7 @@ public sealed class MainMenuController : MonoBehaviour
     {
         selectedMatchMode = selectedMatchMode == GameManager.MatchMode.TowerControl
             ? GameManager.MatchMode.TurfWar
-            : (GameManager.MatchMode)((int)selectedMatchMode + 1);
+            : GameManager.MatchMode.TowerControl;
         PlayerPrefs.SetInt(MatchModePrefKey, (int)selectedMatchMode);
         PlayerPrefs.Save();
         UpdateMenuText();
@@ -1384,12 +1382,12 @@ public sealed class MainMenuController : MonoBehaviour
     {
         int rawMode = PlayerPrefs.GetInt(MatchModePrefKey, (int)GameManager.MatchMode.TurfWar);
 
-        if (rawMode < (int)GameManager.MatchMode.TurfWar || rawMode > (int)GameManager.MatchMode.TowerControl)
+        if (rawMode == (int)GameManager.MatchMode.TowerControl || rawMode == 1)
         {
-            return GameManager.MatchMode.TurfWar;
+            return GameManager.MatchMode.TowerControl;
         }
 
-        return (GameManager.MatchMode)rawMode;
+        return GameManager.MatchMode.TurfWar;
     }
 
     private static void SetButtonText(Button button, string label)
