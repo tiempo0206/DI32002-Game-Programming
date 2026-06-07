@@ -1088,10 +1088,10 @@ public sealed class MainMenuController : MonoBehaviour
 
         playerPreviewCardRenderer = CreatePreviewCard("PlayerCardBackdrop", new Vector3(-2.6f, -0.45f, 0.72f), selectedPlayerCharacterIndex);
         opponentPreviewCardRenderer = CreatePreviewCard("OpponentCardBackdrop", new Vector3(2.6f, -0.45f, 0.72f), selectedOpponentCharacterIndex);
-        playerPreview = CreateCharacterPreview("PlayerPreview", new Vector3(-4.82f, -2.38f, -0.22f), Team.TeamA, selectedPlayerCharacterIndex);
-        opponentPreview = CreateCharacterPreview("OpponentPreview", new Vector3(4.82f, -2.38f, -0.22f), Team.TeamB, selectedOpponentCharacterIndex);
-        playerPreviewPlatformRenderer = CreatePreviewPlatform("PlayerPlatform", new Vector3(-4.82f, -2.52f, -0.22f), selectedPlayerCharacterIndex);
-        opponentPreviewPlatformRenderer = CreatePreviewPlatform("OpponentPlatform", new Vector3(4.82f, -2.52f, -0.22f), selectedOpponentCharacterIndex);
+        playerPreview = CreateCharacterPreview("PlayerPreview", new Vector3(-5.28f, -2.6f, -0.22f), Team.TeamA, selectedPlayerCharacterIndex);
+        opponentPreview = CreateCharacterPreview("OpponentPreview", new Vector3(5.28f, -2.6f, -0.22f), Team.TeamB, selectedOpponentCharacterIndex);
+        playerPreviewPlatformRenderer = CreatePreviewPlatform("PlayerPlatform", new Vector3(-5.28f, -2.76f, -0.22f), selectedPlayerCharacterIndex);
+        opponentPreviewPlatformRenderer = CreatePreviewPlatform("OpponentPlatform", new Vector3(5.28f, -2.76f, -0.22f), selectedOpponentCharacterIndex);
     }
 
     private SpriteRenderer CreatePreviewCard(string name, Vector3 position, int characterIndex)
@@ -1116,7 +1116,7 @@ public sealed class MainMenuController : MonoBehaviour
 
         CharacterPreviewPresenter preview = previewObject.AddComponent<CharacterPreviewPresenter>();
         preview.Configure(characterCatalog, team, index);
-        preview.ConfigureStageFit(1.82f, 1.14f);
+        preview.ConfigureStageFit(2.55f, 1.55f);
         return preview;
     }
 
@@ -1126,7 +1126,7 @@ public sealed class MainMenuController : MonoBehaviour
         platformObject.name = name;
         platformObject.transform.SetParent(characterSelectionPreviewStage.transform, false);
         platformObject.transform.position = position;
-        platformObject.transform.localScale = new Vector3(0.98f, 0.1f, 0.98f);
+        platformObject.transform.localScale = new Vector3(1.32f, 0.11f, 1.32f);
 
         Collider platformCollider = platformObject.GetComponent<Collider>();
         if (platformCollider != null)
