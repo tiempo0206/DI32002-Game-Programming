@@ -77,7 +77,6 @@ jobs:
             'Splat Fighters/Assets/Scripts/Level/SpawnPoint.cs'
             'Splat Fighters/Assets/Scripts/Level/PaintBlocker.cs'
             'Splat Fighters/Assets/Scripts/Level/PaintRouteSurface.cs'
-            'Splat Fighters/Assets/Scripts/Level/SplatZoneObjective.cs'
             'Splat Fighters/Assets/Scripts/Level/TowerObjective.cs'
             'Splat Fighters/Assets/Scripts/Managers/GameManager.cs'
             'Splat Fighters/Assets/Scripts/Managers/MatchTimer.cs'
@@ -94,7 +93,6 @@ jobs:
             'Splat Fighters/Assets/Materials/Level/MAT_Level_Platform.mat'
             'Splat Fighters/Assets/Materials/Level/MAT_Level_PaintRoute.mat'
             'Splat Fighters/Assets/Materials/Level/MAT_Level_Ramp.mat'
-            'Splat Fighters/Assets/Materials/Level/MAT_Level_SplatZone.mat'
             'Splat Fighters/Assets/Materials/Level/MAT_Level_TowerObjective.mat'
             'Splat Fighters/Assets/Materials/Level/MAT_Level_Spawn_TeamA.mat'
             'Splat Fighters/Assets/Materials/Level/MAT_Level_Spawn_TeamB.mat'
@@ -399,7 +397,6 @@ jobs:
             'm_Name: EastPaintRouteUpperDeck'
             'm_Name: EastPaintRouteSurface'
             'm_Name: EastPaintRouteProbe'
-            'm_Name: CenterSplatZone'
             'm_Name: CenterTowerRoute'
             'm_Name: CenterTowerObjective'
             'm_Name: CenterTowerPlatform'
@@ -427,7 +424,6 @@ jobs:
             'guid: 4cf88df31b8c4e5f859ab98461e6d6a5'
             'guid: 322b3e2d5c7a4fe99f839080ec5d0992'
             'guid: 5bc59f8f6ed34b1883bcf162bb96c1d7'
-            'guid: 0b7bd9469b3e4ababafbdc4e50a71b6f'
             'guid: 0297631b5333b42d5a5984b79ba419a4'
             'requirePaintPointNearAreaPlane: 1'
             'rebuildMaskFromPaintBlockersOnAwake: 1'
@@ -457,11 +453,6 @@ jobs:
             'currentTool: 0'
             'shooterKey: 49'
             'rollerKey: 50'
-            'centerZoneObjective: {fileID:'
-            'zoneSize: {x: 7.5, y: 4.2}'
-            'controlThresholdPercent: 55'
-            'minimumPaintedPercent: 18'
-            'refreshInterval: 0.25'
             'centerTowerObjective: {fileID:'
             'controlSize: {x: 4.4, y: 3.2}'
             'moveSpeed: 0.18'
@@ -648,8 +639,8 @@ jobs:
             exit 1
           }
 
-          grep -q 'ZoneText' 'Splat Fighters/Assets/Scripts/UI/ScoreUI.cs' || {
-            echo "Expected ScoreUI Splat Zone text support."
+          grep -q 'ObjectiveText' 'Splat Fighters/Assets/Scripts/UI/ScoreUI.cs' || {
+            echo "Expected ScoreUI objective text support."
             exit 1
           }
 
@@ -743,27 +734,13 @@ jobs:
             }
           done
 
-          required_zone_patterns=(
-            'public class SplatZoneObjective'
-            'ControllingTeam'
-            'IsContested'
-            'GetZoneBounds'
-            'controlThresholdPercent'
-            'minimumPaintedPercent'
-          )
-
-          for pattern in "${required_zone_patterns[@]}"; do
-            grep -q "$pattern" 'Splat Fighters/Assets/Scripts/Level/SplatZoneObjective.cs' || {
-              echo "Missing Splat Zone objective code pattern: $pattern"
-              exit 1
-            }
-          done
-
           required_tower_patterns=(
             'public class TowerObjective'
             'ControllingTeam'
             'IsContested'
             'LeadingTeam'
+            'GoalTeam'
+            'SignedRouteProgress'
             'RouteProgressPercent'
             'GetControlBounds'
             'ResetObjective'
@@ -779,7 +756,7 @@ jobs:
           done
 
           grep -q 'GetTeamCellCountsInWorldBounds' 'Splat Fighters/Assets/Scripts/Painting/PaintManager.cs' || {
-            echo "Expected PaintManager local zone scoring support."
+            echo "Expected PaintManager local objective scoring support."
             exit 1
           }
 

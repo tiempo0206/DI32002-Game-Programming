@@ -333,6 +333,7 @@ public sealed class SplatAudioManager : MonoBehaviour
     private static bool IsGameplayScene(string sceneName)
     {
         return sceneName == "MVP_ShootingTest"
+            || sceneName == "HowToPlayTraining"
             || sceneName.Contains("Shooting")
             || sceneName.Contains("Arena");
     }

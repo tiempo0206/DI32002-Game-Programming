@@ -38,6 +38,8 @@ public class TowerObjective : MonoBehaviour
     public Team ControllingTeam => controllingTeam;
     public bool IsContested => contested;
     public Team LeadingTeam => routeProgress > 0.01f ? Team.TeamA : routeProgress < -0.01f ? Team.TeamB : Team.None;
+    public Team GoalTeam => routeProgress >= 0.999f ? Team.TeamA : routeProgress <= -0.999f ? Team.TeamB : Team.None;
+    public float SignedRouteProgress => routeProgress;
     public float RouteProgressPercent => Mathf.Abs(routeProgress) * 100f;
     public float TeamAPercent => teamAPercent;
     public float TeamBPercent => teamBPercent;
@@ -122,7 +124,12 @@ public class TowerObjective : MonoBehaviour
 
     private void UpdateRouteProgress(float deltaTime)
     {
-        if (contested || controllingTeam == Team.None || deltaTime <= 0f)
+        if (GameManager.Instance != null && GameManager.Instance.CurrentState != GameManager.MatchState.Playing)
+        {
+            return;
+        }
+
+        if (GoalTeam != Team.None || contested || controllingTeam == Team.None || deltaTime <= 0f)
         {
             return;
         }

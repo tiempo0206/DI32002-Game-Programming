@@ -15,7 +15,7 @@ public class ScoreUI : MonoBehaviour
     [SerializeField] private Text inkText = null;
     [SerializeField] private Text healthText = null;
     [SerializeField] private Text specialText = null;
-    [SerializeField] private Text zoneText = null;
+    [SerializeField] private Text objectiveText = null;
     [SerializeField] private Text towerText = null;
     [SerializeField] private Text statusText = null;
     [SerializeField] private Text controlsText = null;
@@ -45,10 +45,6 @@ public class ScoreUI : MonoBehaviour
         bool playerEliminated,
         float playerSpecialPercent,
         bool playerSpecialReady,
-        Team zoneOwner,
-        bool zoneContested,
-        float zoneTeamAPercent,
-        float zoneTeamBPercent,
         Team towerOwner,
         bool towerContested,
         Team towerLeadingTeam,
@@ -101,10 +97,10 @@ public class ScoreUI : MonoBehaviour
             specialText.color = playerSpecialReady ? teamAColor : neutralColor;
         }
 
-        if (zoneText != null)
+        if (objectiveText != null)
         {
-            zoneText.text = FormatObjectiveLine(matchMode, zoneOwner, zoneContested, zoneTeamAPercent, zoneTeamBPercent);
-            zoneText.color = matchMode == GameManager.MatchMode.SplatZones && zoneOwner == Team.TeamA ? teamAColor : matchMode == GameManager.MatchMode.SplatZones && zoneOwner == Team.TeamB ? teamBColor : neutralColor;
+            objectiveText.text = FormatObjectiveLine(matchMode);
+            objectiveText.color = neutralColor;
         }
 
         if (towerText != null)
@@ -174,7 +170,7 @@ public class ScoreUI : MonoBehaviour
         scoreUI.inkText = CreateText(panelObject.transform, "InkText", new Vector2(16f, -122f), 20, FontStyle.Bold);
         scoreUI.healthText = CreateText(panelObject.transform, "HealthText", new Vector2(16f, -150f), 20, FontStyle.Bold);
         scoreUI.specialText = CreateText(panelObject.transform, "SpecialText", new Vector2(16f, -178f), 20, FontStyle.Bold);
-        scoreUI.zoneText = CreateText(panelObject.transform, "ZoneText", new Vector2(16f, -206f), 19, FontStyle.Bold, new Vector2(450f, 32f), TextAnchor.UpperLeft);
+        scoreUI.objectiveText = CreateText(panelObject.transform, "ObjectiveText", new Vector2(16f, -206f), 19, FontStyle.Bold, new Vector2(450f, 32f), TextAnchor.UpperLeft);
         scoreUI.towerText = CreateText(panelObject.transform, "TowerText", new Vector2(16f, -234f), 19, FontStyle.Bold, new Vector2(450f, 32f), TextAnchor.UpperLeft);
         scoreUI.statusText = CreateText(panelObject.transform, "StatusText", new Vector2(16f, -264f), 20, FontStyle.Normal);
         scoreUI.controlsText = CreateText(panelObject.transform, "ControlsText", new Vector2(16f, -292f), 18, FontStyle.Normal, new Vector2(450f, 32f), TextAnchor.UpperLeft);
@@ -189,7 +185,7 @@ public class ScoreUI : MonoBehaviour
 
     private void EnsureRuntimeTextReferences()
     {
-        if (presentationText != null && timerText != null && teamAText != null && teamBText != null && inkText != null && healthText != null && specialText != null && zoneText != null && towerText != null && statusText != null && controlsText != null)
+        if (presentationText != null && timerText != null && teamAText != null && teamBText != null && inkText != null && healthText != null && specialText != null && objectiveText != null && towerText != null && statusText != null && controlsText != null)
         {
             return;
         }
@@ -228,9 +224,9 @@ public class ScoreUI : MonoBehaviour
             {
                 specialText = text;
             }
-            else if (text.name == "ZoneText")
+            else if (text.name == "ObjectiveText")
             {
-                zoneText = text;
+                objectiveText = text;
             }
             else if (text.name == "TowerText")
             {
@@ -423,37 +419,14 @@ public class ScoreUI : MonoBehaviour
         return $"Special: {Mathf.Clamp(playerSpecialPercent, 0f, 100f):0}%";
     }
 
-    private string FormatZone(Team zoneOwner, bool zoneContested, float zoneTeamAPercent, float zoneTeamBPercent)
+    private static string FormatObjectiveLine(GameManager.MatchMode matchMode)
     {
-        if (zoneTeamAPercent < 0f || zoneTeamBPercent < 0f)
+        if (matchMode == GameManager.MatchMode.TowerControl)
         {
-            return "Zone: --";
+            return "Mode: Tower Control | Push the tower to win";
         }
 
-        if (zoneContested)
-        {
-            return $"Zone: Contested | {teamALabel} {zoneTeamAPercent:0}% / {teamBLabel} {zoneTeamBPercent:0}%";
-        }
-
-        if (zoneOwner == Team.TeamA || zoneOwner == Team.TeamB)
-        {
-            return $"Zone: {GetTeamLabel(zoneOwner)} controls | {teamALabel} {zoneTeamAPercent:0}% / {teamBLabel} {zoneTeamBPercent:0}%";
-        }
-
-        return $"Zone: Neutral | {teamALabel} {zoneTeamAPercent:0}% / {teamBLabel} {zoneTeamBPercent:0}%";
-    }
-
-    private string FormatObjectiveLine(GameManager.MatchMode matchMode, Team zoneOwner, bool zoneContested, float zoneTeamAPercent, float zoneTeamBPercent)
-    {
-        switch (matchMode)
-        {
-            case GameManager.MatchMode.SplatZones:
-                return FormatZone(zoneOwner, zoneContested, zoneTeamAPercent, zoneTeamBPercent);
-            case GameManager.MatchMode.TowerControl:
-                return "Mode: Tower Control | Paint pushes tower";
-            default:
-                return "Mode: Turf War | Total paint wins";
-        }
+        return "Mode: Turf War | Total paint wins";
     }
 
     private string FormatTower(Team towerOwner, bool towerContested, Team towerLeadingTeam, float towerProgressPercent, float towerTeamAPercent, float towerTeamBPercent)
@@ -475,7 +448,7 @@ public class ScoreUI : MonoBehaviour
         }
 
         string lead = towerLeadingTeam == Team.TeamA || towerLeadingTeam == Team.TeamB ? GetTeamLabel(towerLeadingTeam) : "Center";
-        return $"Tower: {control} | {lead} {towerProgressPercent:0}%";
+        return $"Tower: {control} | Lead {lead} {towerProgressPercent:0}% | Paint {teamALabel} {towerTeamAPercent:0}% / {teamBLabel} {towerTeamBPercent:0}%";
     }
 
     private string FormatTowerLine(GameManager.MatchMode matchMode, Team towerOwner, bool towerContested, Team towerLeadingTeam, float towerProgressPercent, float towerTeamAPercent, float towerTeamBPercent)
@@ -485,20 +458,13 @@ public class ScoreUI : MonoBehaviour
             return FormatTower(towerOwner, towerContested, towerLeadingTeam, towerProgressPercent, towerTeamAPercent, towerTeamBPercent);
         }
 
-        if (matchMode == GameManager.MatchMode.SplatZones)
-        {
-            return "Tower: inactive | Zone is active";
-        }
-
-        return "Objectives: M cycles demo mode";
+        return "Tower: inactive | M switches to Tower Control";
     }
 
     private static string FormatMatchMode(GameManager.MatchMode matchMode)
     {
         switch (matchMode)
         {
-            case GameManager.MatchMode.SplatZones:
-                return "Splat Zones";
             case GameManager.MatchMode.TowerControl:
                 return "Tower Control";
             default:
