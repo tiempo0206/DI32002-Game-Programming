@@ -175,7 +175,8 @@ public sealed class CharacterSelectionManager : MonoBehaviour
 
         if (visualController == null)
         {
-            visualController = target.AddComponent<CharacterVisualController>();
+            Debug.LogWarning($"{target.name} is missing CharacterVisualController. Rebuild actor prefabs from Tools/Splat Fighters/Apply Actor Prefab Architecture.", target);
+            return null;
         }
 
         visualController.Configure(catalog, team, index);

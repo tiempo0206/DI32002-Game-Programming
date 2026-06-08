@@ -52,6 +52,7 @@ public static class SplatFightersGrayboxMapBuilder
     {
         Scene scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
         EnsureArenaContainmentCollidersInCurrentScene();
+        SplatFightersMapPrefabSetup.ApplyGameplayMapPrefabInCurrentScene();
         EditorSceneManager.SaveScene(scene);
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
@@ -122,6 +123,7 @@ public static class SplatFightersGrayboxMapBuilder
         PositionExistingPlayerAtTeamASpawn(teamAPlayerMaterial);
         PositionExistingCameraForGrayboxMap();
         ConfigureGameManagerForMatchFlow();
+        SplatFightersMapPrefabSetup.ApplyGameplayMapPrefabInCurrentScene();
 
         EditorSceneManager.MarkSceneDirty(SceneManager.GetActiveScene());
     }
@@ -741,6 +743,7 @@ public static class SplatFightersGrayboxMapBuilder
 
         AssignMaterial(bot, teamBMaterial);
         TeamVisualBinder visualBinder = bot.AddComponent<TeamVisualBinder>();
+        bot.AddComponent<CharacterVisualController>();
         visualBinder.Configure(Team.TeamB, null, teamBMaterial);
         CharacterHealth health = bot.AddComponent<CharacterHealth>();
         ConfigureCharacterHealth(health, Team.TeamB, bot.transform);
@@ -882,6 +885,10 @@ public static class SplatFightersGrayboxMapBuilder
         ConfigurePlayerSpecialPaintBurst(player);
         ConfigurePlayerRollerTool(player, teamAMaterial);
         ConfigurePlayerToolSwitcher(player);
+        if (player.GetComponent<CharacterVisualController>() == null)
+        {
+            player.AddComponent<CharacterVisualController>();
+        }
         visualBinder.Configure(Team.TeamA, teamAMaterial, null);
         EditorUtility.SetDirty(player);
         EditorUtility.SetDirty(visualBinder);

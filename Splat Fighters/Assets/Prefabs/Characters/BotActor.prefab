@@ -1,0 +1,284 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1095970006530590866
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3658419383222804572}
+  m_Layer: 0
+  m_Name: TeamBBotFirePoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3658419383222804572
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1095970006530590866}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.35, z: 0.7}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1931439844001632157}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2225240407200918460
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1931439844001632157}
+  - component: {fileID: 2130283290311754456}
+  - component: {fileID: 5841207763751186971}
+  - component: {fileID: 5071548867962824069}
+  - component: {fileID: 8010027710734734935}
+  - component: {fileID: 6583745551069849105}
+  - component: {fileID: 7652008831328257474}
+  - component: {fileID: 6575433467485595569}
+  - component: {fileID: 7550884521586228921}
+  m_Layer: 0
+  m_Name: BotActor
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1931439844001632157
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2225240407200918460}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 3658419383222804572}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!33 &2130283290311754456
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2225240407200918460}
+  m_Mesh: {fileID: 10208, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!23 &5841207763751186971
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2225240407200918460}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: ee07f6abdd1964429868fa0d1187932c, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 1
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!143 &5071548867962824069
+CharacterController:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2225240407200918460}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Height: 1.6
+  m_Radius: 0.4
+  m_SlopeLimit: 45
+  m_StepOffset: 0.24
+  m_SkinWidth: 0.08
+  m_MinMoveDistance: 0.001
+  m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &8010027710734734935
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2225240407200918460}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 13b1c0840c8ae4d04a8bf41efc3983d2, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  team: 2
+  includeChildRenderers: 1
+  targetRenderers:
+  - {fileID: 5841207763751186971}
+  useMaterialOverride: 1
+  teamAMaterial: {fileID: 0}
+  teamBMaterial: {fileID: 2100000, guid: ee07f6abdd1964429868fa0d1187932c, type: 2}
+  applyOnAwake: 1
+--- !u!114 &6583745551069849105
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2225240407200918460}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f848a4244c6f82f438a688ce9198be84, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+--- !u!114 &7652008831328257474
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2225240407200918460}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 99b3fd09d15047b9974b269018228d40, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  team: 2
+  maxHealth: 100
+  enemyPaintDamagePerSecond: 35
+  damageOnlyDuringMatch: 1
+  groundProbe: {fileID: 1931439844001632157}
+  hideRenderersWhileEliminated: 1
+--- !u!114 &6575433467485595569
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2225240407200918460}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9f50435939f6424ab08cbe9f42d2f52c, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  projectilePrefab: {fileID: 8914654099017126361, guid: 61133498500374bf7bb40b1a39f7adfd,
+    type: 3}
+  firePoint: {fileID: 3658419383222804572}
+  team: 2
+  projectileSpeed: 18
+  paintRadius: 1.6
+  fireCooldown: 0.35
+  useInkResource: 1
+  maxInk: 100
+  inkPerShot: 10
+  inkRecoveryPerSecond: 12
+  ownPaintRecoveryMultiplier: 3.5
+  startWithFullInk: 1
+  groundProbe: {fileID: 1931439844001632157}
+  useCameraAim: 0
+  aimCamera: {fileID: 0}
+  maxAimDistance: 100
+  aimLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  paintDirectlyAtAimTarget: 1
+  projectileIsVisualOnlyWhenDirectPainting: 1
+  applyTeamColorToProjectile: 1
+  teamAProjectileColor: {r: 0.05, g: 0.45, b: 1, a: 1}
+  teamBProjectileColor: {r: 1, g: 0.45, b: 0.05, a: 1}
+  enableKeyboardTestFire: 0
+  testFireKey: 323
+--- !u!114 &7550884521586228921
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2225240407200918460}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e65d3f35aa204309aead02ea2b17a67a, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  characterController: {fileID: 5071548867962824069}
+  weapon: {fileID: 6575433467485595569}
+  health: {fileID: 7652008831328257474}
+  firePoint: {fileID: 3658419383222804572}
+  botTeam: 2
+  priorityPaintTargetTeam: 1
+  difficulty: 1
+  loadDifficultyFromPreferences: 1
+  waypoints: []
+  retreatTarget: {fileID: 0}
+  patrolOnStart: 1
+  moveSpeed: 3.2
+  turnSpeed: 540
+  waypointReachDistance: 0.6
+  fireOnStart: 1
+  paintTargets: []
+  useTerritoryAwareAim: 1
+  targetUnpaintedCellsAfterEnemyPaint: 1
+  territorySearchRadius: 22
+  fireInterval: 0.65
+  aimRefreshInterval: 1.2
+  fallbackAimDistance: 4
+  aimErrorRadius: 0.55
+  retreatWhenPressured: 1
+  lowInkRetreatPercent: 28
+  resumeInkPercent: 62
+  lowHealthRetreatPercent: 45
+  retreatReachDistance: 0.9
+  retreatRecoveryMultiplier: 1.35
+  gravity: -25
+  groundedStickForce: -2
+  drawGizmos: 1
+  waypointGizmoColor: {r: 1, g: 0.45, b: 0.05, a: 0.85}
+  aimGizmoColor: {r: 1, g: 0.75, b: 0.05, a: 0.85}
