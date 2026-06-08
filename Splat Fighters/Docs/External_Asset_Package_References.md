@@ -8,7 +8,7 @@ This document lists the external asset packages currently present in the Splat F
 
 The project does not use Nintendo, Splatoon, or other copyrighted commercial game assets. External assets are used only as presentation, character, or plugin support around the original Splat Fighters gameplay code.
 
-Project-original generated audio is documented separately in `Generated_Audio_Notes.md` because it is not an external asset package.
+Project-original procedural audio is documented separately in `Audio_Asset_Notes.md` because it is not an external asset package.
 
 ## Summary Table
 

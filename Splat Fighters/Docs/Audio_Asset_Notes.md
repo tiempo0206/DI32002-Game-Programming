@@ -1,10 +1,10 @@
-# Generated Audio Notes
+# Audio Asset Notes
 
 Last updated: 2026-06-07
 
 ## Source
 
-The current Splat Fighters music and sound effects are project-original procedural audio assets generated locally for this course project. No third-party audio, Nintendo audio, Splatoon audio, or public sound-library downloads were copied into this increment.
+The current Splat Fighters music and sound effects are project-original procedural audio assets created locally for this course project. No third-party audio, Nintendo audio, Splatoon audio, or public sound-library downloads were copied into this increment.
 
 ## Asset List
 
@@ -30,4 +30,4 @@ The current Splat Fighters music and sound effects are project-original procedur
 
 ## Attribution
 
-Attribution for these audio files should be listed as: "Original procedural audio generated for Splat Fighters by the project team." No external source URL is required because the files are not public or third-party imports.
+Attribution for these audio files should be listed as: "Original procedural audio created for Splat Fighters by the project team." No external source URL is required because the files are not public or third-party imports.

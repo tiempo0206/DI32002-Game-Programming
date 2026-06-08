@@ -17,7 +17,7 @@ The first lightweight menu increment is implemented in the current development b
 - The `How To Play` panel explains the Turf War objective, core controls, swim behavior, enemy-ink slowdown, tool switching, pause, restart, and special paint burst.
 - `Start Game` now opens a `Select Fighters` screen before loading the arena.
 - The selection screen previews animated 3D Team A and Team B characters, lets the player choose both sides independently, and applies each selected character's signature ink color to the preview and gameplay arena.
-- The menu remains intentionally lightweight. A later visual art pass will add a generated background image and refined presentation assets without changing the navigation flow.
+- The menu remains intentionally lightweight. A later visual art pass will add a project-original background image and refined presentation assets without changing the navigation flow.
 
 ## Peer Feedback Summary
 
