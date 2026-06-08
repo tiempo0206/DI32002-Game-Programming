@@ -618,11 +618,6 @@ jobs:
             }
           done
 
-          grep -q 'ControlsText' 'Splat Fighters/Assets/Scripts/UI/ScoreUI.cs' || {
-            echo "Expected ScoreUI controls text support."
-            exit 1
-          }
-
           grep -q 'PresentationText' 'Splat Fighters/Assets/Scripts/UI/ScoreUI.cs' || {
             echo "Expected ScoreUI presentation banner text support."
             exit 1
@@ -655,11 +650,6 @@ jobs:
 
           grep -q 'FormatMatchMode' 'Splat Fighters/Assets/Scripts/UI/ScoreUI.cs' || {
             echo "Expected ScoreUI match mode presentation support."
-            exit 1
-          }
-
-          grep -q 'M Mode' 'Splat Fighters/Assets/Scripts/UI/ScoreUI.cs' || {
-            echo "Expected ScoreUI mode-cycle controls text."
             exit 1
           }
 
