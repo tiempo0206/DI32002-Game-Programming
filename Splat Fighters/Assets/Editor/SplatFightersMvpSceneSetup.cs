@@ -301,6 +301,7 @@ public static class SplatFightersMvpSceneSetup
         PlayerToolSwitcher toolSwitcher = player.AddComponent<PlayerToolSwitcher>();
         AimController aimController = player.AddComponent<AimController>();
         TeamVisualBinder visualBinder = player.AddComponent<TeamVisualBinder>();
+        player.AddComponent<CharacterVisualController>();
         visualBinder.Configure(Team.TeamA, shooterMaterial, null);
 
         ConfigureCharacterHealth(health, Team.TeamA, player.transform);

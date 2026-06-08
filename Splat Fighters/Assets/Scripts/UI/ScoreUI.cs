@@ -7,6 +7,9 @@ using UnityEngine.UI;
 /// </summary>
 public class ScoreUI : MonoBehaviour
 {
+    private const float HudBarWidth = 356f;
+    private const float TowerBarWidth = 476f;
+
     [Header("Text References")]
     [SerializeField] private Text presentationText = null;
     [SerializeField] private Text timerText = null;
@@ -18,7 +21,20 @@ public class ScoreUI : MonoBehaviour
     [SerializeField] private Text objectiveText = null;
     [SerializeField] private Text towerText = null;
     [SerializeField] private Text statusText = null;
-    [SerializeField] private Text controlsText = null;
+
+    [Header("Bar References")]
+    [SerializeField] private RectTransform teamACoverageFill = null;
+    [SerializeField] private RectTransform teamBCoverageFill = null;
+    [SerializeField] private RectTransform towerProgressFill = null;
+    [SerializeField] private RectTransform inkFill = null;
+    [SerializeField] private RectTransform healthFill = null;
+    [SerializeField] private RectTransform specialFill = null;
+    [SerializeField] private Image teamACoverageImage = null;
+    [SerializeField] private Image teamBCoverageImage = null;
+    [SerializeField] private Image towerProgressImage = null;
+    [SerializeField] private Image inkImage = null;
+    [SerializeField] private Image healthImage = null;
+    [SerializeField] private Image specialImage = null;
 
     [Header("Formatting")]
     [SerializeField] private string teamALabel = TeamVisualPalette.TeamALabel;
@@ -55,6 +71,8 @@ public class ScoreUI : MonoBehaviour
         EnsureRuntimeTextReferences();
         teamAColor = TeamVisualPalette.GetColor(Team.TeamA);
         teamBColor = TeamVisualPalette.GetColor(Team.TeamB);
+        Color warningColor = new Color(1f, 0.32f, 0.18f, 1f);
+        Color specialColor = playerSpecialReady ? new Color(1f, 0.92f, 0.18f, 1f) : teamAColor;
 
         if (presentationText != null)
         {
@@ -73,11 +91,15 @@ public class ScoreUI : MonoBehaviour
             teamAText.color = teamAColor;
         }
 
+        UpdateHorizontalFill(teamACoverageFill, teamACoverageImage, teamACoverage, HudBarWidth, teamAColor);
+
         if (teamBText != null)
         {
             teamBText.text = $"{teamBLabel}: {teamBCoverage:0.0}%";
             teamBText.color = teamBColor;
         }
+
+        UpdateHorizontalFill(teamBCoverageFill, teamBCoverageImage, teamBCoverage, HudBarWidth, teamBColor);
 
         if (inkText != null)
         {
@@ -85,17 +107,23 @@ public class ScoreUI : MonoBehaviour
             inkText.color = playerOnEnemyPaint ? teamBColor : playerOnOwnPaint || playerSwimming ? teamAColor : neutralColor;
         }
 
+        UpdateHorizontalFill(inkFill, inkImage, playerInkPercent, HudBarWidth, playerHasEnoughInk ? teamAColor : warningColor);
+
         if (healthText != null)
         {
             healthText.text = FormatHealth(playerHealthPercent, playerEliminated);
             healthText.color = playerEliminated ? teamBColor : neutralColor;
         }
 
+        UpdateHorizontalFill(healthFill, healthImage, playerHealthPercent, HudBarWidth, playerHealthPercent > 35f ? neutralColor : warningColor);
+
         if (specialText != null)
         {
             specialText.text = FormatSpecial(playerSpecialPercent, playerSpecialReady);
-            specialText.color = playerSpecialReady ? teamAColor : neutralColor;
+            specialText.color = playerSpecialReady ? specialColor : neutralColor;
         }
+
+        UpdateHorizontalFill(specialFill, specialImage, playerSpecialPercent, HudBarWidth, specialColor);
 
         if (objectiveText != null)
         {
@@ -109,17 +137,15 @@ public class ScoreUI : MonoBehaviour
             towerText.color = matchMode == GameManager.MatchMode.TowerControl && towerOwner == Team.TeamA ? teamAColor : matchMode == GameManager.MatchMode.TowerControl && towerOwner == Team.TeamB ? teamBColor : neutralColor;
         }
 
+        Color towerColor = towerLeadingTeam == Team.TeamA ? teamAColor : towerLeadingTeam == Team.TeamB ? teamBColor : neutralColor;
+        UpdateHorizontalFill(towerProgressFill, towerProgressImage, matchMode == GameManager.MatchMode.TowerControl ? towerProgressPercent : 0f, TowerBarWidth, towerColor);
+
         if (statusText != null)
         {
             statusText.text = FormatStatus(state, winningTeam);
             statusText.color = neutralColor;
         }
 
-        if (controlsText != null)
-        {
-            controlsText.text = FormatControls(state);
-            controlsText.color = neutralColor;
-        }
     }
 
     public static ScoreUI CreateRuntimeScoreUI()
@@ -143,10 +169,10 @@ public class ScoreUI : MonoBehaviour
         bannerRect.anchorMax = new Vector2(0.5f, 1f);
         bannerRect.pivot = new Vector2(0.5f, 1f);
         bannerRect.anchoredPosition = new Vector2(0f, -24f);
-        bannerRect.sizeDelta = new Vector2(820f, 96f);
+        bannerRect.sizeDelta = new Vector2(880f, 92f);
 
         Image bannerImage = bannerObject.AddComponent<Image>();
-        bannerImage.color = new Color(0f, 0f, 0f, 0.5f);
+        bannerImage.color = new Color(0.015f, 0.018f, 0.024f, 0.68f);
         bannerImage.raycastTarget = false;
 
         GameObject panelObject = new GameObject("ScorePanel");
@@ -156,24 +182,29 @@ public class ScoreUI : MonoBehaviour
         panelRect.anchorMax = new Vector2(0f, 1f);
         panelRect.pivot = new Vector2(0f, 1f);
         panelRect.anchoredPosition = new Vector2(24f, -24f);
-        panelRect.sizeDelta = new Vector2(500f, 336f);
+        panelRect.sizeDelta = new Vector2(540f, 468f);
 
         Image panelImage = panelObject.AddComponent<Image>();
-        panelImage.color = new Color(0f, 0f, 0f, 0.45f);
+        panelImage.color = new Color(0.015f, 0.018f, 0.024f, 0.72f);
         panelImage.raycastTarget = false;
 
         ScoreUI scoreUI = canvasObject.AddComponent<ScoreUI>();
-        scoreUI.presentationText = CreateText(bannerObject.transform, "PresentationText", new Vector2(16f, -14f), 28, FontStyle.Bold, new Vector2(788f, 68f), TextAnchor.MiddleCenter);
-        scoreUI.timerText = CreateText(panelObject.transform, "TimerText", new Vector2(16f, -12f), 32, FontStyle.Bold);
-        scoreUI.teamAText = CreateText(panelObject.transform, "TeamAText", new Vector2(16f, -58f), 24, FontStyle.Bold);
-        scoreUI.teamBText = CreateText(panelObject.transform, "TeamBText", new Vector2(16f, -90f), 24, FontStyle.Bold);
-        scoreUI.inkText = CreateText(panelObject.transform, "InkText", new Vector2(16f, -122f), 20, FontStyle.Bold);
-        scoreUI.healthText = CreateText(panelObject.transform, "HealthText", new Vector2(16f, -150f), 20, FontStyle.Bold);
-        scoreUI.specialText = CreateText(panelObject.transform, "SpecialText", new Vector2(16f, -178f), 20, FontStyle.Bold);
-        scoreUI.objectiveText = CreateText(panelObject.transform, "ObjectiveText", new Vector2(16f, -206f), 19, FontStyle.Bold, new Vector2(450f, 32f), TextAnchor.UpperLeft);
-        scoreUI.towerText = CreateText(panelObject.transform, "TowerText", new Vector2(16f, -234f), 19, FontStyle.Bold, new Vector2(450f, 32f), TextAnchor.UpperLeft);
-        scoreUI.statusText = CreateText(panelObject.transform, "StatusText", new Vector2(16f, -264f), 20, FontStyle.Normal);
-        scoreUI.controlsText = CreateText(panelObject.transform, "ControlsText", new Vector2(16f, -292f), 18, FontStyle.Normal, new Vector2(450f, 32f), TextAnchor.UpperLeft);
+        scoreUI.presentationText = CreateText(bannerObject.transform, "PresentationText", new Vector2(20f, -12f), 28, FontStyle.Bold, new Vector2(840f, 68f), TextAnchor.MiddleCenter);
+        scoreUI.timerText = CreateText(panelObject.transform, "TimerText", new Vector2(18f, -14f), 34, FontStyle.Bold, new Vector2(172f, 42f), TextAnchor.UpperLeft);
+        scoreUI.statusText = CreateText(panelObject.transform, "StatusText", new Vector2(204f, -20f), 21, FontStyle.Bold, new Vector2(300f, 32f), TextAnchor.UpperRight);
+        scoreUI.teamAText = CreateText(panelObject.transform, "TeamAText", new Vector2(18f, -64f), 23, FontStyle.Bold, new Vector2(500f, 28f), TextAnchor.UpperLeft);
+        CreateBar(panelObject.transform, "TeamACoverageBar", new Vector2(18f, -96f), new Vector2(HudBarWidth, 18f), TeamVisualPalette.GetColor(Team.TeamA), out scoreUI.teamACoverageFill, out scoreUI.teamACoverageImage);
+        scoreUI.teamBText = CreateText(panelObject.transform, "TeamBText", new Vector2(18f, -124f), 23, FontStyle.Bold, new Vector2(500f, 28f), TextAnchor.UpperLeft);
+        CreateBar(panelObject.transform, "TeamBCoverageBar", new Vector2(18f, -156f), new Vector2(HudBarWidth, 18f), TeamVisualPalette.GetColor(Team.TeamB), out scoreUI.teamBCoverageFill, out scoreUI.teamBCoverageImage);
+        scoreUI.objectiveText = CreateText(panelObject.transform, "ObjectiveText", new Vector2(18f, -196f), 19, FontStyle.Bold, new Vector2(500f, 28f), TextAnchor.UpperLeft);
+        scoreUI.towerText = CreateText(panelObject.transform, "TowerText", new Vector2(18f, -226f), 18, FontStyle.Bold, new Vector2(500f, 48f), TextAnchor.UpperLeft);
+        CreateBar(panelObject.transform, "TowerProgressBar", new Vector2(18f, -278f), new Vector2(TowerBarWidth, 14f), Color.white, out scoreUI.towerProgressFill, out scoreUI.towerProgressImage);
+        scoreUI.inkText = CreateText(panelObject.transform, "InkText", new Vector2(18f, -310f), 19, FontStyle.Bold, new Vector2(500f, 26f), TextAnchor.UpperLeft);
+        CreateBar(panelObject.transform, "InkBar", new Vector2(18f, -336f), new Vector2(HudBarWidth, 14f), TeamVisualPalette.GetColor(Team.TeamA), out scoreUI.inkFill, out scoreUI.inkImage);
+        scoreUI.healthText = CreateText(panelObject.transform, "HealthText", new Vector2(18f, -362f), 19, FontStyle.Bold, new Vector2(500f, 26f), TextAnchor.UpperLeft);
+        CreateBar(panelObject.transform, "HealthBar", new Vector2(18f, -388f), new Vector2(HudBarWidth, 14f), Color.white, out scoreUI.healthFill, out scoreUI.healthImage);
+        scoreUI.specialText = CreateText(panelObject.transform, "SpecialText", new Vector2(18f, -414f), 19, FontStyle.Bold, new Vector2(500f, 26f), TextAnchor.UpperLeft);
+        CreateBar(panelObject.transform, "SpecialBar", new Vector2(18f, -438f), new Vector2(HudBarWidth, 14f), new Color(1f, 0.92f, 0.18f, 1f), out scoreUI.specialFill, out scoreUI.specialImage);
 
         return scoreUI;
     }
@@ -185,7 +216,7 @@ public class ScoreUI : MonoBehaviour
 
     private void EnsureRuntimeTextReferences()
     {
-        if (presentationText != null && timerText != null && teamAText != null && teamBText != null && inkText != null && healthText != null && specialText != null && objectiveText != null && towerText != null && statusText != null && controlsText != null)
+        if (presentationText != null && timerText != null && teamAText != null && teamBText != null && inkText != null && healthText != null && specialText != null && objectiveText != null && towerText != null && statusText != null && teamACoverageFill != null && teamBCoverageFill != null && towerProgressFill != null && inkFill != null && healthFill != null && specialFill != null)
         {
             return;
         }
@@ -236,9 +267,43 @@ public class ScoreUI : MonoBehaviour
             {
                 statusText = text;
             }
-            else if (text.name == "ControlsText")
+        }
+
+        RectTransform[] rects = GetComponentsInChildren<RectTransform>(true);
+
+        for (int i = 0; i < rects.Length; i++)
+        {
+            RectTransform rect = rects[i];
+
+            if (rect.name == "TeamACoverageBarFill")
             {
-                controlsText = text;
+                teamACoverageFill = rect;
+                teamACoverageImage = rect.GetComponent<Image>();
+            }
+            else if (rect.name == "TeamBCoverageBarFill")
+            {
+                teamBCoverageFill = rect;
+                teamBCoverageImage = rect.GetComponent<Image>();
+            }
+            else if (rect.name == "TowerProgressBarFill")
+            {
+                towerProgressFill = rect;
+                towerProgressImage = rect.GetComponent<Image>();
+            }
+            else if (rect.name == "InkBarFill")
+            {
+                inkFill = rect;
+                inkImage = rect.GetComponent<Image>();
+            }
+            else if (rect.name == "HealthBarFill")
+            {
+                healthFill = rect;
+                healthImage = rect.GetComponent<Image>();
+            }
+            else if (rect.name == "SpecialBarFill")
+            {
+                specialFill = rect;
+                specialImage = rect.GetComponent<Image>();
             }
         }
     }
@@ -265,12 +330,62 @@ public class ScoreUI : MonoBehaviour
         text.fontSize = fontSize;
         text.fontStyle = fontStyle;
         text.alignment = alignment;
-        text.horizontalOverflow = HorizontalWrapMode.Overflow;
+        text.horizontalOverflow = HorizontalWrapMode.Wrap;
         text.verticalOverflow = VerticalWrapMode.Overflow;
         text.color = Color.white;
         text.raycastTarget = false;
 
         return text;
+    }
+
+    private static void CreateBar(Transform parent, string name, Vector2 anchoredPosition, Vector2 size, Color fillColor, out RectTransform fillRect, out Image fillImage)
+    {
+        GameObject trackObject = new GameObject(name);
+        trackObject.transform.SetParent(parent, false);
+
+        RectTransform trackRect = trackObject.AddComponent<RectTransform>();
+        trackRect.anchorMin = new Vector2(0f, 1f);
+        trackRect.anchorMax = new Vector2(0f, 1f);
+        trackRect.pivot = new Vector2(0f, 1f);
+        trackRect.anchoredPosition = anchoredPosition;
+        trackRect.sizeDelta = size;
+
+        Image trackImage = trackObject.AddComponent<Image>();
+        trackImage.color = new Color(1f, 1f, 1f, 0.12f);
+        trackImage.raycastTarget = false;
+
+        GameObject fillObject = new GameObject($"{name}Fill");
+        fillObject.transform.SetParent(trackObject.transform, false);
+
+        fillRect = fillObject.AddComponent<RectTransform>();
+        fillRect.anchorMin = new Vector2(0f, 0f);
+        fillRect.anchorMax = new Vector2(0f, 1f);
+        fillRect.pivot = new Vector2(0f, 0.5f);
+        fillRect.offsetMin = Vector2.zero;
+        fillRect.offsetMax = Vector2.zero;
+        fillRect.sizeDelta = new Vector2(0f, 0f);
+
+        fillImage = fillObject.AddComponent<Image>();
+        fillImage.color = fillColor;
+        fillImage.raycastTarget = false;
+    }
+
+    private static void UpdateHorizontalFill(RectTransform fill, Image image, float percent, float fallbackWidth, Color color)
+    {
+        if (image != null)
+        {
+            image.color = color;
+        }
+
+        if (fill == null)
+        {
+            return;
+        }
+
+        float normalized = percent < 0f ? 0f : Mathf.Clamp01(percent / 100f);
+        RectTransform track = fill.parent as RectTransform;
+        float width = track != null && track.rect.width > 0.01f ? track.rect.width : fallbackWidth;
+        fill.sizeDelta = new Vector2(width * normalized, 0f);
     }
 
     private static Font GetDefaultFont()
@@ -334,21 +449,6 @@ public class ScoreUI : MonoBehaviour
                 return winningTeam == Team.None ? "Draw - press R to restart" : $"{GetTeamLabel(winningTeam)} wins - press R to restart";
             default:
                 return "Ready";
-        }
-    }
-
-    private static string FormatControls(GameManager.MatchState state)
-    {
-        switch (state)
-        {
-            case GameManager.MatchState.Playing:
-                return "1 Shooter | 2 Roller | Shift Swim | Q Special | M Mode";
-            case GameManager.MatchState.Paused:
-                return "1/2 Tool | M Mode | R Restart | P Resume";
-            case GameManager.MatchState.Finished:
-                return "1/2 Tool | M Mode | R Restart";
-            default:
-                return "Enter Start | 1/2 Tool | M Mode | R Restart";
         }
     }
 

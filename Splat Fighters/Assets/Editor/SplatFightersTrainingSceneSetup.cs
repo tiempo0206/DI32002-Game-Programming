@@ -53,6 +53,7 @@ public static class SplatFightersTrainingSceneSetup
         ConfigureCameraFollow(camera, player.transform);
         CreateTrainingLessonCanvas(player, paintManager);
         CreateEventSystem();
+        SplatFightersActorPrefabSetup.ApplyTrainingActorPrefabsInCurrentScene();
 
         EditorSceneManager.SaveScene(scene, TrainingScenePath);
         EnsureBuildSettings();
