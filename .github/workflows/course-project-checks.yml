@@ -541,14 +541,14 @@ jobs:
             exit 1
           }
 
-          paint_blocker_count="$(grep -c 'guid: 6eae5c84c8a24551a6a1738913276ea9' "$scene")"
+          paint_blocker_count="$({ grep -h -o 'guid: 6eae5c84c8a24551a6a1738913276ea9' "$map_prefab" || true; } | wc -l)"
 
           if [ "$paint_blocker_count" -lt 20 ]; then
             echo "Expected at least 20 PaintBlocker components in the arena map, found $paint_blocker_count."
             exit 1
           fi
 
-          team_visual_binder_count="$(grep -c 'guid: 13b1c0840c8ae4d04a8bf41efc3983d2' "$scene")"
+          team_visual_binder_count="$({ grep -h -o 'guid: 13b1c0840c8ae4d04a8bf41efc3983d2' "$player_actor_prefab" "$bot_actor_prefab" || true; } | wc -l)"
           if [ "$team_visual_binder_count" -lt 2 ]; then
             echo "Expected TeamVisualBinder on both player and TeamB bot, found $team_visual_binder_count."
             exit 1
@@ -986,19 +986,19 @@ jobs:
             exit 1
           fi
 
-          patrol_count="$(grep -c 'm_Name: TeamBBotPatrol_' "$map_prefab")"
+          patrol_count="$({ grep -h -o 'm_Name: TeamBBotPatrol_' "$map_prefab" || true; } | wc -l)"
           if [ "$patrol_count" -lt 4 ]; then
             echo "Expected at least 4 TeamB bot patrol points, found $patrol_count."
             exit 1
           fi
 
-          paint_target_count="$(grep -c 'm_Name: TeamBBotPaintTarget_' "$map_prefab")"
+          paint_target_count="$({ grep -h -o 'm_Name: TeamBBotPaintTarget_' "$map_prefab" || true; } | wc -l)"
           if [ "$paint_target_count" -lt 4 ]; then
             echo "Expected at least 4 TeamB bot paint targets, found $paint_target_count."
             exit 1
           fi
 
-          compact_controller_count="$(grep -h -o 'm_Height: 1.6' "$player_actor_prefab" "$bot_actor_prefab" | wc -l)"
+          compact_controller_count="$({ grep -h -o 'm_Height: 1.6' "$player_actor_prefab" "$bot_actor_prefab" || true; } | wc -l)"
           if [ "$compact_controller_count" -lt 2 ]; then
             echo "Expected compact CharacterController settings for player and TeamB bot, found $compact_controller_count."
             exit 1
