@@ -10,11 +10,14 @@ using UnityEngine.UI;
 public sealed class MatchResultsUI : MonoBehaviour
 {
     private const float CoverageBarWidth = 420f;
+    private const float TowerRouteBarWidth = 500f;
 
     [Header("References")]
     [SerializeField] private GameManager gameManager = null;
     [SerializeField] private CanvasGroup resultsGroup = null;
+    [SerializeField] private Image outcomeStripeImage = null;
     [SerializeField] private Text titleText = null;
+    [SerializeField] private Text subtitleText = null;
     [SerializeField] private Text winnerText = null;
     [SerializeField] private Text modeText = null;
     [SerializeField] private Text scoreText = null;
@@ -22,10 +25,13 @@ public sealed class MatchResultsUI : MonoBehaviour
     [SerializeField] private Text controlsText = null;
     [SerializeField] private Text teamALabelText = null;
     [SerializeField] private Text teamBLabelText = null;
+    [SerializeField] private Text towerRouteLabelText = null;
     [SerializeField] private RectTransform teamABarFill = null;
     [SerializeField] private RectTransform teamBBarFill = null;
+    [SerializeField] private RectTransform towerRouteFill = null;
     [SerializeField] private Image teamABarImage = null;
     [SerializeField] private Image teamBBarImage = null;
+    [SerializeField] private Image towerRouteImage = null;
     [SerializeField] private Button restartButton = null;
     [SerializeField] private Button resetButton = null;
     [SerializeField] private Button closeButton = null;
@@ -54,29 +60,40 @@ public sealed class MatchResultsUI : MonoBehaviour
         RectTransform backdropRect = backdropObject.GetComponent<RectTransform>();
         StretchToParent(backdropRect);
 
-        GameObject panelObject = CreateImageObject(canvasObject.transform, "ResultsPanel", new Color(0.03f, 0.045f, 0.06f, 0.96f));
+        GameObject panelObject = CreateImageObject(canvasObject.transform, "ResultsPanel", new Color(0.025f, 0.032f, 0.045f, 0.97f));
         RectTransform panelRect = panelObject.GetComponent<RectTransform>();
         panelRect.anchorMin = new Vector2(0.5f, 0.5f);
         panelRect.anchorMax = new Vector2(0.5f, 0.5f);
         panelRect.pivot = new Vector2(0.5f, 0.5f);
         panelRect.anchoredPosition = Vector2.zero;
-        panelRect.sizeDelta = new Vector2(820f, 620f);
+        panelRect.sizeDelta = new Vector2(900f, 680f);
 
         MatchResultsUI resultsUI = canvasObject.AddComponent<MatchResultsUI>();
         resultsUI.resultsGroup = group;
-        resultsUI.titleText = CreateText(panelObject.transform, "ResultsTitleText", new Vector2(0f, -42f), new Vector2(740f, 62f), 42, FontStyle.Bold, TextAnchor.MiddleCenter);
-        resultsUI.winnerText = CreateText(panelObject.transform, "ResultsWinnerText", new Vector2(0f, -110f), new Vector2(740f, 44f), 25, FontStyle.Bold, TextAnchor.MiddleCenter);
-        resultsUI.modeText = CreateText(panelObject.transform, "ResultsModeText", new Vector2(0f, -158f), new Vector2(740f, 36f), 22, FontStyle.Normal, TextAnchor.MiddleCenter);
-        resultsUI.scoreText = CreateText(panelObject.transform, "ResultsScoreText", new Vector2(0f, -204f), new Vector2(740f, 44f), 26, FontStyle.Bold, TextAnchor.MiddleCenter);
+        GameObject stripeObject = CreateImageObject(panelObject.transform, "ResultsOutcomeStripe", new Color(1f, 1f, 1f, 0.88f));
+        RectTransform stripeRect = stripeObject.GetComponent<RectTransform>();
+        stripeRect.anchorMin = new Vector2(0.5f, 1f);
+        stripeRect.anchorMax = new Vector2(0.5f, 1f);
+        stripeRect.pivot = new Vector2(0.5f, 1f);
+        stripeRect.anchoredPosition = new Vector2(0f, -14f);
+        stripeRect.sizeDelta = new Vector2(812f, 10f);
+        resultsUI.outcomeStripeImage = stripeObject.GetComponent<Image>();
 
-        CreateCoverageBar(panelObject.transform, "TeamACoverageBar", new Vector2(260f, -282f), Team.TeamA, out resultsUI.teamALabelText, out resultsUI.teamABarFill, out resultsUI.teamABarImage);
-        CreateCoverageBar(panelObject.transform, "TeamBCoverageBar", new Vector2(260f, -348f), Team.TeamB, out resultsUI.teamBLabelText, out resultsUI.teamBBarFill, out resultsUI.teamBBarImage);
+        resultsUI.titleText = CreateText(panelObject.transform, "ResultsTitleText", new Vector2(0f, -38f), new Vector2(800f, 64f), 46, FontStyle.Bold, TextAnchor.MiddleCenter);
+        resultsUI.subtitleText = CreateText(panelObject.transform, "ResultsSubtitleText", new Vector2(0f, -100f), new Vector2(800f, 34f), 20, FontStyle.Bold, TextAnchor.MiddleCenter);
+        resultsUI.winnerText = CreateText(panelObject.transform, "ResultsWinnerText", new Vector2(0f, -138f), new Vector2(800f, 42f), 25, FontStyle.Bold, TextAnchor.MiddleCenter);
+        resultsUI.modeText = CreateText(panelObject.transform, "ResultsModeText", new Vector2(0f, -184f), new Vector2(800f, 34f), 21, FontStyle.Normal, TextAnchor.MiddleCenter);
+        resultsUI.scoreText = CreateText(panelObject.transform, "ResultsScoreText", new Vector2(0f, -226f), new Vector2(800f, 42f), 25, FontStyle.Bold, TextAnchor.MiddleCenter);
 
-        resultsUI.objectiveText = CreateText(panelObject.transform, "ResultsObjectiveText", new Vector2(0f, -414f), new Vector2(720f, 76f), 20, FontStyle.Normal, TextAnchor.MiddleCenter);
-        resultsUI.controlsText = CreateText(panelObject.transform, "ResultsControlsText", new Vector2(0f, -504f), new Vector2(720f, 32f), 17, FontStyle.Normal, TextAnchor.MiddleCenter);
-        resultsUI.restartButton = CreateButton(panelObject.transform, "RestartButton", "Restart Match", new Vector2(-245f, -560f), new Vector2(210f, 56f), TeamVisualPalette.GetColor(Team.TeamA));
-        resultsUI.resetButton = CreateButton(panelObject.transform, "ResetButton", "Reset Match", new Vector2(0f, -560f), new Vector2(210f, 56f), new Color(0.18f, 0.22f, 0.27f, 1f));
-        resultsUI.closeButton = CreateButton(panelObject.transform, "CloseButton", "Close Results", new Vector2(245f, -560f), new Vector2(210f, 56f), TeamVisualPalette.GetColor(Team.TeamB));
+        CreateCoverageBar(panelObject.transform, "TeamACoverageBar", new Vector2(260f, -300f), Team.TeamA, out resultsUI.teamALabelText, out resultsUI.teamABarFill, out resultsUI.teamABarImage);
+        CreateCoverageBar(panelObject.transform, "TeamBCoverageBar", new Vector2(260f, -364f), Team.TeamB, out resultsUI.teamBLabelText, out resultsUI.teamBBarFill, out resultsUI.teamBBarImage);
+        CreateTowerRouteBar(panelObject.transform, "TowerRouteBar", new Vector2(0f, -430f), out resultsUI.towerRouteLabelText, out resultsUI.towerRouteFill, out resultsUI.towerRouteImage);
+
+        resultsUI.objectiveText = CreateText(panelObject.transform, "ResultsObjectiveText", new Vector2(0f, -488f), new Vector2(780f, 78f), 20, FontStyle.Normal, TextAnchor.MiddleCenter);
+        resultsUI.controlsText = CreateText(panelObject.transform, "ResultsControlsText", new Vector2(0f, -570f), new Vector2(780f, 28f), 17, FontStyle.Normal, TextAnchor.MiddleCenter);
+        resultsUI.restartButton = CreateButton(panelObject.transform, "RestartButton", "Restart Match", new Vector2(-255f, -622f), new Vector2(220f, 56f), TeamVisualPalette.GetColor(Team.TeamA));
+        resultsUI.resetButton = CreateButton(panelObject.transform, "ResetButton", "Reset Match", new Vector2(0f, -622f), new Vector2(220f, 56f), new Color(0.18f, 0.22f, 0.27f, 1f));
+        resultsUI.closeButton = CreateButton(panelObject.transform, "CloseButton", "Close Results", new Vector2(255f, -622f), new Vector2(220f, 56f), TeamVisualPalette.GetColor(Team.TeamB));
         resultsUI.ConfigureButtons();
         resultsUI.SetVisible(false);
 
@@ -182,11 +199,23 @@ public sealed class MatchResultsUI : MonoBehaviour
         float teamACoverage = Mathf.Clamp(gameManager.TeamACoverage, 0f, 100f);
         float teamBCoverage = Mathf.Clamp(gameManager.TeamBCoverage, 0f, 100f);
         float margin = Mathf.Abs(teamACoverage - teamBCoverage);
+        Color outcomeColor = winningTeam == Team.None ? Color.white : TeamVisualPalette.GetColor(winningTeam);
+
+        if (outcomeStripeImage != null)
+        {
+            outcomeStripeImage.color = new Color(outcomeColor.r, outcomeColor.g, outcomeColor.b, 0.92f);
+        }
 
         if (titleText != null)
         {
             titleText.text = winningTeam == Team.None ? "Draw" : $"{TeamVisualPalette.GetLabel(winningTeam)} Wins";
-            titleText.color = winningTeam == Team.None ? Color.white : TeamVisualPalette.GetColor(winningTeam);
+            titleText.color = outcomeColor;
+        }
+
+        if (subtitleText != null)
+        {
+            subtitleText.text = FormatResultSubtitle(winningTeam);
+            subtitleText.color = Color.Lerp(outcomeColor, Color.white, winningTeam == Team.None ? 0f : 0.35f);
         }
 
         if (winnerText != null)
@@ -207,6 +236,7 @@ public sealed class MatchResultsUI : MonoBehaviour
 
         UpdateCoverageBar(teamALabelText, teamABarFill, teamABarImage, Team.TeamA, teamACoverage);
         UpdateCoverageBar(teamBLabelText, teamBBarFill, teamBBarImage, Team.TeamB, teamBCoverage);
+        UpdateTowerRouteBar();
 
         if (objectiveText != null)
         {
@@ -216,6 +246,30 @@ public sealed class MatchResultsUI : MonoBehaviour
         if (controlsText != null)
         {
             controlsText.text = "Enter/R: restart   Backspace: reset   Esc: close results";
+        }
+    }
+
+    private string FormatResultSubtitle(Team winningTeam)
+    {
+        if (gameManager == null)
+        {
+            return string.Empty;
+        }
+
+        switch (gameManager.CurrentMatchMode)
+        {
+            case GameManager.MatchMode.TowerControl:
+                if (winningTeam == Team.None)
+                {
+                    return "Tower stayed balanced";
+                }
+
+                ResolveObjectiveReferences();
+                return towerObjective != null && towerObjective.GoalTeam == winningTeam
+                    ? "Tower reached the goal"
+                    : "Best tower push wins";
+            default:
+                return winningTeam == Team.None ? "Equal paint coverage" : "Final paint coverage lead";
         }
     }
 
@@ -331,6 +385,63 @@ public sealed class MatchResultsUI : MonoBehaviour
         if (fill != null)
         {
             fill.sizeDelta = new Vector2(Mathf.Clamp01(percent / 100f) * CoverageBarWidth, fill.sizeDelta.y);
+        }
+    }
+
+    private void UpdateTowerRouteBar()
+    {
+        bool showTowerRoute = gameManager != null && gameManager.CurrentMatchMode == GameManager.MatchMode.TowerControl;
+        GameObject routeRow = towerRouteLabelText != null && towerRouteLabelText.transform.parent != null
+            ? towerRouteLabelText.transform.parent.gameObject
+            : null;
+
+        if (routeRow != null)
+        {
+            routeRow.SetActive(showTowerRoute);
+        }
+
+        if (!showTowerRoute)
+        {
+            return;
+        }
+
+        ResolveObjectiveReferences();
+
+        if (towerObjective == null)
+        {
+            if (towerRouteLabelText != null)
+            {
+                towerRouteLabelText.text = "Tower route unavailable";
+                towerRouteLabelText.color = Color.white;
+            }
+
+            if (towerRouteFill != null)
+            {
+                towerRouteFill.sizeDelta = new Vector2(0f, towerRouteFill.sizeDelta.y);
+            }
+
+            return;
+        }
+
+        Team routeTeam = towerObjective.GoalTeam != Team.None ? towerObjective.GoalTeam : towerObjective.LeadingTeam;
+        Color routeColor = routeTeam == Team.None ? Color.white : TeamVisualPalette.GetColor(routeTeam);
+        float progressPercent = towerObjective.RouteProgressPercent;
+
+        if (towerRouteLabelText != null)
+        {
+            string leadLabel = routeTeam == Team.None ? "Center" : TeamVisualPalette.GetLabel(routeTeam);
+            towerRouteLabelText.text = $"Tower Route: {leadLabel} {progressPercent:0}%";
+            towerRouteLabelText.color = routeColor;
+        }
+
+        if (towerRouteImage != null)
+        {
+            towerRouteImage.color = routeColor;
+        }
+
+        if (towerRouteFill != null)
+        {
+            towerRouteFill.sizeDelta = new Vector2(Mathf.Clamp01(progressPercent / 100f) * TowerRouteBarWidth, towerRouteFill.sizeDelta.y);
         }
     }
 
@@ -473,7 +584,39 @@ public sealed class MatchResultsUI : MonoBehaviour
         fillRect.anchorMax = new Vector2(0f, 1f);
         fillRect.pivot = new Vector2(0f, 0.5f);
         fillRect.offsetMin = Vector2.zero;
-        fillRect.offsetMax = new Vector2(-CoverageBarWidth, 0f);
+        fillRect.offsetMax = Vector2.zero;
+        fillRect.sizeDelta = new Vector2(0f, 0f);
+        fillImage = fillObject.GetComponent<Image>();
+    }
+
+    private static void CreateTowerRouteBar(Transform parent, string name, Vector2 anchoredPosition, out Text label, out RectTransform fillRect, out Image fillImage)
+    {
+        GameObject rowObject = new GameObject(name);
+        rowObject.transform.SetParent(parent, false);
+        RectTransform rowRect = rowObject.AddComponent<RectTransform>();
+        rowRect.anchorMin = new Vector2(0.5f, 1f);
+        rowRect.anchorMax = new Vector2(0.5f, 1f);
+        rowRect.pivot = new Vector2(0.5f, 1f);
+        rowRect.anchoredPosition = anchoredPosition;
+        rowRect.sizeDelta = new Vector2(760f, 44f);
+
+        label = CreateText(rowObject.transform, $"{name}Label", new Vector2(-250f, -1f), new Vector2(270f, 34f), 20, FontStyle.Bold, TextAnchor.MiddleRight);
+
+        GameObject trackObject = CreateImageObject(rowObject.transform, $"{name}Track", new Color(1f, 1f, 1f, 0.14f));
+        RectTransform trackRect = trackObject.GetComponent<RectTransform>();
+        trackRect.anchorMin = new Vector2(0f, 1f);
+        trackRect.anchorMax = new Vector2(0f, 1f);
+        trackRect.pivot = new Vector2(0f, 1f);
+        trackRect.anchoredPosition = new Vector2(310f, -7f);
+        trackRect.sizeDelta = new Vector2(TowerRouteBarWidth, 24f);
+
+        GameObject fillObject = CreateImageObject(trackObject.transform, $"{name}Fill", Color.white);
+        fillRect = fillObject.GetComponent<RectTransform>();
+        fillRect.anchorMin = new Vector2(0f, 0f);
+        fillRect.anchorMax = new Vector2(0f, 1f);
+        fillRect.pivot = new Vector2(0f, 0.5f);
+        fillRect.offsetMin = Vector2.zero;
+        fillRect.offsetMax = Vector2.zero;
         fillRect.sizeDelta = new Vector2(0f, 0f);
         fillImage = fillObject.GetComponent<Image>();
     }

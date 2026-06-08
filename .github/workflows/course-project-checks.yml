@@ -311,8 +311,12 @@ jobs:
           set -euo pipefail
 
           scene='Splat Fighters/Assets/Scenes/MVP_ShootingTest.unity'
+          map_prefab='Splat Fighters/Assets/Prefabs/Maps/HangarArenaMap.prefab'
+          player_actor_prefab='Splat Fighters/Assets/Prefabs/Characters/PlayerActor.prefab'
+          bot_actor_prefab='Splat Fighters/Assets/Prefabs/Characters/BotActor.prefab'
           build_settings='Splat Fighters/ProjectSettings/EditorBuildSettings.asset'
           project_settings='Splat Fighters/ProjectSettings/ProjectSettings.asset'
+          arena_sources=("$scene" "$map_prefab" "$player_actor_prefab" "$bot_actor_prefab")
 
           removed_template_paths=(
             'Splat Fighters/Assets/Readme.asset'
@@ -355,7 +359,7 @@ jobs:
             'disableVSync: 1'
             'fixedDeltaTime: 0.02'
             'm_Name: Main Camera'
-            'm_Name: LevelRoot'
+            'm_Name: HangarArenaMap'
             'm_Name: BoundaryWalls'
             'm_Name: Obstacles'
             'm_Name: Cover'
@@ -499,8 +503,8 @@ jobs:
           )
 
           for pattern in "${required_scene_patterns[@]}"; do
-            grep -q "$pattern" "$scene" || {
-              echo "Missing Splat Fighters arena scene pattern: $pattern"
+            grep -q "$pattern" "${arena_sources[@]}" || {
+              echo "Missing Splat Fighters arena prefab/scene pattern: $pattern"
               exit 1
             }
           done
@@ -977,8 +981,8 @@ jobs:
           from pathlib import Path
           import re
 
-          scene = Path("Splat Fighters/Assets/Scenes/MVP_ShootingTest.unity").read_text(encoding="utf-8")
-          match = re.search(r"paintableCellCount: (\d+)", scene)
+          map_prefab = Path("Splat Fighters/Assets/Prefabs/Maps/HangarArenaMap.prefab").read_text(encoding="utf-8")
+          match = re.search(r"paintableCellCount: (\d+)", map_prefab)
 
           if match is None:
               raise SystemExit("Missing paintableCellCount serialization.")
@@ -992,19 +996,19 @@ jobs:
             exit 1
           fi
 
-          patrol_count="$(grep -c 'm_Name: TeamBBotPatrol_' "$scene")"
+          patrol_count="$(grep -c 'm_Name: TeamBBotPatrol_' "$map_prefab")"
           if [ "$patrol_count" -lt 4 ]; then
             echo "Expected at least 4 TeamB bot patrol points, found $patrol_count."
             exit 1
           fi
 
-          paint_target_count="$(grep -c 'm_Name: TeamBBotPaintTarget_' "$scene")"
+          paint_target_count="$(grep -c 'm_Name: TeamBBotPaintTarget_' "$map_prefab")"
           if [ "$paint_target_count" -lt 4 ]; then
             echo "Expected at least 4 TeamB bot paint targets, found $paint_target_count."
             exit 1
           fi
 
-          compact_controller_count="$(grep -c 'm_Height: 1.6' "$scene")"
+          compact_controller_count="$(grep -h -o 'm_Height: 1.6' "$player_actor_prefab" "$bot_actor_prefab" | wc -l)"
           if [ "$compact_controller_count" -lt 2 ]; then
             echo "Expected compact CharacterController settings for player and TeamB bot, found $compact_controller_count."
             exit 1
