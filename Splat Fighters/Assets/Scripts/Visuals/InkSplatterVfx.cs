@@ -54,6 +54,8 @@ public sealed class InkSplatterVfx : MonoBehaviour
 
     private void ConfigureParticles(ParticleSystem particles, Team team, bool paintableImpact, float paintRadius)
     {
+        PrepareForConfiguration(particles);
+
         float safeRadius = Mathf.Max(0.25f, paintRadius);
         Color baseColor = paintableImpact
             ? TeamVisualPalette.GetColor(team, 0.95f)
@@ -64,6 +66,7 @@ public sealed class InkSplatterVfx : MonoBehaviour
         ParticleSystem.MainModule main = particles.main;
         main.duration = 0.24f;
         main.loop = false;
+        main.playOnAwake = false;
         main.startLifetime = new ParticleSystem.MinMaxCurve(0.18f, 0.55f);
         main.startSpeed = new ParticleSystem.MinMaxCurve(safeRadius * 1.1f, safeRadius * 2.15f);
         main.startSize = new ParticleSystem.MinMaxCurve(safeRadius * 0.08f, safeRadius * 0.22f);
@@ -136,6 +139,8 @@ public sealed class InkSplatterVfx : MonoBehaviour
 
     private void ConfigureDropletParticles(ParticleSystem particles, Team team, bool paintableImpact, float paintRadius)
     {
+        PrepareForConfiguration(particles);
+
         float safeRadius = Mathf.Max(0.25f, paintRadius);
         Color baseColor = paintableImpact
             ? TeamVisualPalette.GetColor(team, 0.92f)
@@ -146,6 +151,7 @@ public sealed class InkSplatterVfx : MonoBehaviour
         ParticleSystem.MainModule main = particles.main;
         main.duration = 0.18f;
         main.loop = false;
+        main.playOnAwake = false;
         main.startLifetime = new ParticleSystem.MinMaxCurve(0.32f, 0.82f);
         main.startSpeed = new ParticleSystem.MinMaxCurve(safeRadius * 0.95f, safeRadius * 2.65f);
         main.startSize = new ParticleSystem.MinMaxCurve(safeRadius * 0.035f, safeRadius * 0.11f);
@@ -207,6 +213,11 @@ public sealed class InkSplatterVfx : MonoBehaviour
             renderer.receiveShadows = false;
             renderer.sortingFudge = 0.15f;
         }
+    }
+
+    private static void PrepareForConfiguration(ParticleSystem particles)
+    {
+        particles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
     }
 
     private static Material GetParticleMaterial()

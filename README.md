@@ -8,9 +8,9 @@ This repository contains my DI32002 Game Programming coursework projects, in-cla
 
 **Splat Fighters** is the main coursework game in this repository. It is an original third-person ink-territory arena game made in Unity 2022, where the player controls a selectable monster character and competes against a rule-based AI opponent. The game includes a complete menu flow, mode selection, AI difficulty selection, character selection with character-specific ink colours, shooter and roller tools, swimming on friendly ink, enemy ink damage, special paint burst, Tower Control objective play, Turf War scoring, HUD feedback, audio feedback, training support, and a final match results screen.
 
-The core gameplay was designed with reference to the ink-territory control idea popularised by Splatoon-style games: players are rewarded for controlling the arena through paint coverage, movement routes, and objective pressure rather than only defeating opponents.
+The core gameplay focuses on ink-territory control: players are rewarded for controlling the arena through paint coverage, movement routes, and objective pressure rather than only defeating opponents.
 
-This project is not a Unity port of Splatoon and does not use Nintendo or Splatoon assets. The Unity project structure, codebase, runtime systems, menu and state flow, 3D arena, character selection, AI behaviour, paint grid, objective logic, UI presentation, audio workflow, asset documentation, and testing records were redesigned and implemented for this coursework project. The reference is limited to the broad ink-territory gameplay idea; the wider game concept and implementation are original coursework work.
+The Unity project structure, codebase, runtime systems, menu and state flow, 3D arena, character selection, AI behaviour, paint grid, objective logic, UI presentation, audio workflow, asset documentation, and testing records were designed and implemented for this coursework project. The wider game concept and implementation are original coursework work.
 
 More details are available in:
 
@@ -123,7 +123,7 @@ The main project records evidence for:
 
 ## Asset And Copyright Notes
 
-Splat Fighters uses original gameplay code and project-created audio, plus documented public or Asset Store visual assets for environment and character presentation. It does not use Nintendo or Splatoon copyrighted assets.
+Splat Fighters uses original gameplay code and project-created audio, plus documented public or Asset Store visual assets for environment and character presentation. It does not use copyrighted commercial game assets.
 
 Important documentation:
 

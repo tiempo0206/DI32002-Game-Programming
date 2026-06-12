@@ -1062,7 +1062,7 @@ English Summary: The codebase is maintainable for an MVP/polish-stage course pro
 - 排行榜 / leaderboard
 - 关卡进度存档 / progression save
 - 完整手柄输入 / full gamepad setup
-- Splat Zones 模式 / Splat Zones mode
+- 中心区域模式 / center zone mode
 
 ## 25. 答辩可用总结 / Presentation Summary
 

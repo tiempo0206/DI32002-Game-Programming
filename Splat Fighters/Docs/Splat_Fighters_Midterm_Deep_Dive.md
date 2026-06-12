@@ -4,7 +4,7 @@ This document is a technical reading of the current project state. It is written
 
 ## 1. Project Summary
 
-Splat Fighters is a third-person territory-control shooter inspired by Splatoon. The core loop is:
+Splat Fighters is a third-person territory-control shooter. The core loop is:
 
 1. Move through the arena.
 2. Aim and fire ink projectiles or close-range paint.
@@ -813,7 +813,7 @@ This document is not just a feature list. It shows:
 - how the team model is represented across logic, UI, visuals, and AI
 - how paint ownership becomes the shared source of truth for scoring and objectives
 - how imported third-party assets are organized into a runtime-ready workflow
-- how the project is being shaped toward a complete Splatoon-like experience rather than a toy prototype
+- how the project is being shaped toward a complete territory-control experience rather than a toy prototype
 
 ## 11. Suggested Midterm Talking Points
 

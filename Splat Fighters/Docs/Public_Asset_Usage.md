@@ -32,7 +32,7 @@ If a future increment imports public assets from the internet, add each asset to
 
 - Use only assets whose license allows the intended course-project use.
 - Keep source URLs specific enough for a reviewer to verify the original asset.
-- Do not import Nintendo, Splatoon, or other copyrighted game assets.
+- Do not import copyrighted commercial game assets.
 - Prefer simple placeholder assets until the gameplay loop is stable.
 - Keep each imported asset tied to a GitHub issue or pull request.
 - Before final submission, replace any "pending confirmation" fields with the original asset page URL, author, and exact license text.

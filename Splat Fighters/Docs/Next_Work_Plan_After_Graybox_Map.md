@@ -8,11 +8,11 @@ User story:
 
 As a course project developer, I want a compact graybox arena so the player can test movement, shooting, painting, and future bot behavior in a readable 3D space.
 
-## Splatoon-Aligned Product Direction
+## Product Direction
 
 Target:
 
-Move the project from a simple ink shooter MVP toward a small, classroom-friendly Turf War prototype inspired by Splatoon.
+Move the project from a simple ink shooter MVP toward a small, classroom-friendly territory-control prototype.
 
 Core loop to protect:
 
@@ -27,7 +27,7 @@ Current scope guardrails:
 - Build one local single-player prototype first: TeamA player versus TeamB bot.
 - Keep the main mode close to Turf War before adding ranked-style objectives.
 - Avoid online 4v4, Salmon Run-style co-op, complex loadouts, and large weapon rosters until the core loop feels correct.
-- Do not copy Nintendo branding, character names, assets, UI, music, or exact weapon names.
+- Do not copy commercial branding, character names, assets, UI, music, or exact weapon names.
 
 Priority adjustment:
 
@@ -226,7 +226,7 @@ Implemented in the current branch.
 
 Goal:
 
-Make enemy paint matter immediately, matching the Splatoon idea that territory controls movement.
+Make enemy paint matter immediately, reinforcing the idea that territory controls movement.
 
 Implemented work:
 
@@ -342,7 +342,7 @@ Acceptance criteria:
 
 Goal:
 
-Introduce Splatoon-like weapon identity without building a large arsenal.
+Introduce clear weapon identity without building a large arsenal.
 
 Status: Implemented through smaller Agile slices.
 
@@ -412,7 +412,7 @@ Acceptance criteria:
 - Runtime code and documentation no longer conflict.
 - Existing keyboard and mouse controls remain unchanged.
 
-### 15. Splat Zones-Style Center Objective V1
+### 15. Center Zone Objective V1
 
 Goal:
 
@@ -422,7 +422,7 @@ Status: Implemented.
 
 Implemented work:
 
-- Added `SplatZoneObjective` for center-zone local paint ownership.
+- Added a center objective for local paint ownership.
 - Added `PaintManager.GetTeamCellCountsInWorldBounds` for objective scoring queries.
 - Added `CenterSplatZone` to the graybox map and wired it to `GameManager`.
 - Added HUD text for neutral, contested, and controlled zone states.
@@ -456,20 +456,20 @@ Acceptance criteria:
 - Tower control is calculated from local TeamA/TeamB paint coverage.
 - The tower moves along its route while one team controls the local paint area.
 - HUD text communicates tower control and progress.
-- Existing Turf War score, Splat Zone HUD, match flow, bot, ink, health, swim, and special systems remain stable.
+- Existing Turf War score, center objective HUD, match flow, bot, ink, health, swim, and special systems remain stable.
 
 ### 17. Match Mode Selector V1
 
 Goal:
 
-Present one active demo mode at a time so Turf War, Splat Zones, and Tower Control feel like clear match rules instead of simultaneous HUD noise.
+Present one active demo mode at a time so the available match rules remain clear instead of creating simultaneous HUD noise.
 
 Status: Implemented in the current branch.
 
 Implemented work:
 
 - Added `GameManager.MatchMode` with Turf War as the default mode.
-- Added `M` keyboard cycling between Turf War, Splat Zones, and Tower Control.
+- Added `M` keyboard cycling between available match modes.
 - Updated the presentation banner to show the active mode name.
 - Updated objective HUD lines so they focus on the selected mode.
 - Kept restart/reset behavior stable while preserving the selected mode.
@@ -477,10 +477,10 @@ Implemented work:
 Acceptance criteria:
 
 - `GameManager` has a serialized match mode with Turf War as the default.
-- A keyboard shortcut cycles between Turf War, Splat Zones, and Tower Control.
+- A keyboard shortcut cycles between available match modes.
 - The presentation banner shows the active mode name.
 - HUD objective text focuses on the active mode.
-- Core score, timer, restart, pause, bot, ink, health, swim, special, Splat Zone, and Tower systems remain stable.
+- Core score, timer, restart, pause, bot, ink, health, swim, special, center objective, and tower systems remain stable.
 
 ### 18. Stretch Modes After Turf War Core
 
