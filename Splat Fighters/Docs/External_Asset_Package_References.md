@@ -6,7 +6,7 @@ Last updated: 2026-06-07
 
 This document lists the external asset packages currently present in the Splat Fighters Unity project. It is intended for course review, attribution checks, and final submission preparation.
 
-The project does not use Nintendo, Splatoon, or other copyrighted commercial game assets. External assets are used only as presentation, character, or plugin support around the original Splat Fighters gameplay code.
+The project does not use copyrighted commercial game assets. External assets are used only as presentation, character, or plugin support around the original Splat Fighters gameplay code.
 
 Project-original procedural audio is documented separately in `Audio_Asset_Notes.md` because it is not an external asset package.
 
@@ -103,5 +103,5 @@ Reference:
 - [ ] Confirm the exact license text for `Hangar Building Modular` before final submission.
 - [ ] Keep `RPG Monster Wave PBR` attribution tied to the Unity Asset Store page and publisher.
 - [ ] Keep `Zibra Liquid` attribution tied to the Unity Asset Store page and local open-source notices.
-- [ ] Do not add Nintendo, Splatoon, or other copyrighted commercial game assets.
+- [ ] Do not add copyrighted commercial game assets.
 - [ ] Document any future imported public audio, music, texture, model, or VFX package in this file before final submission.

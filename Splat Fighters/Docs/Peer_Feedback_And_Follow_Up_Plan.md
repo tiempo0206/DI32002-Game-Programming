@@ -158,7 +158,7 @@ Suggested Kanban labels:
 
 - Keep menu UI readable and separate from the gameplay scene.
 - Protect MacBook Air performance by avoiding heavy runtime effects.
-- Do not use copyrighted Nintendo, Splatoon, or third-party assets without a compatible public license.
+- Do not use copyrighted commercial or third-party assets without a compatible public license.
 - Record all imported public assets in `Public_Asset_Usage.md`.
 - Keep each feature as a small, reviewable Agile increment.
 - Validate the existing Turf War loop after each change: movement, shooting, painting, scoring, TeamB bot behavior, pause, restart, swim form, and menu-to-gameplay navigation.

@@ -42,7 +42,7 @@ Out of scope:
 - Re-enabling ink splatter VFX.
 - Adding online multiplayer.
 - Adding large character customization systems.
-- Importing copyrighted Nintendo or Splatoon assets.
+- Importing copyrighted commercial game assets.
 - Importing high-poly models without optimization.
 - Adding multiple new bots before the current performance profile is stable.
 
@@ -153,7 +153,7 @@ Acceptance criteria:
 - Each imported asset has a source URL, author or publisher, license, imported path, project use, and modification notes.
 - Assets are stored in a clear project folder.
 - Assets use reasonable scale, pivots, materials, and colliders.
-- The imported assets do not introduce copyrighted Splatoon or Nintendo content.
+- The imported assets do not introduce copyrighted commercial game content.
 
 Definition of done:
 
