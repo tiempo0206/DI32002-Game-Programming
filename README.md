@@ -12,6 +12,12 @@ The core gameplay focuses on ink-territory control: players are rewarded for con
 
 The Unity project structure, codebase, runtime systems, menu and state flow, 3D arena, character selection, AI behaviour, paint grid, objective logic, UI presentation, audio workflow, asset documentation, and testing records were designed and implemented for this coursework project. The wider game concept and implementation are original coursework work.
 
+#### Screenshots
+
+| Main Menu | Gameplay Arena | Training Scene |
+|---|---|---|
+| ![Splat Fighters main menu](Splat%20Fighters/Docs/Screenshots/readme_main_menu.png) | ![Splat Fighters gameplay arena](Splat%20Fighters/Docs/Screenshots/readme_gameplay_arena.png) | ![Splat Fighters training scene](Splat%20Fighters/Docs/Screenshots/readme_training_scene.png) |
+
 More details are available in:
 
 - `Splat Fighters/Docs/Game_Design_and_Code_Documentation_CN_EN.md`
