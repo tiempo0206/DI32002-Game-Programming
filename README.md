@@ -8,6 +8,8 @@ This repository contains my DI32002 Game Programming coursework projects, in-cla
 
 **Splat Fighters** is the main coursework game in this repository. It is an original third-person ink-territory arena game made in Unity 2022, where the player controls a selectable monster character and competes against a rule-based AI opponent. The game includes a complete menu flow, mode selection, AI difficulty selection, character selection with character-specific ink colours, shooter and roller tools, swimming on friendly ink, enemy ink damage, special paint burst, Tower Control objective play, Turf War scoring, HUD feedback, audio feedback, training support, and a final match results screen.
 
+**Published release:** [Play and download Splat Fighters on itch.io](https://tiempo206.itch.io/splat-fighters)
+
 The core gameplay focuses on ink-territory control: players are rewarded for controlling the arena through paint coverage, movement routes, and objective pressure rather than only defeating opponents.
 
 The Unity project structure, codebase, runtime systems, menu and state flow, 3D arena, character selection, AI behaviour, paint grid, objective logic, UI presentation, audio workflow, asset documentation, and testing records were designed and implemented for this coursework project. The wider game concept and implementation are original coursework work.
@@ -21,6 +23,7 @@ The Unity project structure, codebase, runtime systems, menu and state flow, 3D 
 More details are available in:
 
 - `Splat Fighters/Docs/Game_Design_and_Code_Documentation_CN_EN.md`
+- `Splat Fighters/Docs/ITCH_IO_RELEASE_GUIDE.md`
 - `Splat Fighters/Docs/Splat_Fighters_Midterm_Deep_Dive.md`
 - `Splat Fighters/Docs/Public_Asset_Usage.md`
 - `Splat Fighters/Docs/External_Asset_Package_References.md`

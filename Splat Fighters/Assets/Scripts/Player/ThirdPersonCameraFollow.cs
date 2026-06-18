@@ -38,6 +38,9 @@ public class ThirdPersonCameraFollow : MonoBehaviour
     private float yaw;
     private float pitch;
     private bool orbitInitialized;
+#if UNITY_WEBGL && !UNITY_EDITOR
+    private bool webGLDiagnosticsLogged;
+#endif
 
     public Transform Target
     {
@@ -71,6 +74,10 @@ public class ThirdPersonCameraFollow : MonoBehaviour
             transform.rotation,
             desiredRotation,
             GetSharpness(rotationSmoothSpeed));
+
+#if UNITY_WEBGL && !UNITY_EDITOR
+        LogWebGLDiagnosticsOnce();
+#endif
     }
 
     private Vector3 GetDesiredPosition()
@@ -141,6 +148,58 @@ public class ThirdPersonCameraFollow : MonoBehaviour
         pitch += mouseY * pitchSensitivity * ySign * Time.deltaTime;
         pitch = Mathf.Clamp(pitch, minPitch, maxPitch);
     }
+
+#if UNITY_WEBGL && !UNITY_EDITOR
+    private void LogWebGLDiagnosticsOnce()
+    {
+        if (webGLDiagnosticsLogged || Time.timeSinceLevelLoad < 1f)
+        {
+            return;
+        }
+
+        webGLDiagnosticsLogged = true;
+        Renderer[] renderers = FindObjectsOfType<Renderer>();
+        int enabledRendererCount = 0;
+        int visibleRendererCount = 0;
+        Bounds rendererBounds = new Bounds();
+        bool hasRendererBounds = false;
+
+        foreach (Renderer sceneRenderer in renderers)
+        {
+            if (sceneRenderer == null || !sceneRenderer.enabled || !sceneRenderer.gameObject.activeInHierarchy)
+            {
+                continue;
+            }
+
+            enabledRendererCount++;
+            visibleRendererCount += sceneRenderer.isVisible ? 1 : 0;
+
+            if (!hasRendererBounds)
+            {
+                rendererBounds = sceneRenderer.bounds;
+                hasRendererBounds = true;
+            }
+            else
+            {
+                rendererBounds.Encapsulate(sceneRenderer.bounds);
+            }
+        }
+
+        string pipelineName = UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline != null
+            ? UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline.name
+            : "Built-in";
+        string boundsSummary = hasRendererBounds
+            ? $"center={rendererBounds.center}, size={rendererBounds.size}"
+            : "none";
+
+        Debug.Log(
+            $"[WebGLCameraDiagnostics] scene={gameObject.scene.name}, position={transform.position}, " +
+            $"rotation={transform.eulerAngles}, forward={transform.forward}, target={target.position}, " +
+            $"pitch={pitch:F2}, yaw={yaw:F2}, cursor={Cursor.lockState}, quality={QualitySettings.GetQualityLevel()}, " +
+            $"pipeline={pipelineName}, renderers={enabledRendererCount}, visible={visibleRendererCount}, " +
+            $"bounds={boundsSummary}");
+    }
+#endif
 
     private void ApplyCursorLock()
     {
